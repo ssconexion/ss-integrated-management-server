@@ -11,13 +11,38 @@ public class ModelsContext : DbContext
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Models.TeamInfo>(entity =>
+        // TODO deshacer comentarios
+        
+        modelBuilder.Entity<Models.Match>(entity =>
         {
-            entity.HasOne(t => t.OsuData)
-                .WithMany()
-                .HasForeignKey(t => t.OsuID);
-
-            entity.Navigation(t => t.OsuData).AutoInclude();
+            entity.ToTable("matches");
+            
+            entity.OwnsOne(m => m.Round, roundSnapshotBuilder => 
+            {
+                roundSnapshotBuilder.ToJson();
+                roundSnapshotBuilder.OwnsMany(r => r.MapPool); 
+            });
+            
+            // snapshots
+            entity.OwnsOne(m => m.Round, b => b.ToJson());
+            entity.OwnsOne(m => m.TeamRed, b => b.ToJson());
+            entity.OwnsOne(m => m.TeamBlue, b => b.ToJson());
+            entity.OwnsOne(m => m.Referee, b => b.ToJson());
         });
+    
+        // real shit
+        modelBuilder.Entity<Models.TeamInfo>(e => {
+            e.ToTable("user"); 
+            e.HasOne(t => t.OsuData).WithMany().HasForeignKey(t => t.OsuID);
+            e.Navigation(t => t.OsuData).AutoInclude();
+        });
+
+        modelBuilder.Entity<Models.Round>(e => {
+            e.ToTable("round");
+            e.OwnsMany(r => r.MapPool, b => b.ToJson());
+        });
+
+        modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees");
+        modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
     }
 }

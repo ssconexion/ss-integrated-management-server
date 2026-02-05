@@ -16,12 +16,16 @@ public partial class AutoRef
     
     private int[] matchScore = [0, 0];
     private bool auto = false;
+    private bool joined = false;
+    
+    private readonly Action<string, string> msgCallback;
 
-    public AutoRef(string matchId, string refDisplayName, Models.MatchType type)
+    public AutoRef(string matchId, string refDisplayName, Models.MatchType type, Action<string, string> msgCallback)
     {
         this.matchId = matchId;
         this.refDisplayName = refDisplayName;
         this.type = type;
+        this.msgCallback = msgCallback;
     }
 
     public async Task StartAsync()
@@ -33,7 +37,7 @@ public partial class AutoRef
                 .Include(m => m.TeamRed)
                 .Include(m => m.TeamBlue)
                 .Include(m => m.Referee)
-                .FirstOrDefaultAsync(m => m.Id == matchId && m.Type == (int)type) ?? throw new Exception("Match no encontrado en DB");
+                .FirstOrDefaultAsync(m => m.Id == matchId) ?? throw new Exception("Match no encontrado en DB");
         }
 
         await ConnectToBancho();
@@ -42,7 +46,7 @@ public partial class AutoRef
     private async Task ConnectToBancho()
     {
         var config = new BanchoClientConfig(
-            new IrcCredentials(currentMatch.Referee.DisplayName, currentMatch.Referee.IRC)
+            new IrcCredentials(currentMatch.Referee.Name, currentMatch.Referee.IRC)
         );
 
         client = new BanchoClient(config);
@@ -54,7 +58,7 @@ public partial class AutoRef
 
         client.OnAuthenticated += () =>
         {
-            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: {currentMatch.TeamRed.DisplayName} vs {currentMatch.TeamBlue.DisplayName}", true);
+            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: jowjowosu vs methalox", true);
         };
 
         await client.ConnectAsync();
@@ -62,17 +66,17 @@ public partial class AutoRef
 
     private async Task HandleIrcMessage(IIrcMessage msg)
     {
-        if (msg.Parameters.Count < 2) return;
-        
-        if (msg.Command != "PRIVMSG") return;
-        
         string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
         string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
 
         string target = msg.Parameters[0];
         string content = msg.Parameters[1];
         
-        if (senderNick == "BanchoBot" && content.Contains("Created the tournament lobby"))
+        Console.WriteLine($"{senderNick}: {content}");
+
+        if (joined) msgCallback(matchId, $"**[{senderNick}]** {content}");
+        
+        if (senderNick == "BanchoBot" && content.Contains("Created the tournament match"))
         {
             var parts = content.Split('/');
             var idPart = parts.Last().Split(' ')[0];
@@ -80,12 +84,9 @@ public partial class AutoRef
 
             await client.JoinChannelAsync(lobbyChannelName);
             await InitializeLobbySettings();
+            joined = true;
             return;
         }
-
-        if (string.IsNullOrEmpty(lobbyChannelName) ||
-            !target.Equals(lobbyChannelName, StringComparison.OrdinalIgnoreCase))
-            return;
         
         if (senderNick == "BanchoBot")
         {
@@ -101,16 +102,16 @@ public partial class AutoRef
             }
         }
         
-        if (content.StartsWith(">") &&
-            senderNick.Equals(currentMatch.Referee.DisplayName, StringComparison.OrdinalIgnoreCase))
+        if (content == "PING")
         {
-            await ExecuteAdminCommand(content[1..].Split(' '));
+            await client.SendPrivateMessageAsync(lobbyChannelName,"pong");
         }
     }
 
     private async Task InitializeLobbySettings()
     {
-        await client.SendPrivateMessageAsync(lobbyChannelName, "!mp set 2 3 2");
+        await client.SendPrivateMessageAsync(lobbyChannelName,"!mp set 2 3 2");
+        await client.SendPrivateMessageAsync(lobbyChannelName, "!mp invite " + currentMatch.Referee.Name);
         //TODO addrefs streamers
     }
 

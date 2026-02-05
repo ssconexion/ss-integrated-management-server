@@ -1,22 +1,37 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Humanizer;
-using Microsoft.EntityFrameworkCore;
 
 namespace ss.Internal.Management.Server.AutoRef;
 
 public class Models
 {
+    [Table("matches")]
     public class Match
     {
+        [Key]
+        [Column("id")]
         public string Id { get; set; }
+        
+        [Column("match_type")]
         public int Type { get; set; }
-        public Round Round { get; set; }
-        public TeamInfo TeamRed { get; set; }
-        public TeamInfo TeamBlue { get; set; }
+        
+        [Column("round")]
+        public RoundSnapshot Round { get; set; }
+        
+        [Column("team_red")]
+        public TeamSnapshot TeamRed { get; set; }
+        
+        [Column("team_blue")]
+        public TeamSnapshot TeamBlue { get; set; }
+        
+        [Column("start_time")]
         public DateTime StartTime { get; set; }
+        
+        [Column("is_over")]
         public bool IsOver { get; set; }
-        public RefereeInfo Referee { get; set; }
+        
+        [Column("referee")]
+        public RefereeSnapshot Referee { get; set; }
     }
 
     [Table("round")]
@@ -28,8 +43,8 @@ public class Models
         [Column("display_name")]
         public string DisplayName { get; set; }
         
-        [Column("bans")]
-        public int Bans { get; set; }
+        [Column("ban_rounds")]
+        public int BanRounds { get; set; }
         
         [Column("ban_mode")]
         public BansType Mode { get; set; }
@@ -37,17 +52,17 @@ public class Models
         [Column("best_of")]
         public int BestOf { get; set; }
         
-        //[Column("mappool")]
-        //public List<RoundBeatmap> MapPool { get; set; }
+        [Column("mappool")]
+        public List<RoundBeatmap> MapPool { get; set; }
     }
 
     [Table("user")]
     public class TeamInfo
     {
+        [Key]
         [Column("id")]
         public string Id { get; set; }
-     
-        [Key]
+        
         [Column("osu_id")]
         public int OsuID { get; set; }
         
@@ -57,6 +72,7 @@ public class Models
         [ForeignKey("OsuID")]
         public virtual OsuUser OsuData { get; set; }
 
+        [NotMapped]
         public string DisplayName => OsuData.DisplayName ?? "Desconocido";
     }
 
@@ -70,16 +86,57 @@ public class Models
         [Column("username")]
         public string DisplayName { get; set; }
     }
-    
+
+    [Table("referees")]
     public class RefereeInfo
     {
-        public string Id { get; set; }
+        [Column("id")]
+        public int Id { get; set; }
+        
+        [Column("display_name")]
         public string DisplayName { get; set; }
-        public string DiscordID { get; set; }
-        public string OsuID { get; set; }
+        
+        [Column("discord_id")]
+        public int DiscordID { get; set; }
+        
+        [Column("osu_id")]
+        public int OsuID { get; set; }
+        
+        [Column("irc")]
         public string IRC { get; set; }
     }
     
+    public class TeamSnapshot
+    {
+        public string Id { get; set; }
+        public int OsuID { get; set; }
+        public string DiscordID { get; set; }
+        public string DisplayName { get; set; }
+    }
+
+    public class RoundSnapshot
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int BestOf { get; set; }
+        public int BanRounds { get; set; }
+        public BansType Mode { get; set; }
+        public List<RoundBeatmap> MapPool { get; set; } = [];
+    }
+
+    public class RefereeSnapshot
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string IRC { get; set; }
+    }
+
+    public class RoundBeatmap
+    {
+        public int BeatmapID { get; set; }
+        public string slot { get; set; }
+    }
+
     public enum BansType
     {
         SpanishShowdown = 0,
