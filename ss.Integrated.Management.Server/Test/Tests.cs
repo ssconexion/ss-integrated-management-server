@@ -24,8 +24,8 @@ namespace ss.Integrated.Management.Server
             }
 
             // 2. Crear Usuarios de App (TeamInfo)
-            var team1 = new Models.TeamInfo { Id = Guid.NewGuid().ToString(), OsuID = 727, DiscordID = 234547235647 };
-            var team2 = new Models.TeamInfo { Id = Guid.NewGuid().ToString(), OsuID = 12431, DiscordID = 348756234 };
+            var team1 = new Models.TeamInfo { OsuID = 727, DiscordID = "234547235647" };
+            var team2 = new Models.TeamInfo { OsuID = 12431, DiscordID = "348756234" };
 
             if (!db.Set<Models.TeamInfo>().Any())
             {
@@ -49,8 +49,8 @@ namespace ss.Integrated.Management.Server
                 DisplayName = "Finals",
                 BestOf = 7,
                 Mode = Models.BansType.SpanishShowdown,
-                MapPool = new List<Models.RoundBeatmap> 
-                { 
+                MapPool = new List<Models.RoundBeatmap>
+                {
                     new() { BeatmapID = 1453229, Slot = "NM1" },
                     new() { BeatmapID = 1453229, Slot = "HD1" },
                     new() { BeatmapID = 1453229, Slot = "HR1" },
@@ -64,45 +64,21 @@ namespace ss.Integrated.Management.Server
                 await db.SaveChangesAsync();
             }
 
-            // 4. CREAR EL MATCH (Usando Snapshots)
-            // Aquí es donde "congelamos" los datos de las tablas en el JSON del partido
+            // 4. CREAR EL MATCH
             var match = new Models.Match
             {
                 Id = "A5",
-                Type = (int)Models.MatchType.QualifiersStage,
+                Type = Models.MatchType.QualifiersStage,
                 StartTime = DateTime.UtcNow,
-
-                // CONVERTIR ENTIDAD -> SNAPSHOT
-                TeamRed = new Models.TeamSnapshot
-                {
-                    Id = team1.Id,
-                    OsuID = team1.OsuID,
-                    DiscordID = team1.DiscordID,
-                    DisplayName = team1.DisplayName // Guardamos "Cookiezi"
-                },
-
-                TeamBlue = new Models.TeamSnapshot
-                {
-                    Id = team2.Id,
-                    OsuID = team2.OsuID,
-                    DiscordID = team2.DiscordID,
-                    DisplayName = team2.DisplayName
-                },
-
-                Round = new Models.RoundSnapshot
-                {
-                    Id = roundTemplate.Id,
-                    Name = roundTemplate.DisplayName,
-                    BestOf = roundTemplate.BestOf,
-                    BanRounds = roundTemplate.BanRounds,
-                    Mode = roundTemplate.Mode,
-                    MapPool = roundTemplate.MapPool // Copiamos la lista
-                },
-
-                Referee = new Models.RefereeSnapshot
+                TeamRedId = team1.Id,
+                TeamBlueId = team2.Id,
+                RoundId = roundTemplate.Id,
+                Referee = new Models.RefereeInfo
                 {
                     Id = 1,
-                    Name = "Furina",
+                    DisplayName = "Furina",
+                    OsuID = 16393244,
+                    DiscordID = 404328124961128453,
                     IRC = "77bc905b"
                 }
             };
@@ -111,7 +87,7 @@ namespace ss.Integrated.Management.Server
             {
                 db.Matches.Add(match);
                 await db.SaveChangesAsync();
-                Console.WriteLine("Match creado exitosamente con Snapshots.");
+                Console.WriteLine("Match creado exitosamente.");
             }
             else
             {
@@ -119,8 +95,11 @@ namespace ss.Integrated.Management.Server
             }
 
             // LEER PARA COMPROBAR
-            var savedMatch = await db.Matches.FirstOrDefaultAsync(x => x.Id == "A4" );
-            Console.WriteLine($"Leído de DB -> Red: {savedMatch.TeamRed.DisplayName} vs Blue: {savedMatch.TeamBlue.DisplayName}");
+            var savedMatch = await db.Matches.FirstOrDefaultAsync(x => x.Id == "A4");
+            if (savedMatch != null)
+            {
+                Console.WriteLine($"Leído de DB -> Red: {savedMatch.TeamRed.DisplayName} vs Blue: {savedMatch.TeamBlue.DisplayName}");
+            }
         }
     }
 };
