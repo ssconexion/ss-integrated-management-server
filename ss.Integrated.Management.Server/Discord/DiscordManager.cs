@@ -135,12 +135,11 @@ public class DiscordManager
         }
     }
 
-    public Task AddRefereeToDbAsync(Models.RefereeInfo model)
+    public async Task AddRefereeToDbAsync(Models.RefereeInfo model)
     {
-        using var db = new ModelsContext();
+        await using var db = new ModelsContext();
         db.Referees.Add(model);
-        db.SaveChangesAsync();
-        return Task.CompletedTask;
+        await db.SaveChangesAsync();
     }
 
     private async Task HandleMessageAsync(SocketMessage message)

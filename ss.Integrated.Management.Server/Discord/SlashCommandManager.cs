@@ -44,10 +44,11 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             IRC = ircPass,
             DiscordID = discordId
         };
-        
-        await Manager.AddRefereeToDbAsync(model);
+
         await RespondAsync($"Referee **{nombre}** añadido/actualizado en la base de datos.\n" +
                            $"- OsuID: {osuId}\n" +
-                           $"- DiscordID: {discordId}", ephemeral: true);
+                           $"- DiscordID: {discordId}");
+
+        await Manager.AddRefereeToDbAsync(model);
     }
 }
