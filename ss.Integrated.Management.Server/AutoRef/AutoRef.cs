@@ -10,8 +10,6 @@ public partial class AutoRef
     private readonly string matchId;
     private readonly string refDisplayName;
 
-    private List<Models.RoundBeatmap> mappool = new();
-
     private IBanchoClient? client;
     public string? LobbyChannelName;
 
@@ -55,15 +53,9 @@ public partial class AutoRef
     {
         using (var db = new ModelsContext())
         {
-            currentMatch = await db.Matches
-                .Include(m => m.Round)
-                .Include(m => m.TeamRed)
-                .Include(m => m.TeamBlue)
-                .Include(m => m.Referee)
-                .FirstOrDefaultAsync(m => m.Id == matchId) ?? throw new Exception("Match no encontrado en DB");
+            currentMatch = await db.Matches.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match no encontrado en DB");
+            currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee no encontrado en DB");
         }
-
-        mappool = currentMatch.Round.MapPool;
 
         await ConnectToBancho();
     }

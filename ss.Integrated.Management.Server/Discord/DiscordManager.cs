@@ -33,9 +33,9 @@ public class DiscordManager
         {
             GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.Guilds
         });
-        
+
         interactionService = new InteractionService(client.Rest);
-        
+
         services = new ServiceCollection()
             .AddSingleton(this)
             .AddSingleton(client)
@@ -45,7 +45,7 @@ public class DiscordManager
         client.Log += LogAsync;
         client.Ready += ReadyAsync;
         client.InteractionCreated += HandleInteractionAsync;
-        
+
         client.MessageReceived += HandleMessageAsync;
     }
 
@@ -53,15 +53,15 @@ public class DiscordManager
     {
         await client.LoginAsync(TokenType.Bot, token);
         await client.StartAsync();
-        
+
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
-        
+
         Console.WriteLine("DoloresRelay iniciado y servicios cargados.");
     }
-    
+
     private async Task ReadyAsync()
     {
-        try 
+        try
         {
             await interactionService.RegisterCommandsToGuildAsync(guildId);
             Console.WriteLine($"Comandos Slash registrados en Guild: {guildId}");
@@ -83,6 +83,7 @@ public class DiscordManager
         catch (Exception ex)
         {
             Console.WriteLine($"Error ejecutando comando: {ex}");
+
             if (interaction.Type == InteractionType.ApplicationCommand)
                 await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
         }
@@ -100,12 +101,20 @@ public class DiscordManager
 
         activeChannels.TryAdd(matchId, newChannel.Id);
 
+
         var worker = new AutoRef.AutoRef(matchId, referee, HandleMatchIRCMessage);
         activeMatches.TryAdd(matchId, worker);
 
         await newChannel.SendMessageAsync($"Canal creado para Referee: **{referee}**. Iniciando worker...");
-        
-        _ = worker.StartAsync();
+
+        try
+        {
+            _ = worker.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            await newChannel.SendMessageAsync($"Error durante la ejecución del AutoRef: `{ex.Message}`");
+        }
 
         return true;
     }
@@ -122,10 +131,11 @@ public class DiscordManager
             await requestChannel.SendMessageAsync("No se encontró un worker activo con ese Match ID.");
             return;
         }
-        
+
         if (activeChannels.TryRemove(matchId, out ulong channelId))
         {
             var channel = client.GetChannel(channelId) as ITextChannel;
+
             if (channel != null)
             {
                 await requestChannel.SendMessageAsync("Eliminando canal y cerrando proceso...");
@@ -144,15 +154,15 @@ public class DiscordManager
 
     private async Task HandleMessageAsync(SocketMessage message)
     {
-        if(message.Author.IsBot || message.Attachments.Count > 0 || message.Stickers.Count > 0) return;
-        
+        if (message.Author.IsBot || message.Attachments.Count > 0 || message.Stickers.Count > 0) return;
+
         foreach (var channelid in activeChannels.Values)
         {
             if (message.Channel.Id == channelid)
             {
                 var msgToIRC = message.Content;
                 if (!message.Content.StartsWith("!")) msgToIRC = $"[DISCORD | {message.Author.Username}] {message.Content}";
-                
+
                 // Busca la instancia de autoref asociada al canal al que se envia el mensaje
                 var key = activeChannels.FirstOrDefault(m => m.Value == channelid).Key;
                 await activeMatches.GetValueOrDefault(key)!.SendMessageFromDiscord(msgToIRC);
@@ -165,7 +175,7 @@ public class DiscordManager
             await message.Channel.SendMessageAsync("Sample database filled.");
         }
     }
-    
+
     private void HandleMatchIRCMessage(string matchId, string messageContent)
     {
         Task.Run(async () =>

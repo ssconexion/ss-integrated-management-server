@@ -31,7 +31,7 @@ public class Models
         public bool IsOver { get; set; }
 
         [Column("referee_id")]
-        public int RefereeId { get; set; }
+        public int? RefereeId { get; set; }
 
         [ForeignKey("RoundId")]
         public virtual Round Round { get; set; }

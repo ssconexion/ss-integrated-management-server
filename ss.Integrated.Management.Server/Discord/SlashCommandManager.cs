@@ -1,6 +1,8 @@
 ﻿using Discord;
 using Discord.Interactions;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic.CompilerServices;
 using ss.Internal.Management.Server.AutoRef;
 
 namespace ss.Internal.Management.Server.Discord;
@@ -15,12 +17,22 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     {
         await DeferAsync(ephemeral: false);
 
-        bool created = await Manager.CreateMatchEnvironmentAsync(matchId, referee, Context.Guild);
+        await using var db = new ModelsContext();
 
-        if (created)
-            await FollowupAsync($"Match **{matchId}** iniciado correctamente.");
+        if (await db.Referees.FirstOrDefaultAsync(r => r.DisplayName == referee) != null)
+        {
+            bool created = await Manager.CreateMatchEnvironmentAsync(matchId, referee, Context.Guild);
+
+            if (created)
+                await FollowupAsync($"Match **{matchId}** iniciado correctamente.");
+            else
+                await FollowupAsync($"El Match ID **{matchId}** ya está en curso.", ephemeral: true);
+        }
         else
-            await FollowupAsync($"El Match ID **{matchId}** ya está en curso.", ephemeral: true);
+        {
+            await FollowupAsync($"El Referee **{referee}** no existe.", ephemeral: true);
+        }
+        
     }
     
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
@@ -47,7 +59,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         await RespondAsync($"Referee **{nombre}** añadido/actualizado en la base de datos.\n" +
                            $"- OsuID: {osuId}\n" +
-                           $"- DiscordID: {discordId}");
+                           $"- DiscordID: {discordId}", ephemeral: true);
 
         await Manager.AddRefereeToDbAsync(model);
     }

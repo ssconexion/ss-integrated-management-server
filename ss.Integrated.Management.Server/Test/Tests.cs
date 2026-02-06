@@ -15,7 +15,7 @@ namespace ss.Integrated.Management.Server
 
             // 1. Crear Osu Users (Cache)
             var osuUser1 = new Models.OsuUser { Id = 727, DisplayName = "Qualifiers" };
-            var osuUser2 = new Models.OsuUser { Id = 12431, DisplayName = "A4" };
+            var osuUser2 = new Models.OsuUser { Id = 12431, DisplayName = "A5" };
 
             if (!db.Set<Models.OsuUser>().Any())
             {
@@ -67,20 +67,13 @@ namespace ss.Integrated.Management.Server
             // 4. CREAR EL MATCH
             var match = new Models.Match
             {
-                Id = "A5",
+                Id = "A6",
                 Type = Models.MatchType.QualifiersStage,
                 StartTime = DateTime.UtcNow,
                 TeamRedId = team1.Id,
                 TeamBlueId = team2.Id,
                 RoundId = roundTemplate.Id,
-                Referee = new Models.RefereeInfo
-                {
-                    Id = 1,
-                    DisplayName = "Furina",
-                    OsuID = 16393244,
-                    DiscordID = 404328124961128453,
-                    IRC = "77bc905b"
-                }
+                RefereeId = null,
             };
 
             if (!await db.Matches.AnyAsync(m => m.Id == match.Id))
@@ -95,7 +88,7 @@ namespace ss.Integrated.Management.Server
             }
 
             // LEER PARA COMPROBAR
-            var savedMatch = await db.Matches.FirstOrDefaultAsync(x => x.Id == "A4");
+            var savedMatch = await db.Matches.FirstOrDefaultAsync(x => x.Id == "A5");
             if (savedMatch != null)
             {
                 Console.WriteLine($"Leído de DB -> Red: {savedMatch.TeamRed.DisplayName} vs Blue: {savedMatch.TeamBlue.DisplayName}");
