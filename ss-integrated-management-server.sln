@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ss-integrated-management-server", "ss-integrated-management-server\ss-integrated-management-server.csproj", "{6019BB59-F133-4D8F-93D9-C032640292D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ss-integrated-management-server", "ss-integrated-management-server\ss.Integrated.Management.Server.csproj", "{6019BB59-F133-4D8F-93D9-C032640292D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
