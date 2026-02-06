@@ -11,11 +11,24 @@ public class ModelsContext : DbContext
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // TODO deshacer comentarios
+        // IMPORTANTE: En producción, los toTable se invierten para evitar creación de tablas nuevas
+        // Cómo se tendría que ver?
+        // 
+        // - Development:
+        //   entity.ToTable("matches");
+        //   //entity.ToTable("matches", t => t.ExcludeFromMigrations());
+        //
+        // - Producción:
+        //   //entity.ToTable("matches");
+        //   entity.ToTable("matches", t => t.ExcludeFromMigrations());
+        //
+        // Hay 5 de estos casos, asegúrate de revisarlos todos antes de nada.
         
         modelBuilder.Entity<Models.Match>(entity =>
-        {
+        { 
+            
             entity.ToTable("matches");
+            //entity.ToTable("matches", t => t.ExcludeFromMigrations());
             
             entity.OwnsOne(m => m.Round, roundSnapshotBuilder => 
             {
@@ -32,17 +45,26 @@ public class ModelsContext : DbContext
     
         // real shit
         modelBuilder.Entity<Models.TeamInfo>(e => {
+            
             e.ToTable("user"); 
+            //e.ToTable("user", t => t.ExcludeFromMigrations());
+            
             e.HasOne(t => t.OsuData).WithMany().HasForeignKey(t => t.OsuID);
             e.Navigation(t => t.OsuData).AutoInclude();
         });
 
         modelBuilder.Entity<Models.Round>(e => {
+            
             e.ToTable("round");
+            //e.ToTable("round", t => t.ExcludeFromMigrations());
+            
             e.OwnsMany(r => r.MapPool, b => b.ToJson());
         });
 
         modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees");
+        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
+        
         modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
+        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
     }
 }
