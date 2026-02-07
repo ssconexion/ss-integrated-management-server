@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ss.Internal.Management.Server.AutoRef;
@@ -53,6 +53,9 @@ public class Models
         [Column("start_time")]
         public DateTime StartTime { get; set; }
         
+        [Column("is_over")]
+        public bool IsOver { get; set; }
+        
         [Column("referee_id")]
         public int? RefereeId { get; set; }
         
@@ -83,7 +86,7 @@ public class Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("display_name")]
+        [Column("name")]
         public string DisplayName { get; set; }
 
         [Column("ban_rounds")]
@@ -99,7 +102,7 @@ public class Models
         public List<RoundBeatmap> MapPool { get; set; }
     }
 
-    [Table("user")]
+    [Table("users")]
     public class TeamInfo
     {
         [Key]
@@ -119,17 +122,20 @@ public class Models
         public string DisplayName => OsuData.DisplayName ?? "Desconocido";
     }
 
-    [Table("player")]
+    [Table("players")]
     public class PlayerInfo
     {
         [Key]
         [Column("id")]
         public int Id { get; set; }
-        
+
+        [Column("user_id")]
+        public int UserId { get; set; }
+
         [Column("qualifier_room_id")]
         public string QualifiersRoom { get; set; }
-        
-        [ForeignKey("Id")]
+
+        [ForeignKey("UserId")]
         public TeamInfo User { get; set; }
     }
 
@@ -160,7 +166,7 @@ public class Models
         [Column("osu_id")]
         public int OsuID { get; set; }
 
-        [Column("irc")]
+        [Column("irc_password")]
         public string IRC { get; set; }
     }
 
