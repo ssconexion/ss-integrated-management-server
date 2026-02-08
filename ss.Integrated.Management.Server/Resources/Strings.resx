@@ -75,4 +75,16 @@
     <data name="QualifiersOver" xml:space="preserve">
         <value>Qualifiers lobby finished. Thank you for playing!</value>
     </data>
+    <data name="WorkerInit" xml:space="preserve">
+        <value>Channel created for referee: **{0}**. Starting worker...</value>
+    </data>
+    <data name="AutorefError" xml:space="preserve">
+        <value>Error while executing AutoRef: `{0}`</value>
+    </data>
+    <data name="WorkerNotFound" xml:space="preserve">
+        <value>A worker couldn't be found matching that Match ID.</value>
+    </data>
+    <data name="DeletingChannel" xml:space="preserve">
+        <value>Deleting channel and killing thread...</value>
+    </data>
 </root>

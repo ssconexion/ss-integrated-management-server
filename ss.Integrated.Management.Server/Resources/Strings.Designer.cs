@@ -28,7 +28,7 @@ namespace ss.Internal.Management.Server.Resources {
         internal static System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.Equals(null, resourceMan)) {
-                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("ss.Internal.Management.Server.Localization.Resources.Strings", typeof(Strings).Assembly);
+                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("ss.Internal.Management.Server.Resources.Strings", typeof(Strings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -156,6 +156,30 @@ namespace ss.Internal.Management.Server.Resources {
         internal static string QualifiersOver {
             get {
                 return ResourceManager.GetString("QualifiersOver", resourceCulture);
+            }
+        }
+        
+        internal static string WorkerInit {
+            get {
+                return ResourceManager.GetString("WorkerInit", resourceCulture);
+            }
+        }
+        
+        internal static string AutorefError {
+            get {
+                return ResourceManager.GetString("AutorefError", resourceCulture);
+            }
+        }
+        
+        internal static string WorkerNotFound {
+            get {
+                return ResourceManager.GetString("WorkerNotFound", resourceCulture);
+            }
+        }
+        
+        internal static string DeletingChannel {
+            get {
+                return ResourceManager.GetString("DeletingChannel", resourceCulture);
             }
         }
     }

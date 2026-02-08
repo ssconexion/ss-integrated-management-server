@@ -75,4 +75,16 @@
     <data name="QualifiersOver" xml:space="preserve">
         <value>Lobby de qualifiers terminada. Gracias por jugar!</value>
     </data>
+    <data name="DeletingChannel" xml:space="preserve">
+        <value>Eliminando canal y cerrando proceso...</value>
+    </data>
+    <data name="WorkerInit" xml:space="preserve">
+        <value>Canal creado para Referee: **{0}**. Iniciando worker...</value>
+    </data>
+    <data name="WorkerNotFound" xml:space="preserve">
+        <value>No se encontró un worker activo con ese Match ID.</value>
+    </data>
+    <data name="AutorefError" xml:space="preserve">
+        <value>Error durante la ejecución del AutoRef: `{0}`</value>
+    </data>
 </root>
