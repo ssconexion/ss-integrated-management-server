@@ -141,7 +141,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     private async Task InitializeLobbySettings()
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp set 0 3 16");
-        await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName);
+        await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
     }
 
     private async Task ExecuteAdminCommand(string[] args)

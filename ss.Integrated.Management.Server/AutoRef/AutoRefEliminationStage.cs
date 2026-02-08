@@ -200,7 +200,7 @@ public partial class AutoRefEliminationStage : IAutoRef
     private async Task InitializeLobbySettings()
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp set 2 3 3");
-        await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName);
+        await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
     }
     
     private async Task ProcessFinalScores()
@@ -234,7 +234,7 @@ public partial class AutoRefEliminationStage : IAutoRef
     {
         Console.WriteLine("admin command ejecutando");
 
-        if (sender != currentMatch!.Referee.DisplayName) return;
+        if (sender != currentMatch!.Referee.DisplayName.Replace(' ', '_')) return;
 
         switch (args[0].ToLower())
         {
@@ -248,8 +248,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                 break;
 
             case "invite":
-                await SendMessageBothWays($"!mp invite {currentMatch!.TeamRed.DisplayName}");
-                await SendMessageBothWays($"!mp invite {currentMatch!.TeamBlue.DisplayName}");
+                await SendMessageBothWays($"!mp invite {currentMatch!.TeamRed.DisplayName.Replace(' ', '_')}");
+                await SendMessageBothWays($"!mp invite {currentMatch!.TeamBlue.DisplayName.Replace(' ', '_')}");
                 break;
 
             case "start":
