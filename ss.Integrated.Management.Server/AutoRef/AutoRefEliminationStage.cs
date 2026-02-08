@@ -434,12 +434,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (firstPick == TeamColor.TeamRed)
             {
-                await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
+                await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
                 state = MatchState.WaitingForPickRed;
             }
             else
             {
-                await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
+                await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                 state = MatchState.WaitingForPickBlue;
             }
 

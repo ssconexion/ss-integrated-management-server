@@ -55,7 +55,7 @@
         <value>El equipo rojo ha baneado el {0}.</value>
     </data>
     <data name="RedPicked" xml:space="preserve">
-        <value>El equipo rojo ha baneado el {0}.</value>
+        <value>El equipo rojo ha pickeado el {0}.</value>
     </data>
     <data name="RedWins" xml:space="preserve">
         <value>El equipo rojo gana el mapa! ({0} vs. {1})</value>
@@ -70,7 +70,7 @@
         <value>first_pick rellenado satisfactoriamente.</value>
     </data>
     <data name="QualifiersAutoEngage" xml:space="preserve">
-        <value>Activando el modo autoreferee para fase clasificatoria, Lobby {0}. Usa '!panic' si necesitas intervención humana y un referee estará contigo con la mayor brevedad posible.</value>
+        <value>Activando el modo autoreferee para fase clasificatoria, Lobby {0}. Usa '!panic' si necesitas intervención humana y un referee estará contigo a la mayor brevedad posible.</value>
     </data>
     <data name="QualifiersOver" xml:space="preserve">
         <value>Lobby de qualifiers terminada. Gracias por jugar!</value>

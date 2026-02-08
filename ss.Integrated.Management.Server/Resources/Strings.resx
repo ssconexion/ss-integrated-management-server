@@ -52,10 +52,10 @@
         <value>GGWP! {0} wins the match!</value>
     </data>
     <data name="PickCall" xml:space="preserve">
-        <value>Please {0}, state in chat your PICK (ej.: NM1, HD2)</value>
+        <value>Please {0}, state in chat your PICK (eg.: NM1, HD2)</value>
     </data>
     <data name="BanCall" xml:space="preserve">
-        <value>Please {0}, state in chat your BAN (ej.: NM1, HD2)</value>
+        <value>Please {0}, state in chat your BAN (eg.: NM1, HD2)</value>
     </data>
     <data name="RedBanned" xml:space="preserve">
         <value>Team Red has banned {0}.</value>
