@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="BackToAuto" xml:space="preserve">
+        <value>Volviendo al modo auto. Empezando en breve...</value>
+    </data>
+    <data name="BanCall" xml:space="preserve">
+        <value>Por favor, {0}, indica en el chat tu BAN (ej.: NM1, HD2)</value>
+    </data>
+    <data name="BlueBanned" xml:space="preserve">
+        <value>El equipo azul ha baneado el {0}.</value>
+    </data>
+    <data name="BluePicked" xml:space="preserve">
+        <value>El equipo azul ha pickeado el {0}.</value>
+    </data>
+    <data name="BlueWins" xml:space="preserve">
+        <value>El equipo azul gana el mapa! ({0} vs. {1})</value>
+    </data>
+    <data name="EngagingAuto" xml:space="preserve">
+        <value>Activando el modo autoreferee para fase eliminatoria, Lobby {0}</value>
+    </data>
+    <data name="MatchWin" xml:space="preserve">
+        <value>GGWP! {0} gana el partido!</value>
+    </data>
+    <data name="NotEnoughArgs" xml:space="preserve">
+        <value>Insuficientes argumentos.</value>
+    </data>
+    <data name="Panic" xml:space="preserve">
+        <value>&lt;@&amp;{0}&gt;, {1} ha solicitado intervención humana. El modo auto ha sido deshabilitado, para reanudarlo usa !panic_over</value>
+    </data>
+    <data name="PickCall" xml:space="preserve">
+        <value>Por favor, {0}, indica en el chat tu PICK (ej.: NM1, HD2)</value>
+    </data>
+    <data name="PropertiesNotInit" xml:space="preserve">
+        <value>Propiedades no inicializadas. Rellena first_ban y first_pick</value>
+    </data>
+    <data name="RedBanned" xml:space="preserve">
+        <value>El equipo rojo ha baneado el {0}.</value>
+    </data>
+    <data name="RedPicked" xml:space="preserve">
+        <value>El equipo rojo ha baneado el {0}.</value>
+    </data>
+    <data name="RedWins" xml:space="preserve">
+        <value>El equipo rojo gana el mapa! ({0} vs. {1})</value>
+    </data>
+    <data name="SecondBanRound" xml:space="preserve">
+        <value>La segunda ronda de bans va a comenzar</value>
+    </data>
+    <data name="SuccessfulFirstBan" xml:space="preserve">
+        <value>first_ban rellenado satisfactoriamente.</value>
+    </data>
+    <data name="SuccessfulFirstPick" xml:space="preserve">
+        <value>first_pick rellenado satisfactoriamente.</value>
+    </data>
+</root>
