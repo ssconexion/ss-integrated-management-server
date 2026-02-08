@@ -232,8 +232,23 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
 
         currentMapScores.Clear();
+
         await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
+    }
+
+    private async Task SendMatchStatus()
+    {
+        string bannedmaps = bannedMaps.Any() ? string.Join(", ", bannedMaps.Select(m => m.Slot)) : "None";
+        string pickedmaps = pickedMaps.Any() ? string.Join(", ", pickedMaps.Select(m => m.Slot)) : "None";
+        string availablemaps = string.Join(", ", currentMatch!.Round.MapPool
+            .Where(m =>
+                !pickedMaps.Any(p => p.Slot == m.Slot) &&
+                !bannedMaps.Any(p => p.Slot == m.Slot))
+            .Select(m => m.Slot));
+
+        await SendMessageBothWays($"Bans: {bannedmaps} | Picks: {pickedmaps}");
         await Task.Delay(250);
+        await SendMessageBothWays($"Available: {availablemaps}");
     }
 
     private async Task ExecuteAdminCommand(string sender, string[] args)
@@ -255,7 +270,12 @@ public partial class AutoRefEliminationStage : IAutoRef
 
             case "invite":
                 await SendMessageBothWays($"!mp invite {currentMatch!.TeamRed.DisplayName.Replace(' ', '_')}");
+                await Task.Delay(250);
                 await SendMessageBothWays($"!mp invite {currentMatch!.TeamBlue.DisplayName.Replace(' ', '_')}");
+                break;
+            
+            case "maps":
+                await SendMatchStatus();
                 break;
 
             case "start":
@@ -341,7 +361,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                       bannedMaps.Find(beatmap => beatmap.Slot == content.ToUpper()) == null &&
                       pickedMaps.Find(beatmap => beatmap.Slot == content.ToUpper()) == null &&
                       content.ToUpper() != "TB1";
-        
+
         return canAdd;
     }
 
@@ -369,11 +389,15 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (firstBan == TeamColor.TeamRed)
             {
                 await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
+                await Task.Delay(250);
+                await SendMatchStatus();
                 state = MatchState.WaitingForBanRed;
             }
             else
             {
                 await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
+                await Task.Delay(250);
+                await SendMatchStatus();
                 state = MatchState.WaitingForBanBlue;
             }
         }
@@ -396,6 +420,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                 {
                     state = MatchState.WaitingForBanBlue;
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
+                    await Task.Delay(250);
+                    await SendMatchStatus();
                 }
             }
 
@@ -420,6 +446,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                 {
                     state = MatchState.WaitingForBanRed;
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
+                    await Task.Delay(250);
+                    await SendMatchStatus();
                 }
             }
 
@@ -435,11 +463,15 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (firstPick == TeamColor.TeamRed)
             {
                 await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
+                await Task.Delay(250);
+                await SendMatchStatus();
                 state = MatchState.WaitingForPickRed;
             }
             else
             {
                 await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
+                await Task.Delay(250);
+                await SendMatchStatus();
                 state = MatchState.WaitingForPickBlue;
             }
 
@@ -519,11 +551,15 @@ public partial class AutoRefEliminationStage : IAutoRef
                     if (lastPick == TeamColor.TeamRed)
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
+                        await Task.Delay(250);
+                        await SendMatchStatus();
                         state = MatchState.WaitingForPickBlue;
                     }
                     else
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
+                        await Task.Delay(250);
+                        await SendMatchStatus();
                         state = MatchState.WaitingForPickRed;
                     }
                 }
