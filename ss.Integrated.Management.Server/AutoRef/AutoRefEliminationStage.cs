@@ -26,9 +26,9 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private List<Models.RoundChoice> bannedMaps = [];
     private List<Models.RoundChoice> pickedMaps = [];
-    
+
     private Dictionary<string, int> currentMapScores = new(); // Nickname -> Score
-    
+
     private TeamColor lastPick = TeamColor.None;
 
     private MatchState state;
@@ -75,7 +75,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
             currentMatch.TeamRed = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamRedId);
             currentMatch.TeamBlue = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamBlueId);
-            
+
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
         }
 
@@ -151,6 +151,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             {
                 // Regex para extraer Nick y Score
                 var match = Regex.Match(content, @"^(.*) finished playing \(Score: (\d+),");
+
                 if (match.Success)
                 {
                     string nick = match.Groups[1].Value;
@@ -158,14 +159,16 @@ public partial class AutoRefEliminationStage : IAutoRef
                     currentMapScores[nick] = score;
                 }
             }
-            
+
             if (content.Contains("The match has finished!"))
             {
                 await ProcessFinalScores();
             }
 
             await Task.Delay(250);
-        };
+        }
+
+        ;
 
         // REGIÓN DEDICADA AL !PANIC. ESTÁ DESACOPLADA DEL RESTO POR SER UN CASO DE EMERGENCIA
         // QUE NO DEBERÍA CAER EN NINGUNA OTRA SUBRUTINA
@@ -186,7 +189,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
 
         _ = TryStateChange(senderNick, content);
-        
+
         if (content.StartsWith('>'))
         {
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
@@ -203,7 +206,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp set 2 3 3");
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
     }
-    
+
     private async Task ProcessFinalScores()
     {
         long redTotal = 0;
@@ -216,7 +219,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             else if (player.Key.Equals(currentMatch.TeamBlue.DisplayName, StringComparison.OrdinalIgnoreCase))
                 blueTotal += player.Value;
         }
-        
+
         if (redTotal > blueTotal)
         {
             matchScore[0]++;
@@ -227,8 +230,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             matchScore[1]++;
             await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
         }
-        
+
         currentMapScores.Clear();
+        await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName}");
     }
 
     private async Task ExecuteAdminCommand(string sender, string[] args)
@@ -325,6 +329,21 @@ public partial class AutoRefEliminationStage : IAutoRef
         return found;
     }
 
+    private bool IsMapAvailable(string content)
+    {
+        // Un mapa a la hora de pickearse debería cumplir siempre las siguientes condiciones:
+        // - Debe existir en la pool actual
+        // - No debe estar baneado previamente
+        // - No debe estar pickeado previamente
+        // - No puede ser el Tiebreaker (esto lo manejamos por otro lado)
+        bool canAdd = currentMatch!.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null &&
+                      bannedMaps.Find(beatmap => beatmap.Slot == content.ToUpper()) == null &&
+                      pickedMaps.Find(beatmap => beatmap.Slot == content.ToUpper()) == null &&
+                      content.ToUpper() != "TB1";
+        
+        return canAdd;
+    }
+
     private async Task PreparePick(string slot)
     {
         var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot);
@@ -358,9 +377,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             }
         }
 
-        if (state == MatchState.WaitingForBanRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ','_'))
+        if (state == MatchState.WaitingForBanRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_'))
         {
-            if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
+            if (IsMapAvailable(content))
             {
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedBanned, content.ToUpper()));
@@ -377,15 +396,14 @@ public partial class AutoRefEliminationStage : IAutoRef
                     state = MatchState.WaitingForBanBlue;
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 }
-                
             }
-            
+
             return;
         }
 
-        if (state == MatchState.WaitingForBanBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ','_'))
+        if (state == MatchState.WaitingForBanBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_'))
         {
-            if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
+            if (IsMapAvailable(content))
             {
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BlueBanned, content.ToUpper()));
@@ -403,7 +421,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 }
             }
-            
+
             return;
         }
 
@@ -423,35 +441,38 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                 state = MatchState.WaitingForPickBlue;
             }
+
             return;
         }
 
-        if (state == MatchState.WaitingForPickRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ','_'))
+        if (state == MatchState.WaitingForPickRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_'))
         {
-            if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
+            if (IsMapAvailable(content))
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
                 lastPick = TeamColor.TeamRed;
             }
+
             return;
         }
 
-        if (state == MatchState.WaitingForPickBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ','_'))
+        if (state == MatchState.WaitingForPickBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_'))
         {
-            if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
+            if (IsMapAvailable(content))
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
                 lastPick = TeamColor.TeamBlue;
             }
+
             return;
         }
 
         #endregion
-        
+
         if (state == MatchState.WaitingForStart)
         {
             if ((content.Contains("All players are ready") || content.Contains("Countdown finished")) && sender == "BanchoBot")
@@ -464,7 +485,6 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (content.Contains("The match has finished"))
             {
-
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
                     state = MatchState.BanPhaseStart;
@@ -478,8 +498,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                         return;
                     }
 
-                    bool redwin = matchScore[0] == ((currentMatch.Round.BestOf - 1) / 2) + 1;
-                    bool bluewin = matchScore[1] == ((currentMatch.Round.BestOf - 1) / 2) + 1;
+                    bool redwin = matchScore[0] == (currentMatch.Round.BestOf - 1) / 2 + 1;
+                    bool bluewin = matchScore[1] == (currentMatch.Round.BestOf - 1) / 2 + 1;
 
                     if (redwin)
                     {
