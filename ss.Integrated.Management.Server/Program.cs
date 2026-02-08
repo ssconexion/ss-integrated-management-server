@@ -1,4 +1,5 @@
-﻿using DotNetEnv;
+﻿using System.Globalization;
+using DotNetEnv;
 using ss.Internal.Management.Server.Discord;
 
 namespace ss.Internal.Management.Server
@@ -12,6 +13,8 @@ namespace ss.Internal.Management.Server
 			Console.WriteLine("hola server de jd");
 
 			Env.Load();
+
+			CultureInfo.CurrentUICulture = new CultureInfo(Environment.GetEnvironmentVariable("LANGUAGE") ?? "en");
 			
 			var manager = new DiscordManager(Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN") ?? throw new InvalidOperationException());
 			await manager.StartAsync();

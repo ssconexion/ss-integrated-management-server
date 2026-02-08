@@ -2,6 +2,7 @@
 using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.AutoRef;
 
@@ -69,8 +70,8 @@ public partial class AutoRefEliminationStage : IAutoRef
     {
         await using (var db = new ModelsContext())
         {
-            currentMatch = await db.MatchRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match no encontrado en DB");
-            currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee no encontrado en DB");
+            currentMatch = await db.MatchRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
+            currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
 
             currentMatch.TeamRed = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamRedId);
             currentMatch.TeamBlue = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamBlueId);
@@ -171,7 +172,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         if (content.Contains("!panic_over"))
         {
-            await SendMessageBothWays("Going back to auto mode. Starting soon...");
+            await SendMessageBothWays(Strings.BackToAuto);
             state = MatchState.WaitingForStart;
             await SendMessageBothWays("!mp timer 10");
         }
@@ -181,7 +182,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
-                $"<@&{Environment.GetEnvironmentVariable("DISCORD_REFEREE_ROLE_ID")}>, {senderNick} has requested human intervention. Auto mode has been disabled, resume it with !panic_over");
+                string.Format(Strings.Panic, Environment.GetEnvironmentVariable("DISCORD_REFEREE_ROLE_ID"), senderNick));
         }
 
         _ = TryStateChange(senderNick, content);
@@ -219,12 +220,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         if (redTotal > blueTotal)
         {
             matchScore[0]++;
-            await SendMessageBothWays($"Team Red wins the map! ({redTotal} vs {blueTotal})");
+            await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
         }
         else
         {
             matchScore[1]++;
-            await SendMessageBothWays($"Team Blue wins the map! ({blueTotal} vs {redTotal})");
+            await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
         }
         
         currentMapScores.Clear();
@@ -232,7 +233,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private async Task ExecuteAdminCommand(string sender, string[] args)
     {
-        Console.WriteLine("admin command ejecutando");
+        Console.WriteLine("admin command is being executed");
 
         if (sender != currentMatch!.Referee.DisplayName.Replace(' ', '_')) return;
 
@@ -255,11 +256,11 @@ public partial class AutoRefEliminationStage : IAutoRef
             case "start":
                 if (firstPick == TeamColor.None || firstBan == TeamColor.None)
                 {
-                    await SendMessageFromDiscord("Properties not initialized. Set both first_ban and first_pick");
+                    await SendMessageFromDiscord(Strings.PropertiesNotInit);
                     return;
                 }
 
-                await SendMessageBothWays($"Engaging autoreferee mode for Elimination Stage, Lobby {currentMatch!.Id}");
+                await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
                 state = MatchState.BanPhaseStart;
                 auto = true;
                 break;
@@ -268,11 +269,11 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (args.Length > 1)
                 {
                     firstPick = args[1] == "red" ? TeamColor.TeamRed : TeamColor.TeamBlue;
-                    await SendMessageBothWays("Set first_pick successfully");
+                    await SendMessageBothWays(Strings.SuccessfulFirstPick);
                 }
                 else
                 {
-                    await SendMessageBothWays("Not enough arguments.");
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
                 }
 
                 break;
@@ -281,11 +282,11 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (args.Length > 1)
                 {
                     firstBan = args[1] == "red" ? TeamColor.TeamRed : TeamColor.TeamBlue;
-                    await SendMessageBothWays("Set first_ban successfully");
+                    await SendMessageBothWays(Strings.SuccessfulFirstBan);
                 }
                 else
                 {
-                    await SendMessageBothWays("Not enough arguments.");
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
                 }
 
                 break;
@@ -347,12 +348,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (firstBan == TeamColor.TeamRed)
             {
-                await SendMessageBothWays($"Please {currentMatch!.TeamRed.DisplayName}, state in chat your BAN (ej.: NM1, HD2)");
+                await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 state = MatchState.WaitingForBanRed;
             }
             else
             {
-                await SendMessageBothWays($"Please {currentMatch!.TeamBlue.DisplayName}, state in chat your BAN (ej.: NM1, HD2)");
+                await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 state = MatchState.WaitingForBanBlue;
             }
         }
@@ -362,7 +363,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
             {
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
-                await SendMessageBothWays($"Red has picked {content.ToUpper()} for their ban.");
+                await SendMessageBothWays(string.Format(Strings.RedBanned, content.ToUpper()));
                 await Task.Delay(250);
                 repeat--;
 
@@ -374,7 +375,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 else
                 {
                     state = MatchState.WaitingForBanBlue;
-                    await SendMessageBothWays($"Please {currentMatch!.TeamBlue.DisplayName}, state in chat your BAN (ej.: NM1, HD2)");
+                    await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 }
                 
             }
@@ -387,7 +388,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
             {
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
-                await SendMessageBothWays($"Blue has picked {content.ToUpper()} for their ban.");
+                await SendMessageBothWays(string.Format(Strings.BlueBanned, content.ToUpper()));
                 await Task.Delay(250);
                 repeat--;
 
@@ -399,7 +400,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 else
                 {
                     state = MatchState.WaitingForBanRed;
-                    await SendMessageBothWays($"Please {currentMatch!.TeamRed.DisplayName}, state in chat your BAN (ej.: NM1, HD2)");
+                    await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 }
             }
             
@@ -414,12 +415,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (firstPick == TeamColor.TeamRed)
             {
-                await SendMessageBothWays($"Please {currentMatch!.TeamRed.DisplayName}, state in chat you PICK (ej.: NM1, HD2)");
+                await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
                 state = MatchState.WaitingForPickRed;
             }
             else
             {
-                await SendMessageBothWays($"Please {currentMatch!.TeamBlue.DisplayName}, state in chat you PICK (ej.: NM1, HD2)");
+                await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                 state = MatchState.WaitingForPickBlue;
             }
         }
@@ -429,7 +430,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
-                await SendMessageBothWays($"Red has picked {content.ToUpper()} for their PICK.");
+                await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
                 lastPick = TeamColor.TeamRed;
             }
@@ -439,7 +440,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (currentMatch.Round.MapPool.Find(beatmap => beatmap.Slot == content.ToUpper()) != null)
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
-                await SendMessageBothWays($"Blue has picked {content.ToUpper()} for their PICK");
+                await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
                 lastPick = TeamColor.TeamBlue;
             }
@@ -463,7 +464,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
                     state = MatchState.BanPhaseStart;
-                    await SendMessageBothWays("Second ban round is about to start");
+                    await SendMessageBothWays(Strings.SecondBanRound);
                 }
                 else
                 {
@@ -477,14 +478,14 @@ public partial class AutoRefEliminationStage : IAutoRef
 
                     if (redwin)
                     {
-                        await SendMessageBothWays($"GGWP! {currentMatch!.TeamRed.DisplayName} wins the match!");
+                        await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
                         state = MatchState.MatchFinished;
                         return;
                     }
 
                     if (bluewin)
                     {
-                        await SendMessageBothWays($"GGWP! {currentMatch!.TeamBlue.DisplayName} wins the match!");
+                        await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                         state = MatchState.MatchFinished;
                         return;
                     }
@@ -492,12 +493,12 @@ public partial class AutoRefEliminationStage : IAutoRef
                     if (lastPick == TeamColor.TeamRed)
                     {
                         state = MatchState.WaitingForPickBlue;
-                        await SendMessageBothWays($"Please {currentMatch!.TeamBlue.DisplayName}, state in chat you PICK (ej.: NM1, HD2)");
+                        await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                     }
                     else
                     {
                         state = MatchState.WaitingForPickRed;
-                        await SendMessageBothWays($"Please {currentMatch!.TeamRed.DisplayName}, state in chat you PICK (ej.: NM1, HD2)");
+                        await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
                     }
                 }
             }

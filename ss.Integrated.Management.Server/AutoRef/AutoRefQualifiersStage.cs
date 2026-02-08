@@ -1,6 +1,7 @@
 ﻿using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.AutoRef;
 
@@ -42,8 +43,8 @@ public partial class AutoRefQualifiersStage : IAutoRef
     {
         await using (var db = new ModelsContext())
         {
-            currentMatch = await db.QualifierRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match no encontrado en DB");
-            currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee no encontrado en DB");
+            currentMatch = await db.QualifierRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
+            currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
         }
 
         await ConnectToBancho();
@@ -114,7 +115,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
 
         if (content.Contains("!panic_over"))
         {
-            await SendMessageBothWays("Going back to auto mode. Starting soon...");
+            await SendMessageBothWays(Strings.BackToAuto);
             state = MatchState.WaitingForStart;
             await SendMessageBothWays("!mp timer 10");
         }
@@ -124,7 +125,8 @@ public partial class AutoRefQualifiersStage : IAutoRef
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
-                $"<@&{Environment.GetEnvironmentVariable("DISCORD_REFEREE_ROLE_ID")}>, {senderNick} has requested human intervention. Auto mode has been disabled, resume it with !panic_over");
+                string.Format(Strings.Panic, Environment.GetEnvironmentVariable("DISCORD_REFEREE_ROLE_ID"), senderNick)
+                );
         }
 
         if (content.StartsWith('>'))
@@ -146,7 +148,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
 
     private async Task ExecuteAdminCommand(string[] args)
     {
-        Console.WriteLine("admin command ejecutando");
+        Console.WriteLine("admin command is being executed");
 
         switch (args[0].ToLower())
         {
@@ -158,7 +160,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
                 break;
             case "start":
                 await SendMessageBothWays(
-                    $"Engaging autoreferee mode for Qualifiers, Lobby {currentMatch!.Id}. Use '!panic' if you need human intervention and a referee will get back to you ASAP");
+                    string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
                 _ = StartQualifiersFlow();
                 break;
         }
@@ -230,7 +232,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     {
         if (currentMapIndex >= currentMatch!.Round.MapPool.Count)
         {
-            await SendMessageBothWays("Qualifiers lobby finished. Thank you for playing!");
+            await SendMessageBothWays(Strings.QualifiersOver);
             state = MatchState.MatchFinished;
             return;
         }

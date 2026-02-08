@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using ss.Integrated.Management.Server;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.Discord;
 
@@ -56,7 +57,7 @@ public class DiscordManager
 
         await interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
 
-        Console.WriteLine("DoloresRelay iniciado y servicios cargados.");
+        Console.WriteLine("DoloresRelay initialized and services loaded.");
     }
 
     private async Task ReadyAsync()
@@ -64,11 +65,11 @@ public class DiscordManager
         try
         {
             await interactionService.RegisterCommandsToGuildAsync(guildId);
-            Console.WriteLine($"Comandos Slash registrados en Guild: {guildId}");
+            Console.WriteLine($"Slash commands registered in Guild: {guildId}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error registrando comandos: {ex.Message}");
+            Console.WriteLine($"Error while registering a command: {ex.Message}");
         }
     }
 
@@ -82,7 +83,7 @@ public class DiscordManager
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error ejecutando comando: {ex}");
+            Console.WriteLine($"Error while executing a command: {ex}");
 
             if (interaction.Type == InteractionType.ApplicationCommand)
                 await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
@@ -107,7 +108,7 @@ public class DiscordManager
         
         activeMatches.TryAdd(matchId, worker);
 
-        await newChannel.SendMessageAsync($"Canal creado para Referee: **{referee}**. Iniciando worker...");
+        await newChannel.SendMessageAsync(string.Format(Strings.WorkerInit, referee));
 
         try
         {
@@ -115,7 +116,7 @@ public class DiscordManager
         }
         catch (Exception ex)
         {
-            await newChannel.SendMessageAsync($"Error durante la ejecución del AutoRef: `{ex.Message}`");
+            await newChannel.SendMessageAsync(string.Format(Strings.AutorefError, ex.Message));
         }
 
         return true;
@@ -126,11 +127,11 @@ public class DiscordManager
         if (activeMatches.TryRemove(matchId, out var worker))
         {
             // TODO parar AutoRef thread 
-            Console.WriteLine($"Worker {matchId} eliminado de memoria.");
+            Console.WriteLine($"Worker {matchId} deleted from memory.");
         }
         else
         {
-            await requestChannel.SendMessageAsync("No se encontró un worker activo con ese Match ID.");
+            await requestChannel.SendMessageAsync(Strings.WorkerNotFound);
             return;
         }
 
@@ -140,7 +141,7 @@ public class DiscordManager
 
             if (channel != null)
             {
-                await requestChannel.SendMessageAsync("Eliminando canal y cerrando proceso...");
+                await requestChannel.SendMessageAsync(Strings.DeletingChannel);
                 await Task.Delay(3000);
                 await channel.DeleteAsync();
             }
