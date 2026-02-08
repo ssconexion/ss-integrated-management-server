@@ -69,4 +69,10 @@
     <data name="SuccessfulFirstPick" xml:space="preserve">
         <value>first_pick rellenado satisfactoriamente.</value>
     </data>
+    <data name="QualifiersAutoEngage" xml:space="preserve">
+        <value>Activando el modo autoreferee para fase clasificatoria, Lobby {0}. Usa '!panic' si necesitas intervención humana y un referee estará contigo con la mayor brevedad posible.</value>
+    </data>
+    <data name="QualifiersOver" xml:space="preserve">
+        <value>Lobby de qualifiers terminada. Gracias por jugar!</value>
+    </data>
 </root>

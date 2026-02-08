@@ -69,4 +69,10 @@
     <data name="BluePicked" xml:space="preserve">
         <value>Team Blue has picked {0}.</value>
     </data>
+    <data name="QualifiersAutoEngage" xml:space="preserve">
+        <value>Engaging autoreferee mode for Qualifiers, Lobby {0}. Use '!panic' if you need human intervention and a referee will get back to you ASAP</value>
+    </data>
+    <data name="QualifiersOver" xml:space="preserve">
+        <value>Qualifiers lobby finished. Thank you for playing!</value>
+    </data>
 </root>

@@ -28,7 +28,7 @@ namespace ss.Internal.Management.Server.Resources {
         internal static System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.Equals(null, resourceMan)) {
-                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("ss.Internal.Management.Server.Resources.Strings_es", typeof(Strings_es).Assembly);
+                    System.Resources.ResourceManager temp = new System.Resources.ResourceManager("ss.Internal.Management.Server.Localization.Resources.Strings_es", typeof(Strings_es).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -144,6 +144,18 @@ namespace ss.Internal.Management.Server.Resources {
         internal static string SuccessfulFirstPick {
             get {
                 return ResourceManager.GetString("SuccessfulFirstPick", resourceCulture);
+            }
+        }
+        
+        internal static string QualifiersAutoEngage {
+            get {
+                return ResourceManager.GetString("QualifiersAutoEngage", resourceCulture);
+            }
+        }
+        
+        internal static string QualifiersOver {
+            get {
+                return ResourceManager.GetString("QualifiersOver", resourceCulture);
             }
         }
     }
