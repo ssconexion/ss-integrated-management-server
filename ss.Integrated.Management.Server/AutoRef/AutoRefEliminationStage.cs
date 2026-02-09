@@ -37,6 +37,8 @@ public partial class AutoRefEliminationStage : IAutoRef
     private MatchState currentState;
     private MatchState previousState;
 
+    private bool stoppedPreviously;
+
     private TaskCompletionSource<string>? chatResponseTcs;
 
     private readonly Action<string, string> msgCallback;
@@ -117,7 +119,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         client.OnAuthenticated += () =>
         {
-            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: jowjowosu vs methalox", false);
+            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: ({currentMatch.TeamRed.DisplayName}) vs ({currentMatch.TeamBlue.DisplayName})", true);
         };
 
         await client.ConnectAsync();
@@ -143,8 +145,6 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         //string target = msg.Parameters[0];
         string content = msg.Parameters[1];
-
-        Console.WriteLine($"{senderNick}: {content}");
 
         if (joined) msgCallback(matchId, $"**[{senderNick}]** {content}");
 
@@ -190,8 +190,6 @@ public partial class AutoRefEliminationStage : IAutoRef
 
             await Task.Delay(250);
         }
-
-        ;
 
         // REGIÓN DEDICADA AL !PANIC. ESTÁ DESACOPLADA DEL RESTO POR SER UN CASO DE EMERGENCIA
         // QUE NO DEBERÍA CAER EN NINGUNA OTRA SUBRUTINA
@@ -281,8 +279,6 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private async Task ExecuteAdminCommand(string sender, string[] args)
     {
-        Console.WriteLine("admin command is being executed");
-
         if (sender != currentMatch!.Referee.DisplayName.Replace(' ', '_')) return;
 
         switch (args[0].ToLower())
@@ -306,6 +302,16 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await SendMatchStatus();
                 break;
             
+            case "setmap":
+                if (currentState != MatchState.Idle)
+                {
+                    await SendMessageBothWays("Auto is engaged, disable auto mode to manually set maps.");
+                    break;
+                }
+                await PreparePick(args[1]);
+                currentState = MatchState.Idle;
+                break;
+            
             case "timeout":
                 await SendMessageBothWays("Timeout requested by the referee of the match. Time will be added after the timer runs out");
                 await Task.Delay(250);
@@ -320,9 +326,37 @@ public partial class AutoRefEliminationStage : IAutoRef
                     return;
                 }
 
-                await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
-                currentState = MatchState.BanPhaseStart;
+                if (currentState != MatchState.Idle)
+                {
+                    await SendMessageBothWays("Auto already engaged. Disable it with '>stop'.");
+                    break;
+                }
+                
+                if (!stoppedPreviously)
+                {
+                    await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
+                    currentState = MatchState.BanPhaseStart;
+                }
+                else
+                {
+                    await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
+                    currentState = previousState;
+                    stoppedPreviously = false;
+                }
+
                 await TryStateChange("a", "a"); // esto es lo más peruano que he hecho pero adivina que, funciona
+                break;
+
+            case "stop":
+                if (currentState == MatchState.Idle)
+                {
+                    await SendMessageBothWays("Auto is not engaged already.");
+                    break;
+                }
+                await SendMessageBothWays("Stopping auto mode...");
+                previousState = currentState;
+                currentState = MatchState.Idle;
+                stoppedPreviously = true;
                 break;
 
             case "firstpick":
