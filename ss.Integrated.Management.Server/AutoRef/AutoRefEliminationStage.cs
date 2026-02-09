@@ -105,12 +105,30 @@ public partial class AutoRefEliminationStage : IAutoRef
             _ = HandleIrcMessage(message);
         };
 
+        client.OnPrivateMessageSent += message =>
+        {
+            _ = PeruTrim(message);
+        };
+
         client.OnAuthenticated += () =>
         {
             _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: jowjowosu vs methalox", false);
         };
 
         await client.ConnectAsync();
+    }
+
+    private async Task PeruTrim(IIrcMessage msg)
+    {
+        string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
+        string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
+
+        string content = msg.Parameters[1];
+
+        if (content.StartsWith('>'))
+        {
+            await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
+        }
     }
 
     private async Task HandleIrcMessage(IIrcMessage msg)
@@ -196,6 +214,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
     }
 
+
     public async Task SendMessageFromDiscord(string content)
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, content);
@@ -233,13 +252,15 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         currentMapScores.Clear();
 
-        await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
+        await SendMessageBothWays(
+            $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
     }
 
     private async Task SendMatchStatus()
     {
         string bannedmaps = bannedMaps.Any() ? string.Join(", ", bannedMaps.Select(m => m.Slot)) : "None";
         string pickedmaps = pickedMaps.Any() ? string.Join(", ", pickedMaps.Select(m => m.Slot)) : "None";
+
         string availablemaps = string.Join(", ", currentMatch!.Round.MapPool
             .Where(m =>
                 !pickedMaps.Any(p => p.Slot == m.Slot) &&
@@ -273,7 +294,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await Task.Delay(250);
                 await SendMessageBothWays($"!mp invite {currentMatch!.TeamBlue.DisplayName.Replace(' ', '_')}");
                 break;
-            
+
             case "maps":
                 await SendMatchStatus();
                 break;

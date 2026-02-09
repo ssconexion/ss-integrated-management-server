@@ -164,10 +164,11 @@ public class DiscordManager
             if (message.Channel.Id == channelid)
             {
                 var msgToIRC = message.Content;
-                
-                bool isCommand = message.Content.StartsWith("!") || message.Content.StartsWith(">");
+
+                bool isCommand = msgToIRC.StartsWith("!");
+                bool interaction = msgToIRC.StartsWith(">");
                     
-                if (!isCommand) msgToIRC = $"[DISCORD | {message.Author.Username}] {message.Content}";
+                if (!isCommand && !interaction) msgToIRC = $"[DISCORD | {message.Author.Username}] {message.Content}";
 
                 // Busca la instancia de autoref asociada al canal al que se envia el mensaje
                 var key = activeChannels.FirstOrDefault(m => m.Value == channelid).Key;
