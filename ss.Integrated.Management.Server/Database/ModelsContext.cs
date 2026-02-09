@@ -10,6 +10,7 @@ public class ModelsContext : DbContext
     public DbSet<Models.PlayerInfo> Players { get; set; }
     public DbSet<Models.TeamInfo> Users { get; set; }
     public DbSet<Models.Round> Rounds { get; set; }
+    public DbSet<Models.ScoreResults> Scores { get; set; }
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -69,5 +70,8 @@ public class ModelsContext : DbContext
 
         modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
         //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
+        
+        modelBuilder.Entity<Models.ScoreResults>().ToTable("scores");
+        //modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());
     }
 }

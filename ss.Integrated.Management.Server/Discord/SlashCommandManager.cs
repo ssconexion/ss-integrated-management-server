@@ -12,7 +12,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     public DiscordManager Manager { get; set; }
     
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("startref", "Inicia un nuevo match y crea su canal")]
+    [SlashCommand("startref", "Inicia un nuevo match y crea su thread")]
     public async Task StartRefAsync(string matchId, string referee, Models.MatchType matchType)
     {
         await DeferAsync(ephemeral: false);
@@ -36,12 +36,25 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
     
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("endref", "Finaliza el match y borra el canal")]
+    [SlashCommand("endref", "Finaliza el match y archiva el thread")]
     public async Task EndRefAsync(string matchId)
     {
-        await RespondAsync($"Procesando cierre para **{matchId}**...");
         
-        await Manager.EndMatchEnvironmentAsync(matchId, Context.Channel);
+        await DeferAsync(ephemeral: false);
+        
+        await using var db = new ModelsContext();
+
+        if (db.MatchRooms.First(m => m.Id == matchId).IsOver)
+        {
+            await RespondAsync($"Procesando cierre para **{matchId}**...");
+            await Manager.EndMatchEnvironmentAsync(matchId, Context.Channel);            
+        }
+        else
+        {
+            await RespondAsync($"La match {matchId} aún no ha procesado sus scores. Procesalas e intenta de nuevo.");
+        }
+
+        
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
@@ -62,5 +75,65 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                            $"- DiscordID: {discordId}", ephemeral: true);
 
         await Manager.AddRefereeToDbAsync(model);
+    }
+    
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("importscores", "Sube un archivo .txt/.csv con los resultados de un match")]
+    public async Task ImportScoresAsync(
+        [Summary("match_id", "El ID del match (ej: 15 o A1)")] string matchId, 
+        [Summary("archivo", "El archivo txt/csv con los datos raw")] IAttachment file)
+    {
+        await DeferAsync(ephemeral: false);
+        
+        if (!file.Filename.EndsWith(".txt") && !file.Filename.EndsWith(".csv"))
+        {
+            await FollowupAsync("**Error:** El archivo debe ser .txt o .csv");
+            return;
+        }
+
+        string csvContent;
+        
+        try 
+        {
+            using (var httpClient = new HttpClient())
+            {
+                csvContent = await httpClient.GetStringAsync(file.Url);
+            }
+        }
+        catch (Exception ex)
+        {
+            await FollowupAsync($"**Error descargando archivo:** {ex.Message}");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(csvContent))
+        {
+            await FollowupAsync("**Error:** El archivo está vacío.");
+            return;
+        }
+        
+        try
+        {
+            await using var db = new ModelsContext();
+            var importer = new ScoreImporter(db);
+            
+            bool success = await importer.ProcessScoresAsync(csvContent, matchId);
+
+            if (success)
+            {
+                await FollowupAsync($"**Importación Exitosa:** Se han guardado los resultados para el Match **{matchId}** desde el archivo `{file.Filename}`.");
+                db.MatchRooms.First(m => m.Id == matchId).IsOver = true;
+                await db.SaveChangesAsync();
+            }
+            else
+            {
+                await FollowupAsync($"**Procesado sin cambios:** El archivo se leyó pero no se guardaron filas. \nPossible causas:\n- MatchID incorrecto.\n- IDs de mapas no coinciden con el pool de la ronda.\n- Usuarios no existen en la DB.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            await FollowupAsync($"**Error Crítico:** {ex.Message}");
+        }
     }
 }

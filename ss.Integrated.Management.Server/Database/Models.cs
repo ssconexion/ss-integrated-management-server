@@ -170,6 +170,40 @@ public class Models
         public string IRC { get; set; }
     }
 
+    public class ScoreResults
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+        
+        [Column("round_id")]
+        public int RoundId { get; set; }
+        
+        [Column("user_id")]
+        public int UserId { get; set; }
+        
+        [Column("slot")]
+        public string Slot { get; set; }
+        
+        [Column("score")]
+        public int Score { get; set; }
+        
+        [Column("accuracy")]
+        public float Accuracy { get; set; }
+        
+        [Column("max_combo")]
+        public int MaxCombo { get; set; }
+        
+        [Column("grade")]
+        public string Grade  { get; set; }
+        
+        [ForeignKey("UserId")]
+        public TeamInfo Team { get; set; }
+        
+        [ForeignKey("RoundId")]
+        public Round Round { get; set; }
+    }
+
     public class RoundBeatmap
     {
         public int BeatmapID { get; set; }

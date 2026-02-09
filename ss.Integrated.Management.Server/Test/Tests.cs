@@ -14,8 +14,8 @@ namespace ss.Integrated.Management.Server
             Console.WriteLine("--- Iniciando Seed ---");
 
             // 1. Crear Osu Users (Cache)
-            var osuUser1 = new Models.OsuUser { Id = 727, DisplayName = "ESCRUPULILLO" };
-            var osuUser2 = new Models.OsuUser { Id = 12431, DisplayName = "towny1" };
+            var osuUser1 = new Models.OsuUser { Id = 18217876, DisplayName = "ESCRUPULILLO" };
+            var osuUser2 = new Models.OsuUser { Id = 16512684, DisplayName = "towny1" };
 
             if (!db.Set<Models.OsuUser>().Any())
             {
@@ -24,16 +24,16 @@ namespace ss.Integrated.Management.Server
             }
 
             // 2. Crear Usuarios de App (TeamInfo)
-            var team1 = new Models.TeamInfo { OsuID = 727, DiscordID = "234547235647" };
-            var team2 = new Models.TeamInfo { OsuID = 12431, DiscordID = "348756234" };
+            var team1 = new Models.TeamInfo { OsuID = 18217876, DiscordID = "234547235647" };
+            var team2 = new Models.TeamInfo { OsuID = 16512684, DiscordID = "348756234" };
 
             if (!db.Set<Models.TeamInfo>().Any())
             {
                 db.AddRange(team1, team2);
                 await db.SaveChangesAsync();
                 // Recargamos para asegurar que el AutoInclude traiga los nombres
-                team1 = await db.Set<Models.TeamInfo>().FirstAsync(t => t.OsuID == 727);
-                team2 = await db.Set<Models.TeamInfo>().FirstAsync(t => t.OsuID == 12431);
+                team1 = await db.Set<Models.TeamInfo>().FirstAsync(t => t.OsuID == 18217876);
+                team2 = await db.Set<Models.TeamInfo>().FirstAsync(t => t.OsuID == 16512684);
             }
             else
             {
