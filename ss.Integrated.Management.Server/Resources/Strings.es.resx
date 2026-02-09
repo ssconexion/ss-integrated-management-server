@@ -87,4 +87,37 @@
     <data name="AutorefError" xml:space="preserve">
         <value>Error durante la ejecución del AutoRef: `{0}`</value>
     </data>
+    <data name="AutoAlreadyEngaged" xml:space="preserve">
+        <value>El modo auto ya está en ejecución. Páralo con '&gt;stop'</value>
+    </data>
+    <data name="AutoAlreadyStopped" xml:space="preserve">
+        <value>El modo auto ya estaba parado.</value>
+    </data>
+    <data name="AvailableMaps" xml:space="preserve">
+        <value>Disponibles: {0}</value>
+    </data>
+    <data name="BlueTimeout" xml:space="preserve">
+        <value>El equipo azul ha pedido un timeout. El tiempo será añadido una vez el timer actual se acabe.</value>
+    </data>
+    <data name="None" xml:space="preserve">
+        <value>Ninguno</value>
+    </data>
+    <data name="RedTimeout" xml:space="preserve">
+        <value>El equipo rojo ha pedido un timeout. El tiempo será añadido una vez el timer actual se acabe</value>
+    </data>
+    <data name="SetMapFail" xml:space="preserve">
+        <value>El modo auto está en ejecución, desactívalo para poner mapas de forma manual.</value>
+    </data>
+    <data name="StoppingAuto" xml:space="preserve">
+        <value>Parando el modo auto...</value>
+    </data>
+    <data name="RefTimeout" xml:space="preserve">
+        <value>Timeout pedido por el referee del partido. El tiempo será añadido una vez el timer actual se acabe</value>
+    </data>
+    <data name="TimeoutAvailable" xml:space="preserve">
+        <value>Timeout rojo disponible: {0} | Timeout azul disponible: {1}</value>
+    </data>
+    <data name="TimeoutStart" xml:space="preserve">
+        <value>Empezando timeout, recuerda estar listo/pickear/banear antes de que acabe!</value>
+    </data>
 </root>

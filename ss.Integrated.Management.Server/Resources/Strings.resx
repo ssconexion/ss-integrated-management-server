@@ -87,4 +87,37 @@
     <data name="DeletingChannel" xml:space="preserve">
         <value>Deleting channel and killing thread...</value>
     </data>
+    <data name="SetMapFail" xml:space="preserve">
+        <value>Auto is engaged, disable auto mode to manually set maps.</value>
+    </data>
+    <data name="RefTimeout" xml:space="preserve">
+        <value>Timeout requested by the referee of the match. Time will be added after the timer runs out</value>
+    </data>
+    <data name="AutoAlreadyEngaged" xml:space="preserve">
+        <value>Auto already engaged. Disable it with '&gt;stop'.</value>
+    </data>
+    <data name="AutoAlreadyStopped" xml:space="preserve">
+        <value>Auto is already not engaged.</value>
+    </data>
+    <data name="StoppingAuto" xml:space="preserve">
+        <value>Stopping auto mode...</value>
+    </data>
+    <data name="None" xml:space="preserve">
+        <value>None</value>
+    </data>
+    <data name="AvailableMaps" xml:space="preserve">
+        <value>Available: {0}</value>
+    </data>
+    <data name="TimeoutAvailable" xml:space="preserve">
+        <value>Red timeout available: {0} | Blue timeout available: {1}</value>
+    </data>
+    <data name="RedTimeout" xml:space="preserve">
+        <value>Team Red has requested a timeout. Time will be added after current timer runs out</value>
+    </data>
+    <data name="BlueTimeout" xml:space="preserve">
+        <value>Team Blue has requested a timeout. Time will be added after current timer runs out</value>
+    </data>
+    <data name="TimeoutStart" xml:space="preserve">
+        <value>Starting timeout, remember to be ready/pick/ban before it runs out!</value>
+    </data>
 </root>
