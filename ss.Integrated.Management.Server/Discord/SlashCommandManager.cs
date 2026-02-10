@@ -117,7 +117,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await using var db = new ModelsContext();
             var importer = new ScoreImporter(db);
             
-            bool success = await importer.ProcessScoresAsync(csvContent, matchId); //TODO hay indicar en algún sitio el tipo de lobby.
+            bool success = await importer.ProcessScoresAsync(csvContent, matchId);
 
             if (success)
             {

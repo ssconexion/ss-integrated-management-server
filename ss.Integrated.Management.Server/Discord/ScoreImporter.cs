@@ -15,15 +15,24 @@ public class ScoreImporter
 
     public async Task<bool> ProcessScoresAsync(string csvContent, string matchIdStr)
     {
+        
         var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchIdStr);
-
-        if (matchRoom == null)
+        var qualsRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == matchIdStr);
+        int roundId;
+        
+        if (matchRoom != null)
+        {
+            roundId = matchRoom.RoundId;
+        }
+        else if(qualsRoom != null)
+        {
+            roundId = qualsRoom.RoundId;
+        }
+        else
         {
             Console.WriteLine($"Error: No se encontró la MatchRoom con ID {matchIdStr}");
             return false;
         }
-
-        int roundId = matchRoom.RoundId;
 
         var rawScores = ParseCsv(csvContent);
         if (!rawScores.Any()) return false;
