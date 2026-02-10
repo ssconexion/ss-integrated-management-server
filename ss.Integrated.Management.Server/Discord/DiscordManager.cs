@@ -103,7 +103,7 @@ public class DiscordManager
         }
 
         var newThread = await parentChannel.CreateThreadAsync(
-            name: $"{Program.TournamentName}_match_{matchId}",
+            name: $"{Program.TournamentName}: Match {matchId}",
             autoArchiveDuration: ThreadArchiveDuration.OneDay,
             type: ThreadType.PublicThread
         );
