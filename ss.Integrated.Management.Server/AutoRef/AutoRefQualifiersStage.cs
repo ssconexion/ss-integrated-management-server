@@ -19,6 +19,8 @@ public partial class AutoRefQualifiersStage : IAutoRef
     private int currentMapIndex;
     private MatchState state;
 
+    private List<int> usersInRoom = new();
+
     private TaskCompletionSource<string>? chatResponseTcs;
 
     private readonly Action<string, string> msgCallback;
@@ -45,6 +47,10 @@ public partial class AutoRefQualifiersStage : IAutoRef
         {
             currentMatch = await db.QualifierRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
             currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
+            
+            currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
+
+            usersInRoom = await db.Players.Where(p => p.QualifiersRoom == matchId).Select(p => p.User.Id).ToListAsync();
         }
 
         await ConnectToBancho();
@@ -161,7 +167,11 @@ public partial class AutoRefQualifiersStage : IAutoRef
                 await client!.DisconnectAsync();
                 break;
             case "invite":
-                //TODO
+                foreach (var osuId in usersInRoom)
+                {
+                    await SendMessageBothWays($"!mp invite #{osuId}");
+                    await Task.Delay(500);
+                }
                 break;
             case "start":
                 await SendMessageBothWays(
