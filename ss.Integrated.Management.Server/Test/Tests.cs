@@ -99,11 +99,34 @@ namespace ss.Integrated.Management.Server
                     
                 },
             };
+            
+            var roundTemplate3 = new Models.Round
+            {
+                Id = 3,
+                DisplayName = "Qualifiers",
+                BestOf = 9,
+                BanRounds = 1,
+                Mode = Models.BansType.SpanishShowdown,
+                MapPool = new List<Models.RoundBeatmap>
+                {
+                    new() { BeatmapID = 2918331, Slot = "NM1" },
+                    new() { BeatmapID = 5245557, Slot = "NM2" },
+                    new() { BeatmapID = 5231751, Slot = "NM3" },
+                    new() { BeatmapID = 5007159, Slot = "NM4" },
+                    new() { BeatmapID = 5181796, Slot = "HD1" },
+                    new() { BeatmapID = 4349038, Slot = "HR1" },
+                    new() { BeatmapID = 2219980, Slot = "HR2" },
+                    new() { BeatmapID = 790428, Slot = "DT1" },
+                    new() { BeatmapID = 3842022, Slot = "DT2" },
+                    
+                },
+            };
 
             if (!db.Set<Models.Round>().Any())
             {
                 db.Add(roundTemplate);
                 db.Add(roundTemplate2);
+                db.Add(roundTemplate3);
                 await db.SaveChangesAsync();
             }
 
@@ -127,11 +150,20 @@ namespace ss.Integrated.Management.Server
                 RoundId = roundTemplate2.Id,
                 RefereeId = null,
             };
+            
+            var qualis = new Models.QualifierRoom
+            {
+                Id = "1444",
+                StartTime = DateTime.UtcNow,
+                RoundId = roundTemplate3.Id,
+                RefereeId = null,
+            };
 
             if (!await db.MatchRooms.AnyAsync(m => m.Id == match.Id))
             {
                 db.MatchRooms.Add(match);
                 db.MatchRooms.Add(match2);
+                db.QualifierRooms.Add(qualis);
                 await db.SaveChangesAsync();
                 Console.WriteLine("Match creado exitosamente.");
             }

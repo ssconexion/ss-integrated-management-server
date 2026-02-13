@@ -77,6 +77,11 @@ public partial class AutoRefQualifiersStage : IAutoRef
         {
             _ = HandleIrcMessage(message);
         };
+        
+        client.OnPrivateMessageSent += message =>
+        {
+            _ = PeruTrim(message);
+        };
 
         client.OnAuthenticated += () =>
         {
@@ -84,6 +89,19 @@ public partial class AutoRefQualifiersStage : IAutoRef
         };
 
         await client.ConnectAsync();
+    }
+    
+    private async Task PeruTrim(IIrcMessage msg)
+    {
+        string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
+        string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
+
+        string content = msg.Parameters[1];
+
+        if (content.StartsWith('>'))
+        {
+            await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
+        }
     }
 
     private async Task HandleIrcMessage(IIrcMessage msg)
@@ -141,7 +159,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
 
         if (content.StartsWith('>'))
         {
-            await ExecuteAdminCommand(content[1..].Split(' '));
+            await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
         }
     }
 
@@ -156,9 +174,9 @@ public partial class AutoRefQualifiersStage : IAutoRef
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
     }
 
-    private async Task ExecuteAdminCommand(string[] args)
+    private async Task ExecuteAdminCommand(string sender, string[] args)
     {
-        Console.WriteLine("admin command is being executed");
+        if (sender != currentMatch!.Referee.DisplayName.Replace(' ', '_')) return;
 
         switch (args[0].ToLower())
         {

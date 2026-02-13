@@ -66,10 +66,10 @@ public class Models
         public int RoundId { get; set; }
         
         [Column("requested_by")]
-        public int RequestedBy { get; set; }
+        public int? RequestedBy { get; set; }
         
         [Column("is_approved")]
-        public bool Approved { get; set; }
+        public bool? Approved { get; set; }
         
         [ForeignKey("RefereeId")]
         public virtual RefereeInfo Referee { get; set; }
