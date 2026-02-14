@@ -1,9 +1,7 @@
 ﻿using Discord;
 using Discord.Interactions;
-using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic.CompilerServices;
 using ss.Internal.Management.Server.AutoRef;
 
 namespace ss.Internal.Management.Server.Discord;
@@ -14,9 +12,9 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
     public class PendingMatch
     {
-        public string MatchId { get; set; } // El string ID de la room (ej: "A1")
-        public int RedId { get; set; } // ID numérico de la tabla user/TeamInfo
-        public int BlueId { get; set; } // ID numérico de la tabla user/TeamInfo
+        public string MatchId { get; set; }
+        public int RedId { get; set; }
+        public int BlueId { get; set; }
         public DateTime ReferenceDate { get; set; }
         public string AvailRed { get; set; }
         public string AvailBlue { get; set; }
@@ -140,9 +138,9 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync($"**Error Crítico:** {ex.Message}");
         }
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("matches", "Muestra la lista de matches activos con paginación")]
+    [SlashCommand("matchups", "Muestra la lista de matches activos con paginación")]
     public async Task ListMatchesAsync()
     {
         await DeferAsync(ephemeral: false);
@@ -167,7 +165,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("removematch", "Elimina una match del listado a través de su ID")]
+    [SlashCommand("removematchup", "Elimina una match del listado a través de su ID")]
     public async Task RemoveMatchAsync(string matchid)
     {
         await DeferAsync(ephemeral: false);
@@ -184,6 +182,37 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         db.MatchRooms.Remove(remover);
         await db.SaveChangesAsync();
         await FollowupAsync($"Se ha borrado la match con ID `{remover.Id}`");
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("reschedulematchup", "Crea una match verificando disponibilidad")]
+    public async Task UpdateMatchTimeAsync(string matchId, string date, string hour)
+    {
+        await DeferAsync(ephemeral: false);
+        await using var db = new ModelsContext();
+
+        var match = await db.MatchRooms.FirstOrDefaultAsync(room => room.Id == matchId);
+
+        if (match == null)
+        {
+            await FollowupAsync("No se ha encontrado una match con la ID especificada");
+            return;
+        }
+
+        string fulldate = $"{date}/{DateTime.UtcNow.Year} {hour}";
+        string[] formatos = { "d/M/yyyy H:m", "dd/MM/yyyy HH:mm" };
+
+        if (!DateTime.TryParseExact(fulldate, formatos, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal,
+                out DateTime result))
+        {
+            await FollowupAsync("Formato inválido, usa DD/MM HH:mm (ej: 09/11, 08:46)");
+            return;
+        }
+        
+        match.StartTime = DateTime.SpecifyKind(result, DateTimeKind.Utc);
+
+        await db.SaveChangesAsync();
+        await FollowupAsync($"Se ha rescheduleado la match con ID `{match.Id}` a las `{match.StartTime}`");
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
@@ -213,15 +242,16 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync($"**Error:** Uno de los usuarios ({teamRed} o {teamBlue}) no existe en la tabla `user`.");
             return;
         }
-        
+
         var playerRed = await db.Players.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userRed.Id) ?? throw new Exception("Red team user not found");
-        var playerBlue = await db.Players.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userBlue.Id) ?? throw new Exception("Blue team user not found");;
+        var playerBlue = await db.Players.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userBlue.Id) ?? throw new Exception("Blue team user not found");
+        ;
 
         string emptySchedule = "000000000000000000000000|000000000000000000000000|000000000000000000000000|000000000000000000000000";
 
         string availRed = playerRed?.Availability ?? emptySchedule;
         string availBlue = playerBlue?.Availability ?? emptySchedule;
-        
+
         string tempId = Guid.NewGuid().ToString();
 
         PendingMatches[tempId] = new PendingMatch
@@ -235,7 +265,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             RedName = teamRed,
             BlueName = teamBlue,
         };
-        
+
         var menu = new SelectMenuBuilder()
             .WithPlaceholder("Selecciona el DÍA del partido")
             .WithCustomId($"match_day_select:{tempId}")
@@ -253,7 +283,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     public async Task HandleDaySelection(string tempId, string[] selection)
     {
         await DeferAsync();
-        
+
         if (!PendingMatches.TryGetValue(tempId, out var pm))
         {
             await FollowupAsync("Sesión expirada.", ephemeral: true);
@@ -266,16 +296,16 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         DateTime rawDate = pm.ReferenceDate.AddDays(dayIndex).Date;
         DateTime targetDate = DateTime.SpecifyKind(rawDate, DateTimeKind.Utc);
-        
+
         var rawStart = pm.ReferenceDate.AddDays(dayIndex - 1);
         var rawEnd = pm.ReferenceDate.AddDays(dayIndex + 2);
-        
+
         DateTime searchStart = DateTime.SpecifyKind(rawStart, DateTimeKind.Utc);
         DateTime searchEnd = DateTime.SpecifyKind(rawEnd, DateTimeKind.Utc);
 
         var spainZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
         HashSet<int> busyHoursInSpain = new HashSet<int>();
-        
+
         await using (var db = new ModelsContext())
         {
             var rawMatches = await db.MatchRooms
@@ -286,9 +316,9 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             foreach (var utcDate in rawMatches)
             {
                 var cleanUtc = DateTime.SpecifyKind(utcDate ?? DateTime.UnixEpoch, DateTimeKind.Utc);
-                
+
                 DateTime spainTime = TimeZoneInfo.ConvertTimeFromUtc(cleanUtc, spainZone);
-                
+
                 if (spainTime.Date == targetDate.Date)
                 {
                     // D. Bloqueamos la hora LOCAL (ej: 18)
@@ -296,15 +326,15 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                 }
             }
         }
-        
-        
+
+
         string bitsRed = AvailabilityHelper.GetDayBits(pm.AvailRed, dayIndex);
         string bitsBlue = AvailabilityHelper.GetDayBits(pm.AvailBlue, dayIndex);
 
         var menu = new SelectMenuBuilder()
             .WithPlaceholder($"Elige HORA ({dayName})")
             .WithCustomId($"match_hour_select:{tempId}:{dayIndex}");
-        
+
         for (int i = 0; i < 24; i++)
         {
             int hour = 23 - i;
@@ -329,7 +359,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                 emoji = "🔵";
                 desc = $"Solo {PendingMatches[tempId].BlueName} disponible";
             }
-            
+
             int hora = 23 - i;
 
             if (busyHoursInSpain.Contains(hora))
@@ -352,7 +382,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     public async Task HandleHourSelection(string tempId, string dayIndexStr, string[] selection)
     {
         await DeferAsync();
-        
+
         if (!PendingMatches.TryGetValue(tempId, out var pm))
         {
             await FollowupAsync("Sesión expirada.", ephemeral: true);
@@ -361,11 +391,11 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         int dayIndex = int.Parse(dayIndexStr);
         int hour = int.Parse(selection[0]);
-        
+
         DateTime finalDate = pm.ReferenceDate.AddDays(dayIndex).AddHours(hour).ToUniversalTime();
 
         await using var db = new ModelsContext();
-        
+
         int defaultRoundId = 1;
 
         var match = new Models.MatchRoom
@@ -391,6 +421,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                               $"- Match: `{match.Id}`\n" +
                               $"- Fecha: <t:{new DateTimeOffset(finalDate).ToUnixTimeSeconds()}:F>\n" +
                               $"- Hora UTC: `{finalDate:HH:mm}`";
+
                 msg.Components = null;
             });
         }
