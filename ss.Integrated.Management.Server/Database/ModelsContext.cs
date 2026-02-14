@@ -8,8 +8,8 @@ public class ModelsContext : DbContext
     public DbSet<Models.MatchRoom> MatchRooms { get; set; }
     public DbSet<Models.RefereeInfo> Referees { get; set; }
     public DbSet<Models.QualifierRoom> QualifierRooms { get; set; }
-    public DbSet<Models.PlayerInfo> Players { get; set; }
-    public DbSet<Models.TeamInfo> Users { get; set; }
+    public DbSet<Models.Player> Players { get; set; }
+    public DbSet<Models.User> Users { get; set; }
     public DbSet<Models.Round> Rounds { get; set; }
     public DbSet<Models.ScoreResults> Scores { get; set; }
 
@@ -18,11 +18,9 @@ public class ModelsContext : DbContext
     {
         optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("POSTGRESQL_CONNECTION_STRING") ?? throw new InvalidOperationException());
         //optionsBuilder.UseNpgsql("Host=localhost;Database=ss26db;Username=ss;Password=ss;");
-        
-        // 👇 AGREGA ESTO: Imprimirá cada consulta SQL, cada conexión y cada error interno
+
         optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
-    
-        // 👇 AGREGA ESTO: Habilita errores detallados de datos sensibles (ids, valores)
+
         optionsBuilder.EnableSensitiveDataLogging();
     }
 
@@ -54,9 +52,9 @@ public class ModelsContext : DbContext
         modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms", t => t.ExcludeFromMigrations());
         
         //modelBuilder.Entity<Models.PlayerInfo>().ToTable("player");
-        modelBuilder.Entity<Models.PlayerInfo>().ToTable("player", t => t.ExcludeFromMigrations());
+        modelBuilder.Entity<Models.Player>().ToTable("players", t => t.ExcludeFromMigrations());
 
-        modelBuilder.Entity<Models.TeamInfo>(e =>
+        modelBuilder.Entity<Models.User>(e =>
         {
             //e.ToTable("user");
             e.ToTable("user", t => t.ExcludeFromMigrations());
@@ -76,7 +74,7 @@ public class ModelsContext : DbContext
         modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
 
         //modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
-        modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user", t => t.ExcludeFromMigrations());
+        modelBuilder.Entity<Models.OsuUser>().ToTable("osu_users", t => t.ExcludeFromMigrations());
         
         //modelBuilder.Entity<Models.ScoreResults>().ToTable("scores");
         modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());

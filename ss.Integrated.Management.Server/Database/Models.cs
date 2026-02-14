@@ -21,12 +21,15 @@ public class Models
         [Column("team_blue_id")]
         public int TeamBlueId { get; set; }
 
-        [Column("start_time")]
-        public DateTime StartTime { get; set; }
-
         [Column("referee_id")]
         public int? RefereeId { get; set; }
-                
+
+        [Column("start_time")]
+        public DateTime? StartTime { get; set; }
+
+        [Column("end_time")]
+        public DateTime? EndTime { get; set; }
+
         [Column("banned_maps")]
         public List<RoundChoice>? BannedMaps { get; set; }
         
@@ -37,10 +40,10 @@ public class Models
         public virtual Round Round { get; set; }
 
         [ForeignKey("TeamRedId")]
-        public virtual TeamInfo TeamRed { get; set; }
+        public virtual User TeamRed { get; set; }
 
         [ForeignKey("TeamBlueId")]
-        public virtual TeamInfo TeamBlue { get; set; }
+        public virtual User TeamBlue { get; set; }
 
         [ForeignKey("RefereeId")]
         public virtual RefereeInfo Referee { get; set; }
@@ -52,19 +55,19 @@ public class Models
         [Key]
         [Column("id")]
         public string Id { get; set; }
-        
-        [Column("start_time")]
-        public DateTime StartTime { get; set; }
-        
-        [Column("referee_id")]
-        public int? RefereeId { get; set; }
-        
+
         [Column("round_id")]
         public int RoundId { get; set; }
-        
+
+        [Column("start_time")]
+        public DateTime StartTime { get; set; }
+
+        [Column("referee_id")]
+        public int? RefereeId { get; set; }
+
         [Column("requested_by")]
         public int? RequestedBy { get; set; }
-        
+
         [Column("is_approved")]
         public bool? Approved { get; set; }
         
@@ -75,7 +78,7 @@ public class Models
         public virtual Round Round { get; set; }
 
         [ForeignKey("RequestedBy")]
-        public virtual TeamInfo RequestUser { get; set; }
+        public virtual User RequestUser { get; set; }
 
     }
 
@@ -103,7 +106,7 @@ public class Models
     }
 
     [Table("users")]
-    public class TeamInfo
+    public class User
     {
         [Key]
         [Column("id")]
@@ -113,33 +116,13 @@ public class Models
         public int OsuID { get; set; }
 
         [Column("discord_id")]
-        public string DiscordID { get; set; }
+        public string? DiscordID { get; set; }
 
         [ForeignKey("OsuID")]
         public virtual OsuUser OsuData { get; set; }
 
         [NotMapped]
-        public string DisplayName => OsuData.DisplayName ?? "Desconocido";
-    }
-
-    [Table("player")]
-    public class PlayerInfo
-    {
-        [Key]
-        [Column("id")]
-        public int Id { get; set; }
-        
-        [Column("user_id")]
-        public int UserId { get; set; }
-        
-        /*[Column("qualifier_room_id")]
-        public string QualifiersRoom { get; set; }*/
-        
-        [Column("availability")]
-        public string Availability { get; set; }
-        
-        [ForeignKey("UserId")]
-        public TeamInfo User { get; set; }
+        public string DisplayName => OsuData.Username ?? "Desconocido";
     }
 
     [Table("osu_user")]
@@ -150,7 +133,39 @@ public class Models
         public int Id { get; set; }
 
         [Column("username")]
-        public string DisplayName { get; set; }
+        public string Username { get; set; }
+
+        [Column("global_rank")]
+        public int GlobalRank { get; set; }
+
+        [Column("country_rank")]
+        public int CountryRank { get; set; }
+    }
+
+    [Table("players")]
+    public class Player
+    {
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+        
+        [Column("user_id")]
+        public int UserId { get; set; }
+        
+        [Column("registered_at")]
+        public DateTime RegisteredAt { get; set; }
+        
+        [Column("availability")]
+        public string Availability { get; set; }
+
+        [Column("qualifier_room_id")]
+        public string? QualifierRoomId { get; set; }
+        
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; }
+
+        [ForeignKey("QualifierRoomId")]
+        public virtual QualifierRoom? QualifierRoom { get; set; }
     }
 
     [Table("referees")]
@@ -169,7 +184,7 @@ public class Models
         [Column("osu_id")]
         public int OsuID { get; set; }
 
-        [Column("irc")]
+        [Column("irc_password")]
         public string IRC { get; set; }
     }
 
@@ -201,7 +216,7 @@ public class Models
         public string Grade  { get; set; }
         
         [ForeignKey("UserId")]
-        public TeamInfo Team { get; set; }
+        public User Team { get; set; }
         
         [ForeignKey("RoundId")]
         public Round Round { get; set; }

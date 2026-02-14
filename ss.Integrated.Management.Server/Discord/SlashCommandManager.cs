@@ -202,11 +202,11 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         var userRed = await db.Users
             .Include(u => u.OsuData)
-            .FirstOrDefaultAsync(u => u.OsuData.DisplayName == teamRed);
+            .FirstOrDefaultAsync(u => u.OsuData.Username == teamRed);
 
         var userBlue = await db.Users
             .Include(u => u.OsuData)
-            .FirstOrDefaultAsync(u => u.OsuData.DisplayName == teamBlue);
+            .FirstOrDefaultAsync(u => u.OsuData.Username == teamBlue);
 
         if (userRed == null || userBlue == null)
         {
@@ -285,7 +285,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
             foreach (var utcDate in rawMatches)
             {
-                var cleanUtc = DateTime.SpecifyKind(utcDate, DateTimeKind.Utc);
+                var cleanUtc = DateTime.SpecifyKind(utcDate ?? DateTime.UnixEpoch, DateTimeKind.Utc);
                 
                 DateTime spainTime = TimeZoneInfo.ConvertTimeFromUtc(cleanUtc, spainZone);
                 
