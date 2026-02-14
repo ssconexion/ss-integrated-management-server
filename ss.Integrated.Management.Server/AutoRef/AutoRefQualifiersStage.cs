@@ -50,7 +50,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
             
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
 
-            //usersInRoom = await db.Players.Where(p => p.QualifiersRoom == matchId).Select(p => p.User.Id).ToListAsync();
+            usersInRoom = await db.Players.Where(p => p.QualifierRoomId == matchId).Select(p => p.User.Id).ToListAsync();
         }
 
         await ConnectToBancho();
@@ -172,6 +172,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp set 0 3 16");
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
+        await SendMessageBothWays($"Join this match via an IRC app with this command: \n- `/join {lobbyChannelName}`");
     }
 
     private async Task ExecuteAdminCommand(string sender, string[] args)

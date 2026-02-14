@@ -230,6 +230,7 @@ public partial class AutoRefEliminationStage : IAutoRef
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp set 2 3 3");
         await client!.SendPrivateMessageAsync(lobbyChannelName!, "!mp invite " + currentMatch!.Referee.DisplayName.Replace(' ', '_'));
+        await SendMessageBothWays($"Join this match via an IRC app with this command: \n- `/join {lobbyChannelName}`");
     }
 
     private async Task ProcessFinalScores()
