@@ -57,7 +57,7 @@ public class ModelsContext : DbContext
         modelBuilder.Entity<Models.User>(e =>
         {
             //e.ToTable("user");
-            e.ToTable("user", t => t.ExcludeFromMigrations());
+            e.ToTable("users", t => t.ExcludeFromMigrations());
 
             e.Navigation(t => t.OsuData).AutoInclude();
         });
