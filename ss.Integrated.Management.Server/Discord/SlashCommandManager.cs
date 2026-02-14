@@ -216,6 +216,72 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("createqualifierslobby", "Crea una match verificando disponibilidad")]
+    public async Task CreateQualifiersRoom(string roomId, string date, string hour, int roundId, int requestedBy = 1)
+    {
+        await DeferAsync(ephemeral: false);
+        
+        await using var db = new ModelsContext();
+        
+        string fulldate = $"{date}/{DateTime.UtcNow.Year} {hour}";
+        string[] formatos = { "d/M/yyyy H:m", "dd/MM/yyyy HH:mm" };
+        
+        if (!DateTime.TryParseExact(fulldate, formatos, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal,
+                out DateTime result))
+        {
+            await FollowupAsync("Formato inválido, usa DD/MM HH:mm (ej: 09/11, 08:46)");
+            return;
+        }
+
+        if (db.QualifierRooms.FirstOrDefault(room => room.Id == roomId) != null)
+        {
+            await FollowupAsync("Ya existía previamente una match con esa ID.");
+            return;
+        }
+        
+        if (db.Rounds.FirstOrDefault(round => round.Id == roundId) == null)
+        {
+            await FollowupAsync("No existe la ronda especificada");
+            return;
+        }
+        
+        var room = new Models.QualifierRoom
+        {
+            Id = roomId,
+            RoundId = roundId,
+            StartTime = DateTime.SpecifyKind(result, DateTimeKind.Utc),
+            RequestedBy = 1, // user_id == 1 -> 16393244 -> Furina :)
+            RefereeId = null,
+            Approved = true,
+        };
+        
+        db.QualifierRooms.Add(room);
+        await db.SaveChangesAsync();
+        
+        await FollowupAsync($"Sala de Qualifiers `{room.Id}` creada con éxito con fecha `{room.StartTime}`");
+    }
+    
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("removequalifiersroom", "Elimina una sala de qualifiers del listado a través de su ID")]
+    public async Task RemoveQualifiersRoomAsync(string matchid)
+    {
+        await DeferAsync(ephemeral: false);
+        await using var db = new ModelsContext();
+
+        var remover = await db.QualifierRooms.FirstOrDefaultAsync(room => room.Id == matchid);
+
+        if (remover == null)
+        {
+            await FollowupAsync("No se ha encontrado una sala con la ID especificada");
+            return;
+        }
+
+        db.QualifierRooms.Remove(remover);
+        await db.SaveChangesAsync();
+        await FollowupAsync($"Se ha borrado la match con ID `{remover.Id}`");
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("creatematchup", "Crea una match verificando disponibilidad")]
     public async Task CreateMatchCheck(string matchId, string teamRed, string teamBlue, string fridayDate)
     {
