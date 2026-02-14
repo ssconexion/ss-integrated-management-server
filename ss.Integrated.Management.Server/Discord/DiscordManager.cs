@@ -194,6 +194,47 @@ public class DiscordManager
             await message.Channel.SendMessageAsync("Sample database filled.");
         }
 
+        if (message.Content == "!roundfill")
+        {
+            var roundTemplate = new Models.Round
+            {
+                Id = 1,
+                DisplayName = "Grand Finals",
+                BestOf = 13,
+                BanRounds = 2,
+                Mode = Models.BansType.SpanishShowdown,
+                MapPool = new List<Models.RoundBeatmap>
+                {
+                    new() { BeatmapID = 4579522, Slot = "NM1" },
+                    new() { BeatmapID = 4277943, Slot = "NM2" },
+                    new() { BeatmapID = 3269529, Slot = "NM3" },
+                    new() { BeatmapID = 4723710, Slot = "NM4" },
+                    new() { BeatmapID = 4096455, Slot = "NM5" },
+                    new() { BeatmapID = 4497114, Slot = "NM6" },
+                    new() { BeatmapID = 5177739, Slot = "HD1" },
+                    new() { BeatmapID = 4274519, Slot = "HD2" },
+                    new() { BeatmapID = 4798495, Slot = "HD3" },
+                    new() { BeatmapID = 4761303, Slot = "HD4" },
+                    new() { BeatmapID = 4931381, Slot = "HR1" },
+                    new() { BeatmapID = 3214479, Slot = "HR2" },
+                    new() { BeatmapID = 3609114, Slot = "HR3" },
+                    new() { BeatmapID = 4881729, Slot = "HR4" },
+                    new() { BeatmapID = 1872396, Slot = "DT1" },
+                    new() { BeatmapID = 5178950, Slot = "DT2" },
+                    new() { BeatmapID = 2458659, Slot = "DT3" },
+                    new() { BeatmapID = 4951914, Slot = "DT4" },
+                    new() { BeatmapID = 4691422, Slot = "TB1" },
+                },
+            };
+            
+            await using var db = new ModelsContext();
+            
+            await db.Rounds.AddAsync(roundTemplate);
+            await db.SaveChangesAsync();
+            
+            await message.Channel.SendMessageAsync("d");
+        }
+
         if (message.Content == "ITS ME")
         {
             string s1 = "https://methalox.s-ul.eu/ReZNgSND";

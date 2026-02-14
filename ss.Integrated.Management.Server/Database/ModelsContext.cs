@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace ss.Internal.Management.Server.AutoRef;
 
@@ -16,7 +17,13 @@ public class ModelsContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         //optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("POSTGRESQL_CONNECTION_STRING") ?? throw new InvalidOperationException());
-        optionsBuilder.UseNpgsql("Host=localhost;Database=ss;Username=ss;Password=ss;");
+        optionsBuilder.UseNpgsql("Host=localhost;Database=ss26db;Username=ss;Password=ss;");
+        
+        // 👇 AGREGA ESTO: Imprimirá cada consulta SQL, cada conexión y cada error interno
+        optionsBuilder.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
+    
+        // 👇 AGREGA ESTO: Habilita errores detallados de datos sensibles (ids, valores)
+        optionsBuilder.EnableSensitiveDataLogging();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,45 +40,45 @@ public class ModelsContext : DbContext
         //   entity.ToTable("matches", t => t.ExcludeFromMigrations());
         //
         // Hay 7 de estos casos, asegúrate de revisarlos todos antes de nada.
-
+        
         modelBuilder.Entity<Models.MatchRoom>(e =>
         {
-            e.ToTable("match_rooms");
-            //e.ToTable("match_rooms", t => t.ExcludeFromMigrations());
+            //e.ToTable("match_rooms");
+            e.ToTable("match_rooms", t => t.ExcludeFromMigrations());
             
             e.OwnsMany(r => r.BannedMaps, b => b.ToJson("banned_maps"));
             e.OwnsMany(r => r.PickedMaps, b => b.ToJson("picked_maps"));
         });
         
-        modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms");
-        //modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms", t => t.ExcludeFromMigrations());
+        //modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms");
+        modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms", t => t.ExcludeFromMigrations());
         
-        modelBuilder.Entity<Models.PlayerInfo>().ToTable("player");
-        //modelBuilder.Entity<Models.PlayerInfo>().ToTable("player", t => t.ExcludeFromMigrations());
+        //modelBuilder.Entity<Models.PlayerInfo>().ToTable("player");
+        modelBuilder.Entity<Models.PlayerInfo>().ToTable("player", t => t.ExcludeFromMigrations());
 
         modelBuilder.Entity<Models.TeamInfo>(e =>
         {
-            e.ToTable("user");
-            //e.ToTable("user", t => t.ExcludeFromMigrations());
+            //e.ToTable("user");
+            e.ToTable("user", t => t.ExcludeFromMigrations());
 
             e.Navigation(t => t.OsuData).AutoInclude();
         });
 
         modelBuilder.Entity<Models.Round>(e =>
         {
-            e.ToTable("round");
-            //e.ToTable("round", t => t.ExcludeFromMigrations());
+            //e.ToTable("rounds");
+            e.ToTable("rounds", t => t.ExcludeFromMigrations());
 
             e.OwnsMany(r => r.MapPool, b => b.ToJson("map_pool"));
         });
 
-        modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees");
-        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
+        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees");
+        modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
 
-        modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
-        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
+        //modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
+        modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user", t => t.ExcludeFromMigrations());
         
-        modelBuilder.Entity<Models.ScoreResults>().ToTable("scores");
-        //modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());
+        //modelBuilder.Entity<Models.ScoreResults>().ToTable("scores");
+        modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());
     }
 }

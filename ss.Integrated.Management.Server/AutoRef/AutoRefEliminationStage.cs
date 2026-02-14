@@ -80,8 +80,8 @@ public partial class AutoRefEliminationStage : IAutoRef
             currentMatch = await db.MatchRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
             currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
 
-            currentMatch.TeamRed = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamRedId);
-            currentMatch.TeamBlue = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamBlueId);
+            currentMatch.TeamRed = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamRedId) ?? throw new Exception("Team red not found in the DB");
+            currentMatch.TeamBlue = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamBlueId) ?? throw new Exception("Team blue not found in the DB");
 
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
         }

@@ -50,7 +50,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
             
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
 
-            usersInRoom = await db.Players.Where(p => p.QualifiersRoom == matchId).Select(p => p.User.Id).ToListAsync();
+            //usersInRoom = await db.Players.Where(p => p.QualifiersRoom == matchId).Select(p => p.User.Id).ToListAsync();
         }
 
         await ConnectToBancho();

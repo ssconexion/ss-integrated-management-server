@@ -24,9 +24,6 @@ public class Models
         [Column("start_time")]
         public DateTime StartTime { get; set; }
 
-        [Column("is_over")]
-        public bool IsOver { get; set; }
-
         [Column("referee_id")]
         public int? RefereeId { get; set; }
                 
@@ -89,7 +86,7 @@ public class Models
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("display_name")]
+        [Column("name")]
         public string DisplayName { get; set; }
 
         [Column("ban_rounds")]
@@ -132,14 +129,20 @@ public class Models
         [Column("id")]
         public int Id { get; set; }
         
-        [Column("qualifier_room_id")]
-        public string QualifiersRoom { get; set; }
+        [Column("user_id")]
+        public int UserId { get; set; }
         
-        [ForeignKey("Id")]
+        /*[Column("qualifier_room_id")]
+        public string QualifiersRoom { get; set; }*/
+        
+        [Column("availability")]
+        public string Availability { get; set; }
+        
+        [ForeignKey("UserId")]
         public TeamInfo User { get; set; }
     }
 
-    [Table("osu_users")]
+    [Table("osu_user")]
     public class OsuUser
     {
         [Key]
