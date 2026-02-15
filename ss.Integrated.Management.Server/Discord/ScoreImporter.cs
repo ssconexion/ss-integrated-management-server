@@ -4,6 +4,9 @@ using ss.Internal.Management.Server.AutoRef;
 
 namespace ss.Internal.Management.Server.Discord;
 
+/// <summary>
+/// Helper class for parsing match results from external files (CSV/TXT) and saving them to the database.
+/// </summary>
 public class ScoreImporter
 {
     private readonly ModelsContext db;
@@ -13,6 +16,12 @@ public class ScoreImporter
         this.db = db;
     }
 
+    /// <summary>
+    /// Parses a CSV/Text file containing raw match results and saves them to the database.
+    /// </summary>
+    /// <param name="csvContent">The raw string content of the uploaded file.</param>
+    /// <param name="matchIdStr">The ID of the match these scores belong to.</param>
+    /// <returns>True if scores were successfully saved; otherwise, false.</returns>
     public async Task<bool> ProcessScoresAsync(string csvContent, string matchIdStr)
     {
         

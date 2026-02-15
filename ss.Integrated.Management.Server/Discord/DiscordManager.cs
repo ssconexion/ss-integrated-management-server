@@ -10,6 +10,9 @@ using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.Discord;
 
+/// <summary>
+/// Service responsible for managing the lifecycle of Discord interactions and bridging them with the AutoRef system.
+/// </summary>
 public class DiscordManager
 {
     private readonly DiscordSocketClient client;
@@ -50,6 +53,9 @@ public class DiscordManager
         client.MessageReceived += HandleMessageAsync;
     }
 
+    /// <summary>
+    /// Connects to Discord, registers modules, and starts the event loop.
+    /// </summary>
     public async Task StartAsync()
     {
         await client.LoginAsync(TokenType.Bot, token);
@@ -90,6 +96,14 @@ public class DiscordManager
         }
     }
 
+    /// <summary>
+    /// Sets up the Discord thread and spawns the AutoRef worker for a specific match.
+    /// </summary>
+    /// <param name="matchId">The unique match identifier (e.g. "A1").</param>
+    /// <param name="referee">The display name of the referee in charge.</param>
+    /// <param name="guild">The Discord guild object where the thread will be created.</param>
+    /// <param name="type">The type of match (Qualifiers vs Elimination) which determines the logic used.</param>
+    /// <returns>True if the environment was created; false if the match is already active.</returns>
     public async Task<bool> CreateMatchEnvironmentAsync(string matchId, string referee, IGuild guild, Models.MatchType type)
     {
         if (activeMatches.ContainsKey(matchId)) return false;
@@ -130,6 +144,11 @@ public class DiscordManager
         return true;
     }
 
+    /// <summary>
+    /// Stops the match worker, archives the Discord thread, and removes the match from active memory.
+    /// </summary>
+    /// <param name="matchId">The unique identifier of the match to close.</param>
+    /// <param name="requestChannel">The channel where the command was issued (for feedback).</param>
     public async Task EndMatchEnvironmentAsync(string matchId, IMessageChannel requestChannel)
     {
         if (activeMatches.TryRemove(matchId, out var worker))
@@ -160,6 +179,10 @@ public class DiscordManager
         }
     }
 
+    /// <summary>
+    /// Registers a new referee in the database with their IRC credentials.
+    /// </summary>
+    /// <param name="model">The referee data model.</param>
     public async Task AddRefereeToDbAsync(Models.RefereeInfo model)
     {
         await using var db = new ModelsContext();

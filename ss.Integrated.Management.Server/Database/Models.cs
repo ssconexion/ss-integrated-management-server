@@ -3,11 +3,20 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ss.Internal.Management.Server.AutoRef;
 
+/// <summary>
+/// Container for all Entity Framework Core data models.
+/// </summary>
 public class Models
 {
+    /// <summary>
+    /// Represents a scheduled match between two teams in the Elimination Stage.
+    /// </summary>
     [Table("match_rooms")]
     public class MatchRoom
     {
+        /// <summary>
+        /// The unique identifier for the match (e.g., "A1", "C2").
+        /// </summary>
         [Key]
         [Column("id")]
         public string Id { get; set; }
@@ -21,21 +30,36 @@ public class Models
         [Column("team_blue_id")]
         public int TeamBlueId { get; set; }
 
+        /// <summary>
+        /// The ID of the referee assigned to this match, if any.
+        /// </summary>
         [Column("referee_id")]
         public int? RefereeId { get; set; }
 
+        /// <summary>
+        /// The scheduled start time in UTC.
+        /// </summary>
         [Column("start_time")]
         public DateTime? StartTime { get; set; }
 
         [Column("end_time")]
         public DateTime? EndTime { get; set; }
 
+        /// <summary>
+        /// JSON-stored list of maps banned during the match.
+        /// </summary>
         [Column("banned_maps")]
         public List<RoundChoice>? BannedMaps { get; set; }
         
+        /// <summary>
+        /// JSON-stored list of maps picked during the match.
+        /// </summary>
         [Column("picked_maps")]
         public List<RoundChoice>? PickedMaps { get; set; }
         
+        /// <summary>
+        /// The numerical ID of the Bancho Match History (e.g. https://osu.ppy.sh/community/matches/{MpLinkId}).
+        /// </summary>
         [Column("mp_link_id")]
         public int MpLinkId { get; set; }
 
@@ -52,6 +76,9 @@ public class Models
         public virtual RefereeInfo Referee { get; set; }
     }
 
+    /// <summary>
+    /// Represents a lobby for the Qualifier Stage where multiple players play a pool at once.
+    /// </summary>
     [Table("qualifier_rooms")]
     public class QualifierRoom
     {
@@ -68,6 +95,9 @@ public class Models
         [Column("referee_id")]
         public int? RefereeId { get; set; }
 
+        /// <summary>
+        /// The user who requested this specific qualifier slot.
+        /// </summary>
         [Column("requested_by")]
         public int? RequestedBy { get; set; }
 
@@ -88,6 +118,9 @@ public class Models
 
     }
 
+    /// <summary>
+    /// Represents a stage of the tournament (e.g., "Round of 16", "Qualifiers").
+    /// </summary>
     [Table("rounds")]
     public class Round
     {
@@ -98,19 +131,31 @@ public class Models
         [Column("name")]
         public string DisplayName { get; set; }
 
+        /// <summary>
+        /// Number of bans allowed per team in this round.
+        /// </summary>
         [Column("ban_rounds")]
         public int BanRounds { get; set; }
 
         [Column("ban_mode")]
         public BansType Mode { get; set; }
 
+        /// <summary>
+        /// The maximum number of maps (e.g., 7 for Best of 7).
+        /// </summary>
         [Column("best_of")]
         public int BestOf { get; set; }
 
+        /// <summary>
+        /// The list of beatmaps available to be picked in this round.
+        /// </summary>
         [Column("map_pool")]
         public List<RoundBeatmap> MapPool { get; set; }
     }
 
+    /// <summary>
+    /// Represents a registered user in the system, linking their osu! identity to Discord.
+    /// </summary>
     [Table("users")]
     public class User
     {
@@ -161,6 +206,9 @@ public class Models
         [Column("registered_at")]
         public DateTime RegisteredAt { get; set; }
         
+        /// <summary>
+        /// A string representation (usually bitmask or JSON) of the player's schedule availability.
+        /// </summary>
         [Column("availability")]
         public string Availability { get; set; }
 
@@ -174,6 +222,9 @@ public class Models
         public virtual QualifierRoom? QualifierRoom { get; set; }
     }
 
+    /// <summary>
+    /// Contains authentication and identity info for tournament referees.
+    /// </summary>
     [Table("referees")]
     public class RefereeInfo
     {
@@ -190,10 +241,16 @@ public class Models
         [Column("osu_id")]
         public int OsuID { get; set; }
 
+        /// <summary>
+        /// The encrypted or raw IRC password for Bancho authentication.
+        /// </summary>
         [Column("irc_password")]
         public string IRC { get; set; }
     }
 
+    /// <summary>
+    /// Represents a single score entry parsed from a match.
+    /// </summary>
     public class ScoreResults
     {
         [Key]
@@ -206,6 +263,9 @@ public class Models
         [Column("user_id")]
         public int UserId { get; set; }
         
+        /// <summary>
+        /// The slot of the map played (e.g., "NM1", "DT2").
+        /// </summary>
         [Column("slot")]
         public string Slot { get; set; }
         
@@ -231,6 +291,9 @@ public class Models
     public class RoundBeatmap
     {
         public int BeatmapID { get; set; }
+        /// <summary>
+        /// The mod slot identifier (e.g. "NM1", "HD2", "TB1").
+        /// </summary>
         public string Slot { get; set; }
     }
 
@@ -245,7 +308,9 @@ public class Models
         TeamBlue,
         TeamRed,
     }
-
+    /// <summary>
+    /// Spanish Showdown style bans (where teams use their second ban after the 4th pick is played) vs other styles where all bans are done at the start. This affects how the banning flow is handled in the logic.
+    /// </summary>
     public enum BansType
     {
         SpanishShowdown = 0,
@@ -257,5 +322,4 @@ public class Models
         EliminationStage = 0,
         QualifiersStage = 1,
     }
-
 }

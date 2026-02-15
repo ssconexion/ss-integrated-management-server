@@ -4,10 +4,18 @@ using Discord.WebSocket;
 
 namespace ss.Internal.Management.Server.Discord;
 
+/// <summary>
+/// A custom precondition attribute that restricts command execution to users with a specific Discord Role.
+/// The Role ID is fetched dynamically from an Environment Variable.
+/// </summary>
 public class RequireFromEnvIdAttribute : PreconditionAttribute
 {
     private readonly string envVarName;
     
+    /// <summary>
+    /// Initializes the attribute with the name of the environment variable containing the Role ID.
+    /// </summary>
+    /// <param name="envVarName">Key of the env var (e.g. "DISCORD_REFEREE_ROLE_ID").</param>
     public RequireFromEnvIdAttribute(string envVarName)
     {
         this.envVarName = envVarName;
