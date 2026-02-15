@@ -36,7 +36,6 @@ dotnet ef database update
 > 
 > This manager is architected to run alongside the official tournament web infrastructure. If you intend to run this tool in **Standalone Mode** (isolated from the web web-server), you **must comment out** the `IgnoreMigrations` directives in `ModelsContext.cs`. Failure to do so will prevent Entity Framework from generating the necessary tables.
 
----
 
 ## ✨ System Capabilities & Key Features
 
@@ -66,7 +65,6 @@ dotnet ef database update
     
 - **Dynamic Rescheduling:** Fully implemented system for handling time changes and slot management, updating the schedule in real-time without manual database queries
 
----
 
 # AutoRef System Documentation
 
@@ -75,8 +73,6 @@ dotnet ef database update
 The **AutoRef System** is a modular, event-driven automation tool designed to manage osu! tournament matches autonomously. It bridges the gap between **Discord** (for coordination and logging) and **Bancho (osu! IRC)** (for game lobby management).
 
 The system is built on **.NET (C#)** and utilizes `BanchoSharp` for IRC communication and `Discord.Net` for user interaction. It ensures matches are played according to strict timing and rulesets without requiring constant human intervention, while maintaining a manual override safety net.
-
----
 
 ## 2. Architecture: The Discord Manager
 
@@ -109,8 +105,6 @@ The lifecycle of a match is handled via two primary asynchronous tasks:
 2. **Cleanup:** Removes the match from the active memory dictionary.
     
 3. **Archival:** Notifies the thread, locks it to prevent further messages, and archives it for record-keeping.
-
----
 
 ## 3. Module: AutoRef Qualifiers Stage
 
@@ -182,9 +176,7 @@ The system accepts commands prefixed with `>` (e.g., `>start`) from the designat
 - `>start`: Engages the automatic flow, loading the first map of the pool.
     
 - `>finish`: Forces the match to close (`!mp close`) and disconnects the bot.
-    
 
----
 ## 4. Module: AutoRef Elimination Stage
 
 The `AutoRefEliminationStage` handles **Head-to-Head (1v1 or Team vs Team)** matches. Unlike the linear flow of qualifiers, this module manages a dynamic, turn-based environment involving banning phases, picking phases, score validation, and win condition checks (Best Of X).
@@ -265,9 +257,6 @@ Players interact with the system primarily by typing map slots in the chat when 
 - **State Recovery:** If the bot crashes or is stopped via `>stop`, the `previousState` is stored. When `>start` is issued again, the match resumes exactly where it left off.
     
 - **Database Sync:** When `StopAsync` is called (end of match context), the system serializes the `BannedMaps` and `PickedMaps` lists and saves them to PostgreSQL to ensure tournament records are accurate.
-    
-
----
 
 ## 5. Deployment & Environment Variables
 
@@ -280,15 +269,9 @@ To ensure successful deployment of the AutoRef system, the following environment
 - `OSU_IRC_PASSWORD`: (Encrypted) Token for Bancho authentication.
     
 - `OSU_API_KEY`: For fetching auxiliary user data.
-    
-
----
 
 ## 6. Known Limitations
 
 - **Bancho Lag:** Extreme server lag may delay score parsing. The system includes a `Task.Delay` buffer to mitigate this.
     
 - **Usernames:** The system relies on database usernames matching Bancho usernames. Name changes during a tournament must be synchronized in the DB.
-    
-
----
