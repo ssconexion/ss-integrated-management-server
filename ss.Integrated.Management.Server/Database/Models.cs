@@ -8,6 +8,7 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// </summary>
 public class Models
 {
+
     /// <summary>
     /// Represents a scheduled match between two teams in the Elimination Stage.
     /// </summary>
@@ -115,7 +116,6 @@ public class Models
 
         [ForeignKey("RequestedBy")]
         public virtual User RequestUser { get; set; }
-
     }
 
     /// <summary>
@@ -206,9 +206,6 @@ public class Models
         [Column("registered_at")]
         public DateTime RegisteredAt { get; set; }
         
-        /// <summary>
-        /// A string representation (usually bitmask or JSON) of the player's schedule availability.
-        /// </summary>
         [Column("availability")]
         public string Availability { get; set; }
 
@@ -241,9 +238,6 @@ public class Models
         [Column("osu_id")]
         public int OsuID { get; set; }
 
-        /// <summary>
-        /// The encrypted or raw IRC password for Bancho authentication.
-        /// </summary>
         [Column("irc_password")]
         public string IRC { get; set; }
     }
@@ -263,9 +257,6 @@ public class Models
         [Column("user_id")]
         public int UserId { get; set; }
         
-        /// <summary>
-        /// The slot of the map played (e.g., "NM1", "DT2").
-        /// </summary>
         [Column("slot")]
         public string Slot { get; set; }
         
@@ -291,35 +282,47 @@ public class Models
     public class RoundBeatmap
     {
         public int BeatmapID { get; set; }
-        /// <summary>
-        /// The mod slot identifier (e.g. "NM1", "HD2", "TB1").
-        /// </summary>
         public string Slot { get; set; }
     }
 
     public class RoundChoice
     {
         public string Slot { get; set; }
+        
+        /// <summary>
+        /// The team that made this choice.
+        /// </summary>
         public TeamColor TeamColor { get; set; }
     }
-
+    
+    /// <summary>
+    /// Indicates which team an action belongs to.
+    /// </summary>
     public enum TeamColor
     {
         TeamBlue,
         TeamRed,
-    }
+
+        /// <summary>Use only for initialization or neutral states.</summary>
+        None
+    };
+
     /// <summary>
-    /// Spanish Showdown style bans (where teams use their second ban after the 4th pick is played) vs other styles where all bans are done at the start. This affects how the banning flow is handled in the logic.
+    /// Defines the ban strategy for a round.
     /// </summary>
     public enum BansType
     {
+        /// <summary>Standard snake draft or fixed order.</summary>
         SpanishShowdown = 0,
         Other = 1,
-    }
+    };
 
+    /// <summary>
+    /// Differentiates between the two behavioral modes of the tournament: Elimination Stage (1v1 matches with bans/picks) and Qualifier Stage (pool play with no bans/picks).
+    /// </summary>
     public enum MatchType
     {
         EliminationStage = 0,
         QualifiersStage = 1,
-    }
+    };
 }

@@ -10,6 +10,75 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// Handles the automated refereeing logic for Elimination/Versus matches.
 /// Implements a complex State Machine to manage Picks, Bans, Timeouts, and Scoring.
 /// </summary>
+/// <remarks>
+/// ## State Transition Diagram
+/// \dot
+/// digraph MatchStateMachine {
+///     // Graph Style
+///     graph [fontname = "helvetica", fontsize = 10, nodesep = 0.5, ranksep = 0.7, compound=true];
+///     node [fontname = "helvetica", fontsize = 10, shape = box, style = rounded];
+///     edge [fontname = "helvetica", fontsize = 8];
+///
+///     // Nodes
+///     Idle [style="filled,rounded", fillcolor="#EEEEEE"];
+///     BanPhase [label="BanPhaseStart\n(Decide who bans first)"];
+///     WaitBanRed [label="WaitingForBanRed"];
+///     WaitBanBlue [label="WaitingForBanBlue"];
+///     PickPhase [label="PickPhaseStart\n(Decide who picks first)"];
+///     WaitPickRed [label="WaitingForPickRed"];
+///     WaitPickBlue [label="WaitingForPickBlue"];
+///     WaitStart [label="WaitingForStart\n(Timer Active)"];
+///     Playing [label="Playing\n(Waiting for results)", style="filled,rounded", fillcolor="#D4E6F1"];
+///     Finish [label="MatchFinished", style="filled,rounded", fillcolor="#D5F5E3"];
+///     Timeout [label="OnTimeout\n(Paused)", shape=octagon, style=filled, fillcolor="#FADBD8"];
+///     Panic [label="MatchOnHold\n(PANIC)", shape=doubleoctagon, style=filled, fillcolor="#E74C3C", fontcolor="white"];
+///
+///     // Initialization
+///     Idle -> BanPhase [label="!start"];
+///     
+///     // Banning Logic
+///     BanPhase -> WaitBanRed [label="FirstBan = Red"];
+///     BanPhase -> WaitBanBlue [label="FirstBan = Blue"];
+///     
+///     WaitBanRed -> WaitBanBlue [label="Red Bans"];
+///     WaitBanBlue -> WaitBanRed [label="Blue Bans"];
+///     
+///     WaitBanRed -> PickPhase [label="Bans Done"];
+///     WaitBanBlue -> PickPhase [label="Bans Done"];
+///
+///     // Picking Logic
+///     PickPhase -> WaitPickRed [label="FirstPick = Red"];
+///     PickPhase -> WaitPickBlue [label="FirstPick = Blue"];
+///     
+///     WaitPickRed -> WaitStart [label="Red Pick\n(Prepare Map)"];
+///     WaitPickBlue -> WaitStart [label="Blue Pick\n(Prepare Map)"];
+///
+///     // Gameplay Loop
+///     WaitStart -> Playing [label="Players Ready\n(Match Start)"];
+///     
+///     Playing -> WaitPickBlue [label="Map finished playing\n(Next Pick Blue)"];
+///     Playing -> WaitPickRed [label="Map finished playing\n(Next Pick Red)"];
+///     
+///     // Special Cases
+///     Playing -> BanPhase [label="Double Ban Round\n(Mid-Match)"];
+///     Playing -> WaitStart [label="Teams are both at match point; Tiebreaker"];
+///     Playing -> Finish [label="Win Condition Met for any of the teams"];
+///
+///     // Timeout System
+///     {WaitPickRed WaitPickBlue WaitStart} -> Timeout [label="!timeout"];
+///     Timeout -> WaitPickRed [label="Resume"];
+///     Timeout -> WaitPickBlue [label="Resume"];
+///     Timeout -> WaitStart [label="Resume"];
+///
+///     // PANIC SYSTEM (Global Interrupt)
+///     // Can be triggered from any active waiting/playing state
+///     {WaitBanRed WaitBanBlue WaitPickRed WaitPickBlue WaitStart Playing} -> Panic [label="!panic\n(ANYONE)", color="#E74C3C", fontcolor="#E74C3C"];
+///     
+///     // Panic Recovery (Ref Only -> Resets to WaitingForStart)
+///     Panic -> WaitStart [label="!panic_over\n(REF ONLY)", color="#27AE60", fontcolor="#27AE60", penwidth=2];
+/// }
+/// \enddot
+/// </remarks>
 public partial class AutoRefEliminationStage : IAutoRef
 {
     private Models.MatchRoom? currentMatch;
@@ -30,15 +99,16 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private int repeat = 2;
 
-    private TeamColor firstPick = TeamColor.None;
-    private TeamColor firstBan = TeamColor.None;
+    // Using Models.TeamColor to avoid ambiguity in Doxygen
+    private Models.TeamColor firstPick = Models.TeamColor.None;
+    private Models.TeamColor firstBan = Models.TeamColor.None;
 
     private List<Models.RoundChoice> bannedMaps = [];
     private List<Models.RoundChoice> pickedMaps = [];
 
     private Dictionary<string, int> currentMapScores = new(); // Nickname -> Score
 
-    private TeamColor lastPick = TeamColor.None;
+    private Models.TeamColor lastPick = Models.TeamColor.None;
 
     private MatchState currentState;
     private MatchState previousState;
@@ -49,12 +119,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private readonly Action<string, string> msgCallback;
 
-    public enum TeamColor
-    {
-        TeamBlue,
-        TeamRed,
-        None,
-    }
+    // Removed the internal TeamColor enum to force usage of Models.TeamColor
 
     /// <summary>
     /// Represents the finite states of the match flow.
@@ -73,7 +138,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         MatchFinished,
         OnTimeout,
         MatchOnHold,
-    }
+    };
 
     public AutoRefEliminationStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
     {
@@ -82,9 +147,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         this.msgCallback = msgCallback;
     }
     
-    /// <summary>
-    /// Hydrates the match context from the database and establishes the Bancho connection.
-    /// </summary>
+    /// <inheritdoc />
     public async Task StartAsync()
     {
         await using (var db = new ModelsContext())
@@ -101,13 +164,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         await ConnectToBancho();
     }
 
-    /// <summary>
-    /// Gracefully shuts down the worker and persists critical match data (Picks/Bans) to the DB.
-    /// </summary>
-    /// <remarks>
-    /// DANGER ZONE: This method must ONLY be called by the <see cref="DiscordManager"/>.
-    /// Calling this manually from within the class logic may cause race conditions or orphan threads.
-    /// </remarks>
+    /// <inheritdoc />
     public async Task StopAsync()
     {
         await using var db = new ModelsContext();
@@ -249,7 +306,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
     }
 
-
+    /// <inheritdoc />
     public async Task SendMessageFromDiscord(string content)
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, content);
@@ -358,7 +415,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 break;
 
             case "start":
-                if (firstPick == TeamColor.None || firstBan == TeamColor.None)
+                if (firstPick == Models.TeamColor.None || firstBan == Models.TeamColor.None)
                 {
                     await SendMessageFromDiscord(Strings.PropertiesNotInit);
                     return;
@@ -402,7 +459,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             case "firstpick":
                 if (args.Length > 1)
                 {
-                    firstPick = args[1] == "red" ? TeamColor.TeamRed : TeamColor.TeamBlue;
+                    firstPick = args[1] == "red" ? Models.TeamColor.TeamRed : Models.TeamColor.TeamBlue;
                     await SendMessageBothWays(Strings.SuccessfulFirstPick);
                 }
                 else
@@ -415,7 +472,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             case "firstban":
                 if (args.Length > 1)
                 {
-                    firstBan = args[1] == "red" ? TeamColor.TeamRed : TeamColor.TeamBlue;
+                    firstBan = args[1] == "red" ? Models.TeamColor.TeamRed : Models.TeamColor.TeamBlue;
                     await SendMessageBothWays(Strings.SuccessfulFirstBan);
                 }
                 else
@@ -535,7 +592,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         if (currentState == MatchState.BanPhaseStart)
         {
-            if (firstBan == TeamColor.TeamRed)
+            if (firstBan == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 currentState = MatchState.WaitingForBanRed;
@@ -601,7 +658,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         if (currentState == MatchState.PickPhaseStart)
         {
-            if (firstPick == TeamColor.TeamRed)
+            if (firstPick == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
                 currentState = MatchState.WaitingForPickRed;
@@ -622,7 +679,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
-                lastPick = TeamColor.TeamRed;
+                lastPick = Models.TeamColor.TeamRed;
             }
 
             return;
@@ -635,7 +692,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
-                lastPick = TeamColor.TeamBlue;
+                lastPick = Models.TeamColor.TeamBlue;
             }
 
             return;
@@ -686,7 +743,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                         return;
                     }
 
-                    if (lastPick == TeamColor.TeamRed)
+                    if (lastPick == Models.TeamColor.TeamRed)
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                         await Task.Delay(250);
