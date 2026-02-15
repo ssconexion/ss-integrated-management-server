@@ -1,0 +1,24 @@
+var classSlashCommandManager =
+[
+    [ "AvailabilityHelper", "classSlashCommandManager_1_1AvailabilityHelper.html", "classSlashCommandManager_1_1AvailabilityHelper" ],
+    [ "PendingMatch", "classSlashCommandManager_1_1PendingMatch.html", "classSlashCommandManager_1_1PendingMatch" ],
+    [ "AddMpLinkIdAsync", "classSlashCommandManager.html#aee9ed9743f0039e41169c870c96c3815", null ],
+    [ "AddRefCredentialsAsync", "classSlashCommandManager.html#ab511f78bdc2623237d25134fc42d8918", null ],
+    [ "CreateMatchCheck", "classSlashCommandManager.html#a724b4283b8a5fb57245328bc22049d5b", null ],
+    [ "CreateMatchEmbed", "classSlashCommandManager.html#af31868be3c8b54018b7f7015df7fe041", null ],
+    [ "CreateQualifiersRoom", "classSlashCommandManager.html#aa1a6d85caced353067e065e49264030f", null ],
+    [ "EndRefAsync", "classSlashCommandManager.html#ac866fe33be7a8ba16a350ae58f428462", null ],
+    [ "HandleDaySelection", "classSlashCommandManager.html#a7fcb86f9e7ae4574304c61059598418f", null ],
+    [ "HandleHourSelection", "classSlashCommandManager.html#a2916a0daf35184717352bdeb154fb5a7", null ],
+    [ "HandleMatchPaginationAsync", "classSlashCommandManager.html#a8eda05a5c7fceca5b294e91ea4608b17", null ],
+    [ "ImportScoresAsync", "classSlashCommandManager.html#a9c15fab13b60305f9c663e3c198905b4", null ],
+    [ "ListMatchesAsync", "classSlashCommandManager.html#a677fd6012310640c18268783d59ffe80", null ],
+    [ "RemoveMatchAsync", "classSlashCommandManager.html#ab9cbd7a6a05e40bb65640ec54c12e025", null ],
+    [ "RemoveQualifiersRoomAsync", "classSlashCommandManager.html#a96f83ad9f228ee9d3d62a6ec2238b4ad", null ],
+    [ "StartRefAsync", "classSlashCommandManager.html#a8e0a91d4fef61920487e589a85adcc2c", null ],
+    [ "UpdateMatchTimeAsync", "classSlashCommandManager.html#aef13789bd0890fe607673fd6f27f1f5c", null ],
+    [ "Manager", "classSlashCommandManager.html#a7fe493f80c7612efb5cca277eb7c0691", null ],
+    [ "PendingMatches", "classSlashCommandManager.html#a922a25cdf6a71199a5df5a6627f21155", null ],
+    [ "set", "classSlashCommandManager.html#a1d07a44baa3e91f10c44cbe40fbdb740", null ],
+    [ "string", "classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6", null ]
+];

@@ -1,0 +1,7 @@
+<map id="Models::MatchRoom" name="Models::MatchRoom">
+<area shape="rect" id="Node000001" title="Represents a scheduled match between two teams in the Elimination Stage." alt="" coords="67,93,222,119"/>
+<area shape="rect" id="Node000002" href="$classModels_1_1Round.html" title="Represents a stage of the tournament (e.g., &quot;Round of 16&quot;, &quot;Qualifiers&quot;)." alt="" coords="5,5,124,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,39,135,91,132,95,83,43"/>
+<area shape="rect" id="Node000003" href="$classModels_1_1RefereeInfo.html" title="Contains authentication and identity info for tournament referees." alt="" coords="148,5,301,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="207,43,158,95,154,91,203,39"/>
+</map>

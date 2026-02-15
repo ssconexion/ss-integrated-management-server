@@ -1,0 +1,11 @@
+<map id="AutoRefQualifiersStage" name="AutoRefQualifiersStage">
+<area shape="rect" id="Node000001" title="Handles the automated refereeing logic for Qualifier Lobbies. manages a linear flow of maps with no p..." alt="" coords="5,181,179,207"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="31,93,110,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="79,131,92,180,86,181,74,133"/>
+<area shape="rect" id="Node000003" href="$classModels.html" title="Container for all Entity Framework Core data models." alt="" coords="135,93,204,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="152,131,105,183,101,179,148,127"/>
+<area shape="rect" id="Node000004" href="$classModels_1_1Round.html" title="Represents a stage of the tournament (e.g., &quot;Round of 16&quot;, &quot;Qualifiers&quot;)." alt="" coords="25,5,143,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="107,39,159,91,156,95,103,43"/>
+<area shape="rect" id="Node000005" href="$classModels_1_1RoundBeatmap.html" title=" " alt="" coords="167,5,345,31"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="237,42,183,95,180,91,233,38"/>
+</map>

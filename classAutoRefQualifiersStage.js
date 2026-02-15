@@ -1,0 +1,36 @@
+var classAutoRefQualifiersStage =
+[
+    [ "MatchState", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621", [
+      [ "Idle", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621abfad57ddd7f15d72a3403d76b37ec069", null ],
+      [ "WaitingForStart", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621a939ea4547449af0be5581f2783f00f18", null ],
+      [ "Playing", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621ae24052ad4c28a73443c8ddbb9bf365e7", null ],
+      [ "MatchFinished", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621a97575c3821ca9eb373b77b53652b97d9", null ],
+      [ "MatchOnHold", "classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621a3b06548fc1a6b21fc1a9b95e15a5ac9f", null ]
+    ] ],
+    [ "AutoRefQualifiersStage", "classAutoRefQualifiersStage.html#a63bdafa9cf7f83e05dfbb96c0eaafddf", null ],
+    [ "ConnectToBancho", "classAutoRefQualifiersStage.html#a67c4ebe6d39f0616bf67412aceea3f17", null ],
+    [ "ExecuteAdminCommand", "classAutoRefQualifiersStage.html#abd3729b8636cead6c4deb7219c19e140", null ],
+    [ "HandleIrcMessage", "classAutoRefQualifiersStage.html#ab57212a1a1ae1702307b33ec8bcf2b99", null ],
+    [ "InitializeLobbySettings", "classAutoRefQualifiersStage.html#a5d0db800cdd312629c557b41892919e0", null ],
+    [ "PeruTrim", "classAutoRefQualifiersStage.html#aa09206f583bbc12352f235e9c1d10adb", null ],
+    [ "PrepareNextQualifierMap", "classAutoRefQualifiersStage.html#ab9cec20f3835fd209d87a4bd4bdfb519", null ],
+    [ "SearchKeywords", "classAutoRefQualifiersStage.html#aa4c78d090710024e2cf9a0d135fab120", null ],
+    [ "SendMessageBothWays", "classAutoRefQualifiersStage.html#a9c444fb5ae2a7cc65f7a907ba550cf5c", null ],
+    [ "SendMessageFromDiscord", "classAutoRefQualifiersStage.html#a968b5d7bd9c58d32056d978427a75723", null ],
+    [ "StartAsync", "classAutoRefQualifiersStage.html#aaf33150f78b36f16eb0754c64b046d8d", null ],
+    [ "StartQualifiersFlow", "classAutoRefQualifiersStage.html#a46c5a74ffe6a147045edd538ab7698a0", null ],
+    [ "StopAsync", "classAutoRefQualifiersStage.html#a48d20e2e9d4502c2d3328e81065f8413", null ],
+    [ "TryStateChange", "classAutoRefQualifiersStage.html#af8734fdfab4301e08f0c3a39d16da956", null ],
+    [ "chatResponseTcs", "classAutoRefQualifiersStage.html#a0e6f92296a1cce1530d8704d3cc6ac93", null ],
+    [ "client", "classAutoRefQualifiersStage.html#ae91bb0ea4504cfb91908b74c1c5262be", null ],
+    [ "currentMapIndex", "classAutoRefQualifiersStage.html#a86221c93645e510124d8342f4de1d65c", null ],
+    [ "currentMatch", "classAutoRefQualifiersStage.html#a3256a2044899c9bf982033ed9c6d41a6", null ],
+    [ "joined", "classAutoRefQualifiersStage.html#aba85de97653f4f5384c7cfb959bdf065", null ],
+    [ "lobbyChannelName", "classAutoRefQualifiersStage.html#aec20d5d365d71247e5984260e1b4e34f", null ],
+    [ "matchId", "classAutoRefQualifiersStage.html#ad2b77ee5629c833f4bb83eb0e2ad4a45", null ],
+    [ "mpLinkId", "classAutoRefQualifiersStage.html#ae1c1498f64668337528d4c521b2f47da", null ],
+    [ "msgCallback", "classAutoRefQualifiersStage.html#a57aa39ce90379a53c9d9e586e9c5eed1", null ],
+    [ "refDisplayName", "classAutoRefQualifiersStage.html#a658529232a226e42f8773e061165c735", null ],
+    [ "state", "classAutoRefQualifiersStage.html#a4b1617bf36002aea47fbd985ff407833", null ],
+    [ "usersInRoom", "classAutoRefQualifiersStage.html#a8648ab100f05d88a7cf69e0357ac434f", null ]
+];

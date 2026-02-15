@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,31,84,56"/>
+<area shape="rect" id="Node000001" href="$classAutoRefEliminationStage.html" title="Handles the automated refereeing logic for Elimination/Versus matches. Implements a complex State Mac..." alt="" coords="132,5,317,31"/>
+<area shape="poly" id="edge2_Node000000_Node000001" title=" " alt="" coords="97,33,134,28,135,33,98,39"/>
+<area shape="rect" id="Node000002" href="$classAutoRefQualifiersStage.html" title="Handles the automated refereeing logic for Qualifier Lobbies. manages a linear flow of maps with no p..." alt="" coords="138,55,311,80"/>
+<area shape="poly" id="edge3_Node000000_Node000002" title=" " alt="" coords="98,48,138,53,138,58,97,53"/>
+</map>
