@@ -30,9 +30,9 @@ namespace ss.Internal.Management.Server.AutoRef;
 ///     Init -> Idle [label="Admin types\n!start"];
 ///     
 ///     // The Loop
-///     Idle -> WaitStart [label="Next Map Available\n(Load Map & Mods)"];
+///     Idle -> WaitStart [label="Next Map Available\n(Loaded Map & Mods)"];
 ///     WaitStart -> Playing [label="Players Ready\nOR Countdown ends"];
-///     Playing -> Idle [label="Map Finished\n(Wait 10s)"];
+///     Playing -> Idle [label="Map Finished\n(Increment Map Index)"];
 ///
 ///     // Exit Condition
 ///     Idle -> Finished [label="No Maps Left"];
