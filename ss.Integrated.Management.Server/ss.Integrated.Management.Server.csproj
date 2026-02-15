@@ -67,4 +67,8 @@
         <DependentUpon>Strings.es.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Docs\" />
+    </ItemGroup>
 </Project>
