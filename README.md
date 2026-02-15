@@ -9,8 +9,6 @@ This system addresses the critical scalability issues found in modern osu! tourn
 
 Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
 
-Diagrams and extra 
-
 ## 🚀 Deployment & Installation
 
 ### Prerequisites
