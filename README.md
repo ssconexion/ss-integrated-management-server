@@ -40,7 +40,7 @@ dotnet ef database update
 
 ## ✨ System Capabilities & Key Features
 
-### ⚙️ Core Architecture
+### Core Architecture
 
 - **Zero-Sheet Dependency:** Eliminates reliance on Google Sheets/Excel. All data is persisted in a relational PostgreSQL database to ensure data integrity.
     
@@ -49,7 +49,7 @@ dotnet ef database update
 - **Legacy Import Support:** Native parsing for existing CSV scripts (e.g., [LeoFLT's qualifier script](https://gist.github.com/LeoFLT/2a7e0c3c201a327f022aa5b61b679d3f)) to ease migration.
     
 
-### 🤖 Automation Modules (AutoRef)
+### Automation Modules (AutoRef)
 
 - **Qualifier Automation:** Fully autonomous lobby management for qualifier lobbies (Room creation, map cycling, timer management, score logging).
     
@@ -58,7 +58,7 @@ dotnet ef database update
 - **Panic Protocol:** Built-in fail-safe mechanisms allowing human referees to instantly override automation in case of edge cases or disputes (`!panic` / `!panic_over`).
     
 
-### 🎮 Discord & Lifecycle Management
+### Discord & Lifecycle Management
 
 - **Seamless Integration:** Bi-directional communication. Control matches, receive live logs, and manage player notifications directly from a dedicated Discord thread.
     
@@ -68,7 +68,7 @@ dotnet ef database update
 
 ---
 
-# 📘 AutoRef System Documentation
+# AutoRef System Documentation
 
 ## 1. System Overview
 
