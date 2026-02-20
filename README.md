@@ -7,7 +7,7 @@ The **SS-IMS** is a high-performance, event-driven middleware designed by **SSCo
 
 This system addresses the critical scalability issues found in modern osu! tournaments: human error, volunteer unavailability, and the cognitive load of managing multiple concurrent lobbies. By replacing manual spreadsheet tracking with a **database-first approach** and bridging **Discord** with **Bancho (IRC)**, SS-IMS provides a seamless, autonomous refereeing experience for both Qualifier and Elimination stages.
 
-Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
+Extra docs and information can be found [here](https://docs.spanishshowdown.es/) ([fallback](https://ssconexion.github.io/ss-integrated-management-server/))
 
 ## 🚀 Deployment & Installation
 
