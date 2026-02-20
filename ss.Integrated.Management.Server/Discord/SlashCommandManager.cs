@@ -88,7 +88,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         await Manager.AddRefereeToDbAsync(model);
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("assignref", "Asigna un referee a una match concreta")]
     public async Task AssignRefToMatch(string matchId, string refName)
@@ -96,8 +96,9 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         await DeferAsync(ephemeral: false);
 
         await using var db = new ModelsContext();
-        
+
         var referee = await db.Referees.FirstOrDefaultAsync(r => r.DisplayName == refName);
+
         if (referee == null)
         {
             await FollowupAsync($"No se encontró ningún referee con el nombre `{refName}` en la base de datos.");
@@ -127,8 +128,8 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("importscores", "Sube un archivo .txt/.csv con los resultados de un match")]
-    public async Task ImportScoresAsync(
+    [SlashCommand("importscores-privaterooms", "Sube un archivo .txt/.csv con los resultados de un match")]
+    public async Task ImportPrivateScoresAsync(
         [Summary("match_id", "El ID del match (ej: 15 o A1)")]
         string matchId,
         [Summary("archivo", "El archivo txt/csv con los datos raw")]
@@ -188,6 +189,83 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("importscores", "Importa las scores de un lobby de osu! directamente desde la API")]
+    public async Task ImportScoresAsync(
+        [Summary(description: "El ID del lobby en la web de osu! (ej. 118575195)")]
+        string osuLobbyIdStr,
+        [Summary(description: "El ID de la sala en la Base de Datos (ej. A1, 56, EX2)")]
+        string dbRoomId)
+    {
+        await DeferAsync(ephemeral: false);
+
+        if (!long.TryParse(osuLobbyIdStr, out long osuLobbyId))
+        {
+            await FollowupAsync("El ID del lobby de osu! debe ser un número válido.");
+            return;
+        }
+
+        await using var db = new ModelsContext();
+        
+        var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == dbRoomId);
+        var qualsRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == dbRoomId);
+
+        int roundId;
+
+        if (matchRoom != null) roundId = matchRoom.RoundId;
+        else if (qualsRoom != null) roundId = qualsRoom.RoundId;
+        else
+        {
+            await FollowupAsync($"No se encontró ninguna sala en la base de datos con el ID `{dbRoomId}`.");
+            return;
+        }
+        
+        var games = await OsuMatchImporter.FetchAllGamesAsync(osuLobbyId);
+
+        if (games == null || games.Count == 0)
+        {
+            await FollowupAsync("No se pudieron obtener datos del lobby (Es privado o está vacío). Considera usar la versión manual.");
+            return;
+        }
+
+        int importedScores = 0;
+        var validUsersCache = new Dictionary<int, int>();
+
+        foreach (var game in games)
+        {
+            var map = db.Rounds.First(r => r.Id == roundId).MapPool.FirstOrDefault(m => m.BeatmapID == game.BeatmapId) ?? new Models.RoundBeatmap { BeatmapID = 0, Slot = "?" };
+            
+            foreach (var score in game.Scores)
+            {
+                if (!validUsersCache.TryGetValue(score.UserId, out int internalUserId))
+                {
+                    var dbUser = await db.Users.FirstOrDefaultAsync(u => u.OsuData.Id == score.UserId);
+                    if (dbUser == null) continue;
+
+                    internalUserId = dbUser.Id;
+                    validUsersCache[score.UserId] = internalUserId;
+                }
+
+                var newScore = new Models.ScoreResults
+                {
+                    RoundId = roundId,
+                    UserId = internalUserId,
+                    Score = score.TotalScore,
+                    Accuracy = (float)score.Accuracy,
+                    MaxCombo = score.MaxCombo,
+                    Grade = OsuMatchImporter.CalculateGrade(score),
+                    Slot = map.Slot,
+                };
+
+                db.Scores.Add(newScore);
+                importedScores++;
+            }
+        }
+
+        await db.SaveChangesAsync();
+        await FollowupAsync($"Guardadas {importedScores} scores en la DB para la sala `{dbRoomId}`");
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("matchups", "Muestra la lista de matches activos con paginación")]
     public async Task ListMatchesAsync()
     {
@@ -218,14 +296,16 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     {
         await DeferAsync(ephemeral: false);
         await using var db = new ModelsContext();
-        
+
         var match = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
 
         if (!int.TryParse(mpLinkId, out int id))
         {
             await FollowupAsync("Mp link ID no válido. Debe ser un int");
             return;
-        };
+        }
+
+        ;
 
         if (match == null)
         {
@@ -282,7 +362,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync("Formato inválido, usa DD/MM HH:mm (ej: 09/11, 08:46)");
             return;
         }
-        
+
         match.StartTime = DateTime.SpecifyKind(result, DateTimeKind.Utc);
 
         await db.SaveChangesAsync();
@@ -294,12 +374,12 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     public async Task CreateQualifiersRoom(string roomId, string date, string hour, int roundId, int requestedBy = 1)
     {
         await DeferAsync(ephemeral: false);
-        
+
         await using var db = new ModelsContext();
-        
+
         string fulldate = $"{date}/{DateTime.UtcNow.Year} {hour}";
         string[] formatos = { "d/M/yyyy H:m", "dd/MM/yyyy HH:mm" };
-        
+
         if (!DateTime.TryParseExact(fulldate, formatos, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal,
                 out DateTime result))
         {
@@ -312,13 +392,13 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync("Ya existía previamente una match con esa ID.");
             return;
         }
-        
+
         if (db.Rounds.FirstOrDefault(round => round.Id == roundId) == null)
         {
             await FollowupAsync("No existe la ronda especificada");
             return;
         }
-        
+
         var room = new Models.QualifierRoom
         {
             Id = roomId,
@@ -328,13 +408,13 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             RefereeId = null,
             Approved = true,
         };
-        
+
         db.QualifierRooms.Add(room);
         await db.SaveChangesAsync();
-        
+
         await FollowupAsync($"Sala de Qualifiers `{room.Id}` creada con éxito con fecha `{room.StartTime}`");
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("removequalifiersroom", "Elimina una sala de qualifiers del listado a través de su ID")]
     public async Task RemoveQualifiersRoomAsync(string matchid)
@@ -366,10 +446,10 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync("Fecha inválida. Usa formato YYYY-MM-DD.");
             return;
         }
-        
+
 
         await using var db = new ModelsContext();
-        
+
         if (db.Rounds.FirstOrDefault(round => round.Id == roundId) == null)
         {
             await FollowupAsync("No existe la ronda especificada");
