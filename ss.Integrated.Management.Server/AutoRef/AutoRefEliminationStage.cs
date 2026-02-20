@@ -289,7 +289,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         // 3. Emergency Protocols (!panic)
         // Decoupled from the main State Machine to ensure it works regardless of the current state.
-        if (content.Contains("!panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
+        if (content.Contains(">panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
         {
             await SendMessageBothWays(Strings.BackToAuto);
             currentState = MatchState.WaitingForStart;
