@@ -27,7 +27,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     public static Dictionary<string, PendingMatch> PendingMatches = new();
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("startref", "Inicia un nuevo match y crea su thread")]
+    [SlashCommand("startref", "SlashCommandStartRef")]
     public async Task StartRefAsync(string matchId, string referee, Models.MatchType matchType)
     {
         await DeferAsync(ephemeral: false);
@@ -39,23 +39,23 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             bool created = await Manager.CreateMatchEnvironmentAsync(matchId, referee, Context.Guild, matchType);
 
             if (created)
-                await FollowupAsync($"Match **{matchId}** iniciado correctamente.");
+                await FollowupAsync(string.Format(Strings.MatchCreated, matchId));
             else
-                await FollowupAsync($"El Match ID **{matchId}** ya está en curso.", ephemeral: true);
+                await FollowupAsync(string.Format(Strings.MatchAlreadyCreated, matchId), ephemeral: true);
         }
         else
         {
-            await FollowupAsync($"El Referee **{referee}** no existe.", ephemeral: true);
+            await FollowupAsync(string.Format(Strings.RefDoesntExist, referee), ephemeral: true);
         }
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("endref", "Finaliza el match y archiva el thread")]
+    [SlashCommand("endref", "SlashCommandEndRef")]
     public async Task EndRefAsync(string matchId)
     {
         await DeferAsync(ephemeral: false);
         await using var db = new ModelsContext();
-        await FollowupAsync($"Procesando cierre para **{matchId}**...");
+        await FollowupAsync(string.Format(Strings.MatchFinishingUp));
         bool deleted = await Manager.EndMatchEnvironmentAsync(matchId);
 
         if (deleted)
@@ -69,7 +69,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("linkirc", "Configura tus credenciales de IRC para hacer uso del bot")]
+    [SlashCommand("linkirc", "SlashCommandLinkIrc")]
     public async Task AddRefCredentialsAsync(string nombre, int osuId, string ircPass)
     {
         ulong discordId = Context.User.Id;
@@ -82,15 +82,13 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             DiscordID = discordId
         };
 
-        await RespondAsync($"Referee **{nombre}** añadido/actualizado en la base de datos.\n" +
-                           $"- OsuID: {osuId}\n" +
-                           $"- DiscordID: {discordId}", ephemeral: true);
+        await RespondAsync(string.Format(Strings.RefAddedToDb, nombre, osuId, discordId), ephemeral: true);
 
         await Manager.AddRefereeToDbAsync(model);
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("assignref", "Asigna un referee a una match concreta")]
+    [SlashCommand("assignref", "SlashCommandAssignRef")]
     public async Task AssignRefToMatch(string matchId, string refName)
     {
         await DeferAsync(ephemeral: false);
@@ -101,7 +99,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (referee == null)
         {
-            await FollowupAsync($"No se encontró ningún referee con el nombre `{refName}` en la base de datos.");
+            await FollowupAsync(string.Format(Strings.RefDoesntExist, referee));
             return;
         }
 
@@ -110,7 +108,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (matchRoom == null && qualRoom == null)
         {
-            await FollowupAsync($"No se encontró ninguna match con el ID `{matchId}`.");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, matchId));
             return;
         }
 
@@ -124,22 +122,18 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         }
 
         await db.SaveChangesAsync();
-        await FollowupAsync($"✅ El referee **{referee.DisplayName}** ha sido asignado correctamente a la partida `{matchId}`.");
+        await FollowupAsync(string.Format(Strings.RefAssignedSuccessfully, referee.DisplayName, matchId));
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("importscores-privaterooms", "Sube un archivo .txt/.csv con los resultados de un match")]
-    public async Task ImportPrivateScoresAsync(
-        [Summary("match_id", "El ID del match (ej: 15 o A1)")]
-        string matchId,
-        [Summary("archivo", "El archivo txt/csv con los datos raw")]
-        IAttachment file)
+    [SlashCommand("importscores-privaterooms", "SlashCommandImportScoresPrivate")]
+    public async Task ImportPrivateScoresAsync(string matchId, IAttachment file)
     {
         await DeferAsync(ephemeral: false);
 
         if (!file.Filename.EndsWith(".txt") && !file.Filename.EndsWith(".csv"))
         {
-            await FollowupAsync("**Error:** El archivo debe ser .txt o .csv");
+            await FollowupAsync(Strings.ErrorNotCorrectFileExtension);
             return;
         }
 
@@ -147,10 +141,8 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         try
         {
-            using (var httpClient = new HttpClient())
-            {
-                csvContent = await httpClient.GetStringAsync(file.Url);
-            }
+            using var httpClient = new HttpClient();
+            csvContent = await httpClient.GetStringAsync(file.Url);
         }
         catch (Exception ex)
         {
@@ -215,7 +207,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         else if (qualsRoom != null) roundId = qualsRoom.RoundId;
         else
         {
-            await FollowupAsync($"No se encontró ninguna sala en la base de datos con el ID `{dbRoomId}`.");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, dbRoomId));
             return;
         }
         
@@ -309,7 +301,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (match == null)
         {
-            await FollowupAsync("Match ID no válido.");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, matchId));
             return;
         }
 
@@ -329,7 +321,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (remover == null)
         {
-            await FollowupAsync("No se ha encontrado una match con la ID especificada");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, matchid));
             return;
         }
 
@@ -349,7 +341,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (match == null)
         {
-            await FollowupAsync("No se ha encontrado una match con la ID especificada");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, matchId));
             return;
         }
 
@@ -426,7 +418,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         if (remover == null)
         {
-            await FollowupAsync("No se ha encontrado una sala con la ID especificada");
+            await FollowupAsync(string.Format(Strings.MatchNotFound, matchid));
             return;
         }
 
@@ -549,7 +541,6 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
                 if (spainTime.Date == targetDate.Date)
                 {
-                    // D. Bloqueamos la hora LOCAL (ej: 18)
                     busyHoursInSpain.Add(spainTime.Hour);
                 }
             }

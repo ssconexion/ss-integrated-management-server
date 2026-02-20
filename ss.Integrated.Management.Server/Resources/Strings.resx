@@ -132,4 +132,43 @@
     <data name="MatchFinishedThread" xml:space="preserve">
         <value>**The match has finished.** This thread will be locked.</value>
     </data>
+    <data name="MatchCreated" xml:space="preserve">
+        <value>Match `{0}` started in its corresponding thread.</value>
+    </data>
+    <data name="MatchAlreadyCreated" xml:space="preserve">
+        <value>Match `{0}` is already ongoing.</value>
+    </data>
+    <data name="RefDoesntExist" xml:space="preserve">
+        <value>Referee `{0}` doesn't exist in database. Use `/linkirc` to add them.</value>
+    </data>
+    <data name="SlashCommandStartRef" xml:space="preserve">
+        <value>Starts a new match interface in between discord and Bancho, using the IRC credentials for a given referee.</value>
+    </data>
+    <data name="SlashCommandEndRef" xml:space="preserve">
+        <value>Finalizes a match environment and archives the thread where it took place</value>
+    </data>
+    <data name="MatchFinishingUp" xml:space="preserve">
+        <value>Finishing up closure of match `{0}`...</value>
+    </data>
+    <data name="SlashCommandLinkIrc" xml:space="preserve">
+        <value>Configure your IRC credentials to make use of them to create matches</value>
+    </data>
+    <data name="RefAddedToDb" xml:space="preserve">
+        <value>Referee {0} added/updated in the database \n- OsuID: {1}\n- DiscordID: {2}</value>
+    </data>
+    <data name="SlashCommandAssignRef" xml:space="preserve">
+        <value>Assigns the given referee to a certain match.</value>
+    </data>
+    <data name="MatchNotFound" xml:space="preserve">
+        <value>Match `{0}` was not found in the database.</value>
+    </data>
+    <data name="SlashCommandImportScoresPrivate" xml:space="preserve">
+        <value>Upload a .csv file with LeoFLT's tool to parse it and save the scores</value>
+    </data>
+    <data name="RefAssignedSuccessfully" xml:space="preserve">
+        <value>Referee **{0}** has been successfully assigned to match `{1}`</value>
+    </data>
+    <data name="ErrorNotCorrectFileExtension" xml:space="preserve">
+        <value>**Error**: File must be `.txt` or `.csv`</value>
+    </data>
 </root>
