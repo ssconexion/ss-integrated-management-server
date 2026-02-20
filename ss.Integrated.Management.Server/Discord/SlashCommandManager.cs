@@ -88,6 +88,43 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
         await Manager.AddRefereeToDbAsync(model);
     }
+    
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("assignref", "Asigna un referee a una match concreta")]
+    public async Task AssignRefToMatch(string matchId, string refName)
+    {
+        await DeferAsync(ephemeral: false);
+
+        await using var db = new ModelsContext();
+        
+        var referee = await db.Referees.FirstOrDefaultAsync(r => r.DisplayName == refName);
+        if (referee == null)
+        {
+            await FollowupAsync($"No se encontró ningún referee con el nombre `{refName}` en la base de datos.");
+            return;
+        }
+
+        var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
+        var qualRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == matchId);
+
+        if (matchRoom == null && qualRoom == null)
+        {
+            await FollowupAsync($"No se encontró ninguna match con el ID `{matchId}`.");
+            return;
+        }
+
+        if (matchRoom != null)
+        {
+            matchRoom.Referee = referee;
+        }
+        else if (qualRoom != null)
+        {
+            qualRoom.Referee = referee;
+        }
+
+        await db.SaveChangesAsync();
+        await FollowupAsync($"✅ El referee **{referee.DisplayName}** ha sido asignado correctamente a la partida `{matchId}`.");
+    }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("importscores", "Sube un archivo .txt/.csv con los resultados de un match")]
