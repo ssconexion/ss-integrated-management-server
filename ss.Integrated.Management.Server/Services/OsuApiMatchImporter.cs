@@ -102,7 +102,7 @@ public static class OsuMatchImporter
         [JsonPropertyName("user_id")] public int UserId { get; set; }
         [JsonPropertyName("accuracy")] public double Accuracy { get; set; }
         [JsonPropertyName("max_combo")] public int MaxCombo { get; set; }
-        [JsonPropertyName("score")] public int TotalScore { get; set; }
+        [JsonPropertyName("total_score")] public int TotalScore { get; set; }
         [JsonPropertyName("statistics")] public OsuApiStatistics Statistics { get; set; }
         [JsonPropertyName("mods")] public List<OsuApiMod> Mods { get; set; } = new();
     }
