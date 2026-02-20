@@ -7,6 +7,5 @@ var searchData=
   ['envvarname_4',['envVarName',['../classRequireFromEnvIdAttribute.html#ac4d59aa608017e68d7d71e21721492bf',1,'RequireFromEnvIdAttribute']]],
   ['er_20diagram_5',['Database Schema (ER Diagram)',['../classModels.html#autotoc_md2',1,'']]],
   ['events_6',['events',['../classOsuMatchImporter_1_1OsuMatchResponse.html#ab0a1fb3dc7e8d172cfb34fd7289b46f0',1,'OsuMatchImporter::OsuMatchResponse::Events'],['../OsuApiMatchImporter_8cs.html#a16c367d34bef9cb84b9ebc89c1af26ab',1,'Events:&#160;OsuApiMatchImporter.cs']]],
-  ['executeadmincommand_7',['executeadmincommand',['../classAutoRefEliminationStage.html#a757ebb4fe140388b81cf9f491278d5d0',1,'AutoRefEliminationStage::ExecuteAdminCommand()'],['../classAutoRefQualifiersStage.html#abd3729b8636cead6c4deb7219c19e140',1,'AutoRefQualifiersStage::ExecuteAdminCommand()']]],
-  ['extracttranslations_8',['ExtractTranslations',['../classResxLocalizationManager.html#a990b2b7a39b9679cc13e9edd1f0eb20a',1,'ResxLocalizationManager']]]
+  ['executeadmincommand_7',['executeadmincommand',['../classAutoRefEliminationStage.html#a757ebb4fe140388b81cf9f491278d5d0',1,'AutoRefEliminationStage::ExecuteAdminCommand()'],['../classAutoRefQualifiersStage.html#abd3729b8636cead6c4deb7219c19e140',1,'AutoRefQualifiersStage::ExecuteAdminCommand()']]]
 ];

@@ -1,7 +1,5 @@
 <map id="ss::Internal::Management::Server::Resources::Strings_es" name="ss::Internal::Management::Server::Resources::Strings_es">
-<area shape="rect" id="Node000001" title="A strongly&#45;typed resource class, for looking up localized strings, etc." alt="" coords="5,93,228,133"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="11,5,100,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="56,44,62,68,83,91,79,95,57,71,51,45"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="124,5,232,31"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="167,44,151,71,134,95,129,92,146,68,163,41"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,108,228,148"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="81,5,152,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="119,45,119,108,114,108,114,45"/>
 </map>

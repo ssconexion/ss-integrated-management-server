@@ -52,11 +52,10 @@ var NAVTREEINDEX0 =
 "OsuApiMatchImporter_8cs.html#aefbf0b243123ba990548ba0092bba3f8":[2,0,0,4,0,9],
 "Program_8cs.html":[2,0,0,5],
 "RequireRoleAttribute_8cs.html":[2,0,0,2,1],
-"ResxLocalizationManager_8cs.html":[2,0,0,3,0],
 "ScoreImporter_8cs.html":[2,0,0,2,2],
 "SlashCommandManager_8cs.html":[2,0,0,2,3],
-"Strings_8Designer_8cs.html":[2,0,0,3,1],
-"Strings_8es_8Designer_8cs.html":[2,0,0,3,2],
+"Strings_8Designer_8cs.html":[2,0,0,3,0],
+"Strings_8es_8Designer_8cs.html":[2,0,0,3,1],
 "annotated.html":[1,0],
 "classAutoRefEliminationStage.html":[1,0,1],
 "classAutoRefEliminationStage.html#a000fc62ec632bba784011d0877b9d0f0":[1,0,1,0],
@@ -249,5 +248,6 @@ var NAVTREEINDEX0 =
 "classOsuMatchImporter.html#a2f162dcb1b259d88f933d2727fe5bc0d":[1,0,6,18],
 "classOsuMatchImporter.html#a428beca5fce0f6bb4b43e62c2da4da51":[1,0,6,4],
 "classOsuMatchImporter.html#a51d204b7deae2d6058eb725f9e2bef79":[1,0,6,5],
-"classOsuMatchImporter.html#a5472efb08f738570d913b90fb0edb13d":[1,0,6,14]
+"classOsuMatchImporter.html#a5472efb08f738570d913b90fb0edb13d":[1,0,6,14],
+"classOsuMatchImporter.html#a6fdf170168ea3bb41a40282fa8567063":[1,0,6,16]
 };

@@ -20,7 +20,6 @@ var annotated_dup =
     [ "ModelsContext", "classModelsContext.html", "classModelsContext" ],
     [ "OsuMatchImporter", "classOsuMatchImporter.html", "classOsuMatchImporter" ],
     [ "RequireFromEnvIdAttribute", "classRequireFromEnvIdAttribute.html", "classRequireFromEnvIdAttribute" ],
-    [ "ResxLocalizationManager", "classResxLocalizationManager.html", "classResxLocalizationManager" ],
     [ "ScoreImporter", "classScoreImporter.html", "classScoreImporter" ],
     [ "SlashCommandManager", "classSlashCommandManager.html", "classSlashCommandManager" ]
 ];
