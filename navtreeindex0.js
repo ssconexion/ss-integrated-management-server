@@ -248,6 +248,6 @@ var NAVTREEINDEX0 =
 "classScoreImporter_1_1RawScoreData.html#acbc0dc795aa11e21334ec2831e7d6635":[1,0,7,0,1],
 "classScoreImporter_1_1RawScoreData.html#acead8bde4d316b70b5f0ea5f38acb2c8":[1,0,7,0,4],
 "classSlashCommandManager.html":[1,0,8],
-"classSlashCommandManager.html#a1d07a44baa3e91f10c44cbe40fbdb740":[1,0,8,19],
-"classSlashCommandManager.html#a2916a0daf35184717352bdeb154fb5a7":[1,0,8,9]
+"classSlashCommandManager.html#a1d07a44baa3e91f10c44cbe40fbdb740":[1,0,8,20],
+"classSlashCommandManager.html#a230d806224a4f0314078ec015bc22821":[1,0,8,4]
 };

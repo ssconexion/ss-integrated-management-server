@@ -4,6 +4,7 @@ var classSlashCommandManager =
     [ "PendingMatch", "classSlashCommandManager_1_1PendingMatch.html", "classSlashCommandManager_1_1PendingMatch" ],
     [ "AddMpLinkIdAsync", "classSlashCommandManager.html#aee9ed9743f0039e41169c870c96c3815", null ],
     [ "AddRefCredentialsAsync", "classSlashCommandManager.html#ab511f78bdc2623237d25134fc42d8918", null ],
+    [ "AssignRefToMatch", "classSlashCommandManager.html#a230d806224a4f0314078ec015bc22821", null ],
     [ "CreateMatchCheck", "classSlashCommandManager.html#a724b4283b8a5fb57245328bc22049d5b", null ],
     [ "CreateMatchEmbed", "classSlashCommandManager.html#af31868be3c8b54018b7f7015df7fe041", null ],
     [ "CreateQualifiersRoom", "classSlashCommandManager.html#aa1a6d85caced353067e065e49264030f", null ],
