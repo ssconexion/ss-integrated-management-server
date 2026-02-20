@@ -147,26 +147,21 @@ public class DiscordManager
     /// Stops the match worker, archives the Discord thread, and removes the match from active memory.
     /// </summary>
     /// <param name="matchId">The unique identifier of the match to close.</param>
-    /// <param name="requestChannel">The channel where the command was issued (for feedback).</param>
-    public async Task EndMatchEnvironmentAsync(string matchId, IMessageChannel requestChannel)
+    public async Task<bool> EndMatchEnvironmentAsync(string matchId)
     {
         if (activeMatches.TryRemove(matchId, out var worker))
         {
             await worker.StopAsync();
-            Console.WriteLine($"Worker {matchId} stopped.");
         }
         else
         {
-            await requestChannel.SendMessageAsync(Strings.WorkerNotFound);
-            return;
+            return false;
         }
 
         if (activeChannels.TryRemove(matchId, out ulong threadId))
         {
             if (client.GetChannel(threadId) is IThreadChannel thread)
             {
-                await requestChannel.SendMessageAsync(string.Format(Strings.MatchFinishedGlobal, threadId));
-
                 await thread.SendMessageAsync(Strings.MatchFinishedThread);
 
                 await thread.ModifyAsync(props =>
@@ -176,6 +171,8 @@ public class DiscordManager
                 });
             }
         }
+
+        return true;
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.Discord;
 
@@ -54,8 +55,17 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     {
         await DeferAsync(ephemeral: false);
         await using var db = new ModelsContext();
-        await RespondAsync($"Procesando cierre para **{matchId}**...");
-        await Manager.EndMatchEnvironmentAsync(matchId, Context.Channel);
+        await FollowupAsync($"Procesando cierre para **{matchId}**...");
+        bool deleted = await Manager.EndMatchEnvironmentAsync(matchId);
+
+        if (deleted)
+        {
+            await FollowupAsync(string.Format(Strings.MatchFinishedGlobal, matchId));
+        }
+        else
+        {
+            await FollowupAsync(Strings.WorkerNotFound);
+        }
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]

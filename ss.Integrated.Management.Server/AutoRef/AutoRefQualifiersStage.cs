@@ -104,7 +104,14 @@ public partial class AutoRefQualifiersStage : IAutoRef
     public async Task StopAsync()
     {
         await using var db = new ModelsContext();
+        
+        await db.QualifierRooms
+            .Where(m => m.Id == matchId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.MpLinkId, mpLinkId));
+        
         await db.SaveChangesAsync();
+        await SendMessageBothWays("!mp close");
+        await client!.DisconnectAsync();
     }
 
     private async Task ConnectToBancho()
@@ -181,9 +188,6 @@ public partial class AutoRefQualifiersStage : IAutoRef
                 await InitializeLobbySettings();
                 joined = true;
                 return;
-            case "BanchoBot" when content.Contains("Closed the match"):
-                await client!.DisconnectAsync();
-                break;
             case "BanchoBot" when chatResponseTcs != null && SearchKeywords(content):
                 chatResponseTcs.TrySetResult(content);
                 chatResponseTcs = null;
@@ -243,9 +247,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
         switch (args[0].ToLower())
         {
             case "finish":
-                currentMatch!.MpLinkId = mpLinkId;
                 await SendMessageBothWays("!mp close");
-                await client!.DisconnectAsync();
                 break;
             case "invite":
                 foreach (var osuId in usersInRoom)

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Runtime.InteropServices.JavaScript;
+using System.Text.RegularExpressions;
 using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -168,10 +169,20 @@ public partial class AutoRefEliminationStage : IAutoRef
     public async Task StopAsync()
     {
         await using var db = new ModelsContext();
-        currentMatch!.BannedMaps = bannedMaps;
-        currentMatch!.PickedMaps = pickedMaps;
+
+        await db.MatchRooms
+            .Where(m => m.Id == matchId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.MpLinkId, mpLinkId)
+                .SetProperty(m => m.PickedMaps, pickedMaps) 
+                .SetProperty(m => m.BannedMaps, bannedMaps)
+                .SetProperty(m => m.EndTime, DateTime.UtcNow)
+            );
 
         await db.SaveChangesAsync();
+        
+        await SendMessageBothWays("!mp close");
+        await client!.DisconnectAsync();
     }
 
     private async Task ConnectToBancho()
@@ -194,7 +205,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         client.OnAuthenticated += () =>
         {
-            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: ({currentMatch.TeamRed.DisplayName}) vs ({currentMatch.TeamBlue.DisplayName})", true); // TODO poner en false
+            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: ({currentMatch.TeamRed.DisplayName}) vs ({currentMatch.TeamBlue.DisplayName})", false);
         };
 
         await client.ConnectAsync();
@@ -245,9 +256,6 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await InitializeLobbySettings();
                 joined = true;
                 return;
-            case "BanchoBot" when content.Contains("Closed the match"):
-                await client!.DisconnectAsync();
-                break;
             case "BanchoBot" when chatResponseTcs != null && SearchKeywords(content):
                 chatResponseTcs.TrySetResult(content);
                 chatResponseTcs = null;
@@ -388,9 +396,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 break;
             
             case "finish":
-                currentMatch!.MpLinkId = mpLinkId;
                 await SendMessageBothWays("!mp close");
-                await client!.DisconnectAsync();
                 break;
 
             case "maps":
