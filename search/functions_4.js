@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['getdaybits_0',['GetDayBits',['../classSlashCommandManager_1_1AvailabilityHelper.html#aa1e7ad2ea2337569370b28118230de74',1,'SlashCommandManager::AvailabilityHelper']]]
+  ['fetchallgamesasync_0',['FetchAllGamesAsync',['../classOsuMatchImporter.html#a062963a5ef3a22ac0c0ccbc7dcd0fe3b',1,'OsuMatchImporter']]]
 ];

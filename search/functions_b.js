@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['readyasync_0',['ReadyAsync',['../classDiscordManager.html#a0d2525169060293fee9162c64b60a0da',1,'DiscordManager']]],
-  ['removematchasync_1',['RemoveMatchAsync',['../classSlashCommandManager.html#ab9cbd7a6a05e40bb65640ec54c12e025',1,'SlashCommandManager']]],
-  ['removequalifiersroomasync_2',['RemoveQualifiersRoomAsync',['../classSlashCommandManager.html#a96f83ad9f228ee9d3d62a6ec2238b4ad',1,'SlashCommandManager']]],
-  ['requirefromenvidattribute_3',['RequireFromEnvIdAttribute',['../classRequireFromEnvIdAttribute.html#a8afa47daa87c0d59e4b1b0cea6b99efc',1,'RequireFromEnvIdAttribute']]]
+  ['onconfiguring_0',['OnConfiguring',['../classModelsContext.html#ad75ecc8b411b0cc5eee2a352f703261b',1,'ModelsContext']]],
+  ['onmodelcreating_1',['OnModelCreating',['../classModelsContext.html#a0dff94d030cb13d623e25c8a4761f364',1,'ModelsContext']]],
+  ['osumatchimporter_2',['OsuMatchImporter',['../classOsuMatchImporter.html#a428beca5fce0f6bb4b43e62c2da4da51',1,'OsuMatchImporter']]]
 ];

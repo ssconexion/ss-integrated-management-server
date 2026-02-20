@@ -18,6 +18,7 @@ var annotated_dup =
     [ "DiscordManager", "classDiscordManager.html", "classDiscordManager" ],
     [ "Models", "classModels.html", "classModels" ],
     [ "ModelsContext", "classModelsContext.html", "classModelsContext" ],
+    [ "OsuMatchImporter", "classOsuMatchImporter.html", "classOsuMatchImporter" ],
     [ "RequireFromEnvIdAttribute", "classRequireFromEnvIdAttribute.html", "classRequireFromEnvIdAttribute" ],
     [ "ScoreImporter", "classScoreImporter.html", "classScoreImporter" ],
     [ "SlashCommandManager", "classSlashCommandManager.html", "classSlashCommandManager" ]

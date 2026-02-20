@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['program_2ecs_0',['Program.cs',['../Program_8cs.html',1,'']]]
+  ['osuapimatchimporter_2ecs_0',['OsuApiMatchImporter.cs',['../OsuApiMatchImporter_8cs.html',1,'']]]
 ];

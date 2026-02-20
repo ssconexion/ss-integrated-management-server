@@ -14,6 +14,11 @@ var hierarchy =
     ] ],
     [ "Models::MatchRoom", "classModels_1_1MatchRoom.html", null ],
     [ "Models", "classModels.html", null ],
+    [ "OsuMatchImporter::OsuApiDetail", "classOsuMatchImporter_1_1OsuApiDetail.html", null ],
+    [ "OsuMatchImporter::OsuApiMod", "classOsuMatchImporter_1_1OsuApiMod.html", null ],
+    [ "OsuMatchImporter::OsuApiScore", "classOsuMatchImporter_1_1OsuApiScore.html", null ],
+    [ "OsuMatchImporter", "classOsuMatchImporter.html", null ],
+    [ "OsuMatchImporter::OsuMatchResponse", "classOsuMatchImporter_1_1OsuMatchResponse.html", null ],
     [ "Models::OsuUser", "classModels_1_1OsuUser.html", null ],
     [ "SlashCommandManager::PendingMatch", "classSlashCommandManager_1_1PendingMatch.html", null ],
     [ "PreconditionAttribute", null, [

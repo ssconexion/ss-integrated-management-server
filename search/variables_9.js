@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['lastpick_0',['lastPick',['../classAutoRefEliminationStage.html#a2d18355b028d29d7a201c013c5817b6a',1,'AutoRefEliminationStage']]],
-  ['lobbychannelname_1',['lobbychannelname',['../classAutoRefEliminationStage.html#afe85c45026e45dfb9387fd5d416aced3',1,'AutoRefEliminationStage::lobbyChannelName'],['../classAutoRefQualifiersStage.html#aec20d5d365d71247e5984260e1b4e34f',1,'AutoRefQualifiersStage::lobbyChannelName']]]
+  ['joined_0',['joined',['../classAutoRefEliminationStage.html#ada39976022d393c99afb711a8a10589c',1,'AutoRefEliminationStage::joined'],['../classAutoRefQualifiersStage.html#aba85de97653f4f5384c7cfb959bdf065',1,'AutoRefQualifiersStage::joined']]]
 ];

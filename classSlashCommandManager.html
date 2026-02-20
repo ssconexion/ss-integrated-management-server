@@ -126,8 +126,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ab511f78bdc2623237d25134fc42d8918"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a230d806224a4f0314078ec015bc22821" id="r_a230d806224a4f0314078ec015bc22821"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#a230d806224a4f0314078ec015bc22821">AssignRefToMatch</a> (<a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a> matchId, <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a> refName)</td></tr>
 <tr class="separator:a230d806224a4f0314078ec015bc22821"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c15fab13b60305f9c663e3c198905b4" id="r_a9c15fab13b60305f9c663e3c198905b4"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#a9c15fab13b60305f9c663e3c198905b4">ImportScoresAsync</a> ([Summary(&quot;match_id&quot;, &quot;El ID del match (ej: 15 o A1)&quot;)] string matchId, [Summary(&quot;archivo&quot;, &quot;El archivo txt/csv con los datos raw&quot;)] IAttachment file)</td></tr>
-<tr class="separator:a9c15fab13b60305f9c663e3c198905b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a840ae9e012d149e9ff81ff65b8fff208" id="r_a840ae9e012d149e9ff81ff65b8fff208"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#a840ae9e012d149e9ff81ff65b8fff208">ImportPrivateScoresAsync</a> ([Summary(&quot;match_id&quot;, &quot;El ID del match (ej: 15 o A1)&quot;)] string matchId, [Summary(&quot;archivo&quot;, &quot;El archivo txt/csv con los datos raw&quot;)] IAttachment file)</td></tr>
+<tr class="separator:a840ae9e012d149e9ff81ff65b8fff208"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6469d336714379fe2796ca04c1907586" id="r_a6469d336714379fe2796ca04c1907586"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#a6469d336714379fe2796ca04c1907586">ImportScoresAsync</a> ([Summary(description:&quot;El ID del lobby en la web de osu! (ej. 118575195)&quot;)] string osuLobbyIdStr, [Summary(description:&quot;El ID de la sala en la Base de Datos (ej. A1, 56, EX2)&quot;)] string dbRoomId)</td></tr>
+<tr class="separator:a6469d336714379fe2796ca04c1907586"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a677fd6012310640c18268783d59ffe80" id="r_a677fd6012310640c18268783d59ffe80"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#a677fd6012310640c18268783d59ffe80">ListMatchesAsync</a> ()</td></tr>
 <tr class="separator:a677fd6012310640c18268783d59ffe80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9cbd7a6a05e40bb65640ec54c12e025" id="r_ab9cbd7a6a05e40bb65640ec54c12e025"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager.html#ab9cbd7a6a05e40bb65640ec54c12e025">RemoveMatchAsync</a> (<a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a> matchid)</td></tr>
@@ -560,8 +562,44 @@ Private Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a9c15fab13b60305f9c663e3c198905b4" name="a9c15fab13b60305f9c663e3c198905b4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9c15fab13b60305f9c663e3c198905b4">&#9670;&#160;</a></span>ImportScoresAsync()</h2>
+<a id="a840ae9e012d149e9ff81ff65b8fff208" name="a840ae9e012d149e9ff81ff65b8fff208"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a840ae9e012d149e9ff81ff65b8fff208">&#9670;&#160;</a></span>ImportPrivateScoresAsync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">async Task SlashCommandManager::ImportPrivateScoresAsync </td>
+          <td>(</td>
+          <td class="paramtype">[Summary(&quot;match_id&quot;, &quot;El ID del match (ej: 15 o A1)&quot;)] <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a>&#160;</td>
+          <td class="paramname"><em>matchId</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">[Summary(&quot;archivo&quot;, &quot;El archivo txt/csv con los datos raw&quot;)] IAttachment&#160;</td>
+          <td class="paramname"><em>file</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6469d336714379fe2796ca04c1907586" name="a6469d336714379fe2796ca04c1907586"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6469d336714379fe2796ca04c1907586">&#9670;&#160;</a></span>ImportScoresAsync()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -572,14 +610,14 @@ Private Member Functions</h2></td></tr>
         <tr>
           <td class="memname">async Task SlashCommandManager::ImportScoresAsync </td>
           <td>(</td>
-          <td class="paramtype">[Summary(&quot;match_id&quot;, &quot;El ID del match (ej: 15 o A1)&quot;)] <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a>&#160;</td>
-          <td class="paramname"><em>matchId</em>, </td>
+          <td class="paramtype">[Summary(description: &quot;El ID del lobby en la web de osu! (ej. 118575195)&quot;)] <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a>&#160;</td>
+          <td class="paramname"><em>osuLobbyIdStr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">[Summary(&quot;archivo&quot;, &quot;El archivo txt/csv con los datos raw&quot;)] IAttachment&#160;</td>
-          <td class="paramname"><em>file</em>&#160;</td>
+          <td class="paramtype">[Summary(description: &quot;El ID de la sala en la Base de Datos (ej. A1, 56, EX2)&quot;)] <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a>&#160;</td>
+          <td class="paramname"><em>dbRoomId</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

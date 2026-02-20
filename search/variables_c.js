@@ -1,9 +1,6 @@
 var searchData=
 [
-  ['parentchannelid_0',['parentChannelId',['../classDiscordManager.html#accde08e7e05f5a0351aa0b3902158cce',1,'DiscordManager']]],
-  ['pendingmatches_1',['PendingMatches',['../classSlashCommandManager.html#a922a25cdf6a71199a5df5a6627f21155',1,'SlashCommandManager']]],
-  ['pickedmaps_2',['pickedmaps',['../classAutoRefEliminationStage.html#afb7c1b4a6135e64017e61cc71a147e89',1,'AutoRefEliminationStage::pickedMaps'],['../classModels_1_1MatchRoom.html#a2f05735d52203a6c7811b94e4a3d8e28',1,'Models::MatchRoom::PickedMaps'],['../Models_8cs.html#a5b668e14ecbb97a3d9ece507e6c4d4ac',1,'PickedMaps:&#160;Models.cs']]],
-  ['players_3',['Players',['../classModelsContext.html#a37ee87ae348dca218f3b619e2b392477',1,'ModelsContext']]],
-  ['playing_4',['Playing',['../AutoRefQualifiersStage_8cs.html#adff0cb2b0b9f2305d3d3d0fc7aa6dd46',1,'AutoRefQualifiersStage.cs']]],
-  ['previousstate_5',['previousState',['../classAutoRefEliminationStage.html#a704259132c6daf09b393440645cbad8d',1,'AutoRefEliminationStage']]]
+  ['ok_0',['Ok',['../classOsuMatchImporter.html#a6fdf170168ea3bb41a40282fa8567063',1,'OsuMatchImporter']]],
+  ['osuid_1',['osuid',['../classModels_1_1RefereeInfo.html#a083caf816c1cfebdbf16f45b533bcd6b',1,'Models::RefereeInfo::OsuID'],['../Models_8cs.html#a929bd31e0b8845834110854ee2dd6d63',1,'OsuID:&#160;Models.cs']]],
+  ['osuuserid_2',['OsuUserId',['../classScoreImporter_1_1RawScoreData.html#acead8bde4d316b70b5f0ea5f38acb2c8',1,'ScoreImporter::RawScoreData']]]
 ];
