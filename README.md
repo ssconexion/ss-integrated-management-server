@@ -18,7 +18,7 @@ Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
     
 - Valid `.env` configuration (Refer to `.env.example`).
 
-- Valid database schema (empty .sql file ready for deployment (here)[https://gist.github.com/Angarn/ddd9cf693aaeeb9407cc46b750fce3e5])
+- Valid database schema (empty .sql file ready for deployment [here](https://gist.github.com/Angarn/ddd9cf693aaeeb9407cc46b750fce3e5])
 
 ### How to run
 
