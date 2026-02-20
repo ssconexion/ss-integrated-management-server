@@ -132,43 +132,4 @@
     <data name="MatchFinishedThread" xml:space="preserve">
         <value>**El partido ha finalizado.** Este hilo será archivado.</value>
     </data>
-    <data name="MatchAlreadyCreated" xml:space="preserve">
-        <value>El Match `{0}` ya está en curso </value>
-    </data>
-    <data name="MatchCreated" xml:space="preserve">
-        <value>El Match `{0}` fue iniciado correctamente en su debido thread.</value>
-    </data>
-    <data name="RefDoesntExist" xml:space="preserve">
-        <value>El Referee `{0}` no existe en la base de datos. Usa `/linkirc` para añadirle</value>
-    </data>
-    <data name="SlashCommandStartRef" xml:space="preserve">
-        <value>Inicia una nueva interfaz de match entre discord y Bancho, usando las credenciales de IRC para un Referee.</value>
-    </data>
-    <data name="SlashCommandEndRef" xml:space="preserve">
-        <value>Acaba con el entorno de match activo y archiva en hilo donde ocurrió</value>
-    </data>
-    <data name="MatchFinishingUp" xml:space="preserve">
-        <value>Procesando cierre para la match `{0}`...</value>
-    </data>
-    <data name="SlashCommandLinkIrc" xml:space="preserve">
-        <value>Configura tus credenciales de IRC para poder crear matches</value>
-    </data>
-    <data name="RefAddedToDb" xml:space="preserve">
-        <value>Referee {0} añadido/actualizado en la base de datos \n- OsuID: {1}\n- DiscordID: {2}</value>
-    </data>
-    <data name="SlashCommandAssignRef" xml:space="preserve">
-        <value>Asigna un referee a una match concreta.</value>
-    </data>
-    <data name="MatchNotFound" xml:space="preserve">
-        <value>La match `{0}` no fue encontrada en la base de datos.</value>
-    </data>
-    <data name="SlashCommandImportScoresPrivate" xml:space="preserve">
-        <value>Sube un .csv con la herramienta de LeoFLT para parsearlo y guardar las scores</value>
-    </data>
-    <data name="RefAssignedSuccessfully" xml:space="preserve">
-        <value>El Referee **{0}** ha sido asignado con éxito a la match `{1}`</value>
-    </data>
-    <data name="ErrorNotCorrectFileExtension" xml:space="preserve">
-        <value>**Error**: El archivo debe ser `.txt` ó `.csv`</value>
-    </data>
 </root>

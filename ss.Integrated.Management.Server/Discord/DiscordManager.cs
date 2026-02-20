@@ -37,13 +37,7 @@ public class DiscordManager
             GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent | GatewayIntents.Guilds
         });
 
-        var interactionConfig = new InteractionServiceConfig
-        {
-            LocalizationManager = new ResxLocalizationManager(),
-            DefaultRunMode = RunMode.Async,
-        };
-
-        interactionService = new InteractionService(client.Rest, interactionConfig);
+        interactionService = new InteractionService(client.Rest);
 
         services = new ServiceCollection()
             .AddSingleton(this)
