@@ -4,6 +4,5 @@ var dir_a6127ddb8b0e58dfb22c3df09affe72a =
     [ "Database", "dir_693ad4c83ca32a17db7a3a56af75fca4.html", "dir_693ad4c83ca32a17db7a3a56af75fca4" ],
     [ "Discord", "dir_c6601874a01f031e9511ca4e953df1b6.html", "dir_c6601874a01f031e9511ca4e953df1b6" ],
     [ "Resources", "dir_eaab8a3bff9fffa98468cddca6ab17b8.html", "dir_eaab8a3bff9fffa98468cddca6ab17b8" ],
-    [ "Test", "dir_51f8141dd475733c9b72004f95fe2538.html", "dir_51f8141dd475733c9b72004f95fe2538" ],
     [ "Program.cs", "Program_8cs.html", "Program_8cs" ]
 ];

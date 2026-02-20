@@ -26,6 +26,5 @@ var hierarchy =
     [ "Models::RoundBeatmap", "classModels_1_1RoundBeatmap.html", null ],
     [ "ScoreImporter", "classScoreImporter.html", null ],
     [ "ss::Internal::Management::Server::Resources::Strings", "classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings.html", null ],
-    [ "ss::Internal::Management::Server::Resources::Strings_es", "classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html", null ],
-    [ "ss::Integrated::Management::Server::Tests", "classss_1_1Integrated_1_1Management_1_1Server_1_1Tests.html", null ]
+    [ "ss::Internal::Management::Server::Resources::Strings_es", "classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html", null ]
 ];

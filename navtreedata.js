@@ -54,7 +54,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "AutoRefEliminationStage_8cs.html",
-"classSlashCommandManager.html#a2916a0daf35184717352bdeb154fb5a7"
+"classSlashCommandManager.html#a677fd6012310640c18268783d59ffe80"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

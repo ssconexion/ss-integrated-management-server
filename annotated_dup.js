@@ -1,13 +1,6 @@
 var annotated_dup =
 [
     [ "ss", "namespacess.html", [
-      [ "Integrated", "namespacess_1_1Integrated.html", [
-        [ "Management", "namespacess_1_1Integrated_1_1Management.html", [
-          [ "Server", "namespacess_1_1Integrated_1_1Management_1_1Server.html", [
-            [ "Tests", "classss_1_1Integrated_1_1Management_1_1Server_1_1Tests.html", "classss_1_1Integrated_1_1Management_1_1Server_1_1Tests" ]
-          ] ]
-        ] ]
-      ] ],
       [ "Internal", "namespacess_1_1Internal.html", [
         [ "Management", "namespacess_1_1Internal_1_1Management.html", [
           [ "Server", "namespacess_1_1Internal_1_1Management_1_1Server.html", [

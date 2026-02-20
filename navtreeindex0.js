@@ -39,13 +39,12 @@ var NAVTREEINDEX0 =
 "Models_8cs.html#ad7c48ae24efc05cdb698a766baaa8f48":[2,0,0,1,0,30],
 "Models_8cs.html#ad8e7f82f173c976a2554bc06b2337f65":[2,0,0,1,0,26],
 "Models_8cs.html#afe0b47b3c92f2f69ea3da50cb72553eb":[2,0,0,1,0,14],
-"Program_8cs.html":[2,0,0,5],
+"Program_8cs.html":[2,0,0,4],
 "RequireRoleAttribute_8cs.html":[2,0,0,2,1],
 "ScoreImporter_8cs.html":[2,0,0,2,2],
 "SlashCommandManager_8cs.html":[2,0,0,2,3],
 "Strings_8Designer_8cs.html":[2,0,0,3,0],
 "Strings_8es_8Designer_8cs.html":[2,0,0,3,1],
-"Tests_8cs.html":[2,0,0,4,0],
 "annotated.html":[1,0],
 "classAutoRefEliminationStage.html":[1,0,1],
 "classAutoRefEliminationStage.html#a000fc62ec632bba784011d0877b9d0f0":[1,0,1,0],
@@ -249,5 +248,6 @@ var NAVTREEINDEX0 =
 "classScoreImporter_1_1RawScoreData.html#acbc0dc795aa11e21334ec2831e7d6635":[1,0,7,0,1],
 "classScoreImporter_1_1RawScoreData.html#acead8bde4d316b70b5f0ea5f38acb2c8":[1,0,7,0,4],
 "classSlashCommandManager.html":[1,0,8],
-"classSlashCommandManager.html#a1d07a44baa3e91f10c44cbe40fbdb740":[1,0,8,19]
+"classSlashCommandManager.html#a1d07a44baa3e91f10c44cbe40fbdb740":[1,0,8,19],
+"classSlashCommandManager.html#a2916a0daf35184717352bdeb154fb5a7":[1,0,8,9]
 };

@@ -3,7 +3,7 @@ var searchData=
   ['manager_0',['Manager',['../classSlashCommandManager.html#a7fe493f80c7612efb5cca277eb7c0691',1,'SlashCommandManager']]],
   ['mappool_1',['mappool',['../classModels_1_1Round.html#a965208b59d8f44a513e07ddfc807ad63',1,'Models::Round::MapPool'],['../Models_8cs.html#abf6823a4a016c03347ea81770d320d76',1,'MapPool:&#160;Models.cs']]],
   ['matchfinished_2',['MatchFinished',['../AutoRefQualifiersStage_8cs.html#a6b50011ad00d00ac6c4aab1556a0485a',1,'AutoRefQualifiersStage.cs']]],
-  ['matchid_3',['matchid',['../classSlashCommandManager_1_1PendingMatch.html#ab2058728ffcfb766433edd2744653433',1,'SlashCommandManager::PendingMatch::MatchId'],['../classAutoRefEliminationStage.html#a00bf45d8b313ee41eb94888ef933eec7',1,'AutoRefEliminationStage::matchId'],['../classAutoRefQualifiersStage.html#ad2b77ee5629c833f4bb83eb0e2ad4a45',1,'AutoRefQualifiersStage::matchId']]],
+  ['matchid_3',['matchid',['../classAutoRefEliminationStage.html#a00bf45d8b313ee41eb94888ef933eec7',1,'AutoRefEliminationStage::matchId'],['../classAutoRefQualifiersStage.html#ad2b77ee5629c833f4bb83eb0e2ad4a45',1,'AutoRefQualifiersStage::matchId'],['../classSlashCommandManager_1_1PendingMatch.html#ab2058728ffcfb766433edd2744653433',1,'SlashCommandManager::PendingMatch::MatchId']]],
   ['matchonhold_4',['MatchOnHold',['../AutoRefQualifiersStage_8cs.html#adb0bf5b734e497c87d5491b43a3607b1',1,'AutoRefQualifiersStage.cs']]],
   ['matchrooms_5',['MatchRooms',['../classModelsContext.html#ab79ceac689cb512cb4e43c8f89684cc0',1,'ModelsContext']]],
   ['matchscore_6',['matchScore',['../classAutoRefEliminationStage.html#a8e96fcc6da12d6888f1a6a4a4827f915',1,'AutoRefEliminationStage']]],
