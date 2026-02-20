@@ -127,7 +127,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
 
         client.OnAuthenticated += () =>
         {
-            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: jowjowosu vs methalox", true);
+            _ = client.MakeTournamentLobbyAsync($"{Program.TournamentName}: (Qualifiers) vs (Lobby {matchId})", false);
         };
 
         await client.ConnectAsync();
