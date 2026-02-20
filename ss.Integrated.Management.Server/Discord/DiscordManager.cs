@@ -4,7 +4,6 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Reflection;
-using ss.Integrated.Management.Server;
 using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.Resources;
 
