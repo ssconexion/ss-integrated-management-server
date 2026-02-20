@@ -111,9 +111,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9abca04dc260e77fb36bc0f7b9a2d776" id="r_a9abca04dc260e77fb36bc0f7b9a2d776"><td class="memItemLeft" align="right" valign="top">async Task&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDiscordManager.html#a9abca04dc260e77fb36bc0f7b9a2d776">CreateMatchEnvironmentAsync</a> (string matchId, string referee, IGuild guild, <a class="el" href="classModels.html#af561c5939b4b15a8925d3b250059ecad">Models.MatchType</a> type)</td></tr>
 <tr class="memdesc:a9abca04dc260e77fb36bc0f7b9a2d776"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the Discord thread and spawns the AutoRef worker for a specific match.  <br /></td></tr>
 <tr class="separator:a9abca04dc260e77fb36bc0f7b9a2d776"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06973149a0e2923a06a794de624b9460" id="r_a06973149a0e2923a06a794de624b9460"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDiscordManager.html#a06973149a0e2923a06a794de624b9460">EndMatchEnvironmentAsync</a> (string matchId, IMessageChannel requestChannel)</td></tr>
-<tr class="memdesc:a06973149a0e2923a06a794de624b9460"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the match worker, archives the Discord thread, and removes the match from active memory.  <br /></td></tr>
-<tr class="separator:a06973149a0e2923a06a794de624b9460"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf9397b10993a5e2bb8b311ee8991779" id="r_abf9397b10993a5e2bb8b311ee8991779"><td class="memItemLeft" align="right" valign="top">async Task&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDiscordManager.html#abf9397b10993a5e2bb8b311ee8991779">EndMatchEnvironmentAsync</a> (string matchId)</td></tr>
+<tr class="memdesc:abf9397b10993a5e2bb8b311ee8991779"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the match worker, archives the Discord thread, and removes the match from active memory.  <br /></td></tr>
+<tr class="separator:abf9397b10993a5e2bb8b311ee8991779"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1f24d03c7a716e4ff1a3b6444387623" id="r_ab1f24d03c7a716e4ff1a3b6444387623"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classDiscordManager.html#ab1f24d03c7a716e4ff1a3b6444387623">AddRefereeToDbAsync</a> (<a class="el" href="classModels_1_1RefereeInfo.html">Models.RefereeInfo</a> model)</td></tr>
 <tr class="memdesc:ab1f24d03c7a716e4ff1a3b6444387623"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers a new referee in the database with their IRC credentials.  <br /></td></tr>
 <tr class="separator:ab1f24d03c7a716e4ff1a3b6444387623"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -274,8 +274,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a06973149a0e2923a06a794de624b9460" name="a06973149a0e2923a06a794de624b9460"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a06973149a0e2923a06a794de624b9460">&#9670;&#160;</a></span>EndMatchEnvironmentAsync()</h2>
+<a id="abf9397b10993a5e2bb8b311ee8991779" name="abf9397b10993a5e2bb8b311ee8991779"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf9397b10993a5e2bb8b311ee8991779">&#9670;&#160;</a></span>EndMatchEnvironmentAsync()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -284,21 +284,11 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">async Task DiscordManager::EndMatchEnvironmentAsync </td>
+          <td class="memname">async Task&lt; bool &gt; DiscordManager::EndMatchEnvironmentAsync </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
-          <td class="paramname"><em>matchId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>matchId</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">IMessageChannel&#160;</td>
-          <td class="paramname"><em>requestChannel</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -312,7 +302,6 @@ Private Attributes</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">matchId</td><td>The unique identifier of the match to close.</td></tr>
-    <tr><td class="paramname">requestChannel</td><td>The channel where the command was issued (for feedback).</td></tr>
   </table>
   </dd>
 </dl>

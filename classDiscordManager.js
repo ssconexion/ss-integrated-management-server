@@ -3,7 +3,7 @@ var classDiscordManager =
     [ "DiscordManager", "classDiscordManager.html#a73b662f7607b2390acc4b8fcdd811788", null ],
     [ "AddRefereeToDbAsync", "classDiscordManager.html#ab1f24d03c7a716e4ff1a3b6444387623", null ],
     [ "CreateMatchEnvironmentAsync", "classDiscordManager.html#a9abca04dc260e77fb36bc0f7b9a2d776", null ],
-    [ "EndMatchEnvironmentAsync", "classDiscordManager.html#a06973149a0e2923a06a794de624b9460", null ],
+    [ "EndMatchEnvironmentAsync", "classDiscordManager.html#abf9397b10993a5e2bb8b311ee8991779", null ],
     [ "HandleInteractionAsync", "classDiscordManager.html#afc198d7e7b128b68fc30cded1c09c2f1", null ],
     [ "HandleMatchIRCMessage", "classDiscordManager.html#a4ee9814457a1dc9bb24c1d6ee909b634", null ],
     [ "HandleMessageAsync", "classDiscordManager.html#a77ae9f397ad1f6351e91eae8b8ab08e2", null ],
