@@ -2,7 +2,7 @@
 
 ## 📖 Overview
 
-The **SS-IMS** is a high-performance, event-driven middleware designed by **SSConexión** to revolutionize the logistical flow of the _Spanish Showdown_.
+The **SS-IMS** is designed by **SSConexión** to make things easier for the _Spanish Showdown_ tournament series.
 
 This system addresses the critical scalability issues found in modern osu! tournaments: Google Sheets have been giving us problems for a long time. That is why we've made this, to get rid of that and gain complete, reliable control over data and scheduling flows. **Read below for details on how to run everything and explanations.**
 
