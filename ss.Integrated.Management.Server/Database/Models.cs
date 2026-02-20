@@ -215,7 +215,7 @@ public class Models
         public bool? Approved { get; set; }
 
         [Column("mp_link_id")]
-        public int MpLinkId { get; set; }
+        public int? MpLinkId { get; set; }
         
         [ForeignKey("RefereeId")]
         public virtual RefereeInfo Referee { get; set; }
