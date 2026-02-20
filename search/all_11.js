@@ -34,5 +34,6 @@ var searchData=
   ['strings_31',['strings',['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings.html#aae14e3bed931a6304bf5250dc43deb25',1,'ss::Internal::Management::Server::Resources::Strings::Strings()'],['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings.html',1,'ss::Internal::Management::Server::Resources::Strings']]],
   ['strings_2edesigner_2ecs_32',['Strings.Designer.cs',['../Strings_8Designer_8cs.html',1,'']]],
   ['strings_2ees_2edesigner_2ecs_33',['Strings.es.Designer.cs',['../Strings_8es_8Designer_8cs.html',1,'']]],
-  ['strings_5fes_34',['strings_es',['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html#a0432ba24fd7cc25d89b133c39160e80c',1,'ss::Internal::Management::Server::Resources::Strings_es::Strings_es()'],['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html',1,'ss::Internal::Management::Server::Resources::Strings_es']]]
+  ['strings_5fes_34',['strings_es',['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html#a0432ba24fd7cc25d89b133c39160e80c',1,'ss::Internal::Management::Server::Resources::Strings_es::Strings_es()'],['../classss_1_1Internal_1_1Management_1_1Server_1_1Resources_1_1Strings__es.html',1,'ss::Internal::Management::Server::Resources::Strings_es']]],
+  ['supportedlocales_35',['supportedLocales',['../classResxLocalizationManager.html#ab498bc1adec6f993ee3bf5d44d1c06e0',1,'ResxLocalizationManager']]]
 ];

@@ -9,6 +9,9 @@ var hierarchy =
       [ "AutoRefEliminationStage", "classAutoRefEliminationStage.html", null ],
       [ "AutoRefQualifiersStage", "classAutoRefQualifiersStage.html", null ]
     ] ],
+    [ "ILocalizationManager", null, [
+      [ "ResxLocalizationManager", "classResxLocalizationManager.html", null ]
+    ] ],
     [ "InteractionModuleBase", null, [
       [ "SlashCommandManager", "classSlashCommandManager.html", null ]
     ] ],
