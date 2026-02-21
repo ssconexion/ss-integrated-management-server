@@ -26,37 +26,21 @@ public class ModelsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // IMPORTANTE: En producción, los toTable se invierten para evitar creación de tablas nuevas
-        // Cómo se tendría que ver?
-        // 
-        // - Development:
-        //   entity.ToTable("matches");
-        //   //entity.ToTable("matches", t => t.ExcludeFromMigrations());
-        //
-        // - Producción:
-        //   //entity.ToTable("matches");
-        //   entity.ToTable("matches", t => t.ExcludeFromMigrations());
-        //
-        // Hay 7 de estos casos, asegúrate de revisarlos todos antes de nada.
         
         modelBuilder.Entity<Models.MatchRoom>(e =>
         {
-            //e.ToTable("match_rooms");
             e.ToTable("match_rooms", t => t.ExcludeFromMigrations());
             
             e.OwnsMany(r => r.BannedMaps, b => b.ToJson("banned_maps"));
             e.OwnsMany(r => r.PickedMaps, b => b.ToJson("picked_maps"));
         });
         
-        //modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms");
         modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms", t => t.ExcludeFromMigrations());
         
-        //modelBuilder.Entity<Models.PlayerInfo>().ToTable("player");
         modelBuilder.Entity<Models.Player>().ToTable("players", t => t.ExcludeFromMigrations());
 
         modelBuilder.Entity<Models.User>(e =>
         {
-            //e.ToTable("user");
             e.ToTable("users", t => t.ExcludeFromMigrations());
 
             e.Navigation(t => t.OsuData).AutoInclude();
@@ -64,19 +48,15 @@ public class ModelsContext : DbContext
 
         modelBuilder.Entity<Models.Round>(e =>
         {
-            //e.ToTable("rounds");
             e.ToTable("rounds", t => t.ExcludeFromMigrations());
 
             e.OwnsMany(r => r.MapPool, b => b.ToJson("map_pool"));
         });
-
-        //modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees");
+        
         modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
-
-        //modelBuilder.Entity<Models.OsuUser>().ToTable("osu_user");
+        
         modelBuilder.Entity<Models.OsuUser>().ToTable("osu_users", t => t.ExcludeFromMigrations());
         
-        //modelBuilder.Entity<Models.ScoreResults>().ToTable("scores");
         modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());
     }
 }
