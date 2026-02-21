@@ -39,7 +39,7 @@ public class ScoreImporter
         }
         else
         {
-            Console.WriteLine($"Error: No se encontró la MatchRoom con ID {matchIdStr}");
+            Console.WriteLine($"Error: Match {matchIdStr} not found");
             return false;
         }
 
@@ -69,7 +69,7 @@ public class ScoreImporter
         }
         else
         {
-            Console.WriteLine($"Warning: No se encontró pool para la ronda {roundId}");
+            Console.WriteLine($"Warning: Pool not found for {roundId}");
         }
 
         var entitiesToAdd = new List<Models.ScoreResults>();
@@ -98,11 +98,11 @@ public class ScoreImporter
         {
             await db.Scores.AddRangeAsync(entitiesToAdd);
             await db.SaveChangesAsync();
-            Console.WriteLine($"Guardados {entitiesToAdd.Count} scores correctamente.");
+            Console.WriteLine($"Saved {entitiesToAdd.Count} scores.");
             return true;
         }
 
-        Console.WriteLine("No se guardó nada");
+        Console.WriteLine("Nothing saved. git gud");
         return false;
     }
 

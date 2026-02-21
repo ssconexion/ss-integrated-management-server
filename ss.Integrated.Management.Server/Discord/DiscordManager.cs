@@ -21,8 +21,7 @@ public class DiscordManager
     private readonly ulong guildId = Convert.ToUInt64(Environment.GetEnvironmentVariable("DISCORD_GUILD_ID"));
     private readonly ulong parentChannelId = Convert.ToUInt64(Environment.GetEnvironmentVariable("DISCORD_MATCHES_CHANNEL_ID"));
     private readonly string token;
-
-    // Diccionarios de estado para saber lo que acontece. Por si me olvido (ocurrirá):
+    
     // activeChannels => <match_id, thread_id>
     // activeMatches  => <match_id, autoref_instance>
     private ConcurrentDictionary<string, ulong> activeChannels = new();
@@ -201,13 +200,13 @@ public class DiscordManager
 
                 if (!isCommand && !interaction) msgToIRC = $"[DISCORD | {message.Author.Username}] {message.Content}";
 
-                // Busca la instancia de autoref asociada al canal al que se envia el mensaje
+                // Busca la instancia de autoref asociada al canal al que se envia el mensaje. Vaya puto círculo, loco
                 var key = activeChannels.FirstOrDefault(m => m.Value == channelid).Key;
                 await activeMatches.GetValueOrDefault(key)!.SendMessageFromDiscord(msgToIRC);
             }
         }
 
-        if (message.Content == "ITS ME")
+        if (message.Content == "ITS ME") // ITS ME
         {
             string s1 = "https://methalox.s-ul.eu/ReZNgSND";
             string s2 = "https://methalox.s-ul.eu/rI0fEYx9";

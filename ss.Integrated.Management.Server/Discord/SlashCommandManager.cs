@@ -124,7 +124,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         }
 
         await db.SaveChangesAsync();
-        await FollowupAsync($"✅ El referee **{referee.DisplayName}** ha sido asignado correctamente a la partida `{matchId}`.");
+        await FollowupAsync($"El referee **{referee.DisplayName}** ha sido asignado correctamente a la partida `{matchId}`.");
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
@@ -549,7 +549,6 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
                 if (spainTime.Date == targetDate.Date)
                 {
-                    // D. Bloqueamos la hora LOCAL (ej: 18)
                     busyHoursInSpain.Add(spainTime.Hour);
                 }
             }

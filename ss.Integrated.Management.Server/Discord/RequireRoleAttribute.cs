@@ -27,19 +27,19 @@ public class RequireFromEnvIdAttribute : PreconditionAttribute
         
         if (string.IsNullOrEmpty(roleIdString))
         {
-            return Task.FromResult(PreconditionResult.FromError($"Error interno: La variable de entorno '{envVarName}' no está configurada en el servidor."));
+            return Task.FromResult(PreconditionResult.FromError($"Error: Environment variable '{envVarName}' is not configured."));
         }
 
         if (!ulong.TryParse(roleIdString, out ulong roleId))
         {
-            return Task.FromResult(PreconditionResult.FromError($"Error interno: La variable '{envVarName}' no contiene una ID numérica válida."));
+            return Task.FromResult(PreconditionResult.FromError($"Error: Environment variable '{envVarName}' does not have a valid ID"));
         }
         
         if (context.User is SocketGuildUser user)
         {
-            return Task.FromResult(user.Roles.Any(r => r.Id == roleId) ? PreconditionResult.FromSuccess() : PreconditionResult.FromError("No tienes el rol necesario para ejecutar este comando."));
+            return Task.FromResult(user.Roles.Any(r => r.Id == roleId) ? PreconditionResult.FromSuccess() : PreconditionResult.FromError("You don't have a valid role for this."));
         }
 
-        return Task.FromResult(PreconditionResult.FromError("Este comando solo funciona dentro de un servidor."));
+        return Task.FromResult(PreconditionResult.FromError("This command only works inside a given server."));
     }
 }
