@@ -94,7 +94,7 @@ This automaton is specifically designed to handle **Qualifier Lobbies** where pl
 
 ### 3.1. Workflow & State Machine
 
-The core logic relies on a state machine (`MatchState`) to ensure the match progresses linearly and safely 
+The core logic relies on a state machine to ensure the match progresses linearly and safely 
 
 ![image](https://ssconexion.github.io/ss-integrated-management-server/dot_inline_dotgraph_2_org.svg)
 
