@@ -116,7 +116,7 @@ The core logic relies on a state machine to ensure the match progresses linearly
 
 To comply with tournament regulations regarding automation safety, the system includes a **Panic Protocol** that can be triggered by the referee or authorized staff via IRC or Discord commands. All IRC chat and gameplay logs are actively mirrored and retained in the match's Discord thread. This ensures that when a human referee takes over, they can instantly read the match history and context with minimal interference. **Whenever a match starts, the bot outputs an IRC join command in Discord that can be used by the referee to manually join the lobby if the integrated server experiences connection issues.**
 
-- **`!panic`**: Stops everything and pings all referees. The automaton will only leave this state if a referee allows it with the `!panic_over` directive.
+- **`!panic`**: Stops everything and pings all referees. The automaton will only leave this state if a referee allows it with the `>panic_over` directive.
         
 - **`>panic_over`**: Restarts automation where it left off. Can only be triggered by a referee
         
