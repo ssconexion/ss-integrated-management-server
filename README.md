@@ -30,7 +30,7 @@ Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
 
 ## ✨ System Capabilities & Key Features
 
-- **Zero-Sheet Dependency:** Eliminates reliance on Google Sheets/Excel. All data is persisted in a relational PostgreSQL database to have complete freedom over how we move data around.
+- **Zero-Sheet Dependency:** Eliminates reliance on Google Sheets. All data is persisted in a relational PostgreSQL database to have complete freedom over how we move data around.
     
 - **Database-First Design:** Centralized truth for all tournament data (Players, Teams, Matches, Maps).
     
