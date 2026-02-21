@@ -53,9 +53,12 @@ public partial class AutoRefQualifiersStage : IAutoRef
     private string? lobbyChannelName;
     
     private bool joined;
+    private bool stoppedPreviously;
 
     private int currentMapIndex;
-    private MatchState state;
+    
+    private MatchState currentState;
+    private MatchState previousState;
 
     private int mpLinkId;
 
@@ -199,12 +202,12 @@ public partial class AutoRefQualifiersStage : IAutoRef
         if (content.Contains(">panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
         {
             await SendMessageBothWays(Strings.BackToAuto);
-            state = MatchState.WaitingForStart;
+            currentState = MatchState.WaitingForStart;
             await SendMessageBothWays("!mp timer 10");
         }
         else if (content.Contains("!panic"))
         {
-            state = MatchState.MatchOnHold;
+            currentState = MatchState.MatchOnHold;
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
@@ -256,11 +259,48 @@ public partial class AutoRefQualifiersStage : IAutoRef
                     await Task.Delay(500);
                 }
                 break;
+            case "setmap":
+                if (currentState != MatchState.Idle)
+                {
+                    await SendMessageBothWays(Strings.SetMapFail);
+                    break;
+                }
+                await PreparePick(args[1]);
+                currentState = MatchState.Idle;
+                break;
             case "start":
-                await SendMessageBothWays(
-                    string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
+                if (currentState != MatchState.Idle)
+                {
+                    await SendMessageBothWays(Strings.AutoAlreadyEngaged);
+                    break;
+                }
+                
+                if (!stoppedPreviously)
+                {
+                    await SendMessageBothWays(string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
+                    currentState = MatchState.Idle;
+                }
+                else
+                {
+                    await SendMessageBothWays(string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
+                    currentState = previousState;
+                    stoppedPreviously = true;
+                }
+
                 _ = StartQualifiersFlow();
                 break;
+            case "stop":
+                if (currentState == MatchState.Idle)
+                {
+                    await SendMessageBothWays(Strings.AutoAlreadyStopped);
+                    break;
+                }
+                await SendMessageBothWays(Strings.StoppingAuto);
+                previousState = currentState;
+                currentState = MatchState.Idle;
+                stoppedPreviously = true;
+                break;
+                
         }
     }
 
@@ -289,7 +329,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     /// </summary>
     private async Task TryStateChange(string banchoMsg)
     {
-        switch (state)
+        switch (currentState)
         {
             case MatchState.Idle:
                 return;
@@ -298,7 +338,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
                 if (banchoMsg.Contains("All players are ready") || banchoMsg.Contains("Countdown finished"))
                 {
                     await SendMessageBothWays("!mp start 10");
-                    state = MatchState.Playing;
+                    currentState = MatchState.Playing;
                 }
 
                 break;
@@ -308,7 +348,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
                 if (banchoMsg.Contains("The match has finished"))
                 {
                     currentMapIndex++;
-                    state = MatchState.Idle;
+                    currentState = MatchState.Idle;
 
                     // ASYNC VOID PATTERN (Intentional):
                     // We fire-and-forget this task to create a non-blocking 10s cooldown
@@ -324,6 +364,17 @@ public partial class AutoRefQualifiersStage : IAutoRef
             }
         }
     }
+    
+    private async Task PreparePick(string slot)
+    {
+        var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot);
+
+        await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
+        await Task.Delay(250);
+        await SendMessageBothWays($"!mp mods {slot[..2]} NF");
+        await Task.Delay(250);
+        await SendMessageBothWays("!mp timer 90");
+    }
 
     /// <summary>
     /// Initializes the Qualifier lifecycle. Resets the map index and triggers the first map load.
@@ -331,7 +382,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     private async Task StartQualifiersFlow()
     {
         currentMapIndex = 0;
-        state = MatchState.Idle;
+        currentState = MatchState.Idle;
         await PrepareNextQualifierMap();
     }
 
@@ -344,7 +395,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
         if (currentMapIndex >= currentMatch!.Round.MapPool.Count)
         {
             await SendMessageBothWays(Strings.QualifiersOver);
-            state = MatchState.MatchFinished;
+            currentState = MatchState.MatchFinished;
             return;
         }
 
@@ -354,6 +405,6 @@ public partial class AutoRefQualifiersStage : IAutoRef
         await SendMessageBothWays($"!mp mods {beatmap.Slot[..2]} NF");
         await SendMessageBothWays("!mp timer 120");
 
-        state = MatchState.WaitingForStart;
+        currentState = MatchState.WaitingForStart;
     }
 }
