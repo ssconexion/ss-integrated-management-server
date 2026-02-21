@@ -1,4 +1,4 @@
-# Spanish Showdown: Integrated Management Server (SS-IMS)
+![image](https://methalox.s-ul.eu/07ft7yYW)
 
 ## 📖 Overview
 
