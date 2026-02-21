@@ -68,7 +68,8 @@ Managing a match consists of two simple steps:
 
 - **Initialization:** It is done with the following command: `/startref [match-id] [referee] [match-type]` It will start a multiplayer room on bancho along with its thread on a specified channel (check out the `.env.example`) if the match introduced is valid.
 
-- **Termination:** Once the match is over and the ref specifies it with the `/endref [match-id]` command, all changes will be saved on the database and the bancho multiplayer room will be closed. The thread that held the match will be archived, securely keeping all the chat and play logs accessible in the case of a tournament staff needing to review them later. **IMPORTANT: Do not send a !mp close before an /endref command because it won't save all the changes correctly into the database!!!**
+- **Termination:** Once the match is over and the ref specifies it with the `/endref [match-id]` command, all changes will be saved on the database and the bancho multiplayer room will be closed. The thread that held the match will be archived, securely keeping all the chat and play logs accessible in the case of a tournament staff needing to review them later.
+>⚠️ **IMPORTANT: Do not send a !mp close before an /endref command because it won't save all the changes correctly into the database!!!**
 
 ### 2.2. Other commands that may be useful
 
