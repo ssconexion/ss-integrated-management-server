@@ -223,6 +223,6 @@ To ensure successful deployment of the AutoRef system, the following environment
 
 ## 6. Open Source stuff
 
-Contributions are welcome! If you are interested in improving the system, feel free to open a Pull Request or contact me on Discord (@Angarn). The project is licensed under the Apache License (see the LICENSE file for details)."
+Contributions are welcome! If you are interested in improving the system, feel free to open a Pull Request or contact me on Discord (@Angarn). The project is licensed under the Apache License (see the LICENSE file for details).
 
 
