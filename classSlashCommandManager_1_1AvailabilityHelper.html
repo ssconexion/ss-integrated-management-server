@@ -96,6 +96,9 @@ $(document).ready(function(){initNavTree('classSlashCommandManager_1_1Availabili
   <div class="headertitle"><div class="title">SlashCommandManager::AvailabilityHelper Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>This is how we translate availability into days of the week. Availability is stored like this: 00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000 Each string of 0's represents a day of the week, starting with Friday. Each bit is an hour in 24-hour format LSB is 0:00, MSB is 23:00.  
+ <a href="classSlashCommandManager_1_1AvailabilityHelper.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -109,7 +112,9 @@ Static Private Attributes</h2></td></tr>
 <tr class="memitem:aec6c2a87a2fedcf42d8d504a2c548d3e" id="r_aec6c2a87a2fedcf42d8d504a2c548d3e"><td class="memItemLeft" align="right" valign="top">static readonly <a class="el" href="classSlashCommandManager.html#aa5a290ee0e42394912418ed0ff01eaa6">string</a>[]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSlashCommandManager_1_1AvailabilityHelper.html#aec6c2a87a2fedcf42d8d504a2c548d3e">DayLabels</a> = { &quot;Viernes&quot;, &quot;Sábado&quot;, &quot;Domingo&quot;, &quot;Lunes&quot; }</td></tr>
 <tr class="separator:aec6c2a87a2fedcf42d8d504a2c548d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>This is how we translate availability into days of the week. Availability is stored like this: 00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000 Each string of 0's represents a day of the week, starting with Friday. Each bit is an hour in 24-hour format LSB is 0:00, MSB is 23:00. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="aa3e324d2aa103204472674b6caafc563" name="aa3e324d2aa103204472674b6caafc563"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa3e324d2aa103204472674b6caafc563">&#9670;&#160;</a></span>DayToName()</h2>
 
