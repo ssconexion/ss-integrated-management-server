@@ -367,7 +367,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     
     private async Task PreparePick(string slot)
     {
-        var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot);
+        var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot.ToUpper());
 
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
