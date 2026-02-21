@@ -8,7 +8,7 @@ The **SS-IMS** is designed by **SSConexión** to make things easier for the _Spa
 
 This system addresses the critical scalability issues found in modern osu! tournaments: Google Sheets have been giving us problems for a long time. That is why we've made this, to get rid of that and gain complete, reliable control over data and scheduling flows.
 
-> **Read below for details on how to run everything and explanations. Available commands are below under sections 2.1 and 2.2 for Discord, 3.4 for Qualifier rooms and 4.4 for Elimination stage rooms**
+> Read below for details on how to run everything and explanations. **Available commands are below** under sections [2.1 and 2.2 for Discord](https://github.com/ssconexion/ss-integrated-management-server/?tab=readme-ov-file#2-the-discord-manager), [3.4 for Qualifier rooms](https://github.com/ssconexion/ss-integrated-management-server/?tab=readme-ov-file#34-administrative-commands) and [4.4 for Elimination stage rooms](https://github.com/ssconexion/ss-integrated-management-server/?tab=readme-ov-file#44-administrative-commands)
 
 Extra docs and information can be found [here](https://docs.spanishshowdown.es/) ([fallback](https://ssconexion.github.io/ss-integrated-management-server/))
 
