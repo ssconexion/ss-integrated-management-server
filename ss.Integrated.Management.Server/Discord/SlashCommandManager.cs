@@ -720,6 +720,12 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         return eb.Build();
     }
 
+    /// <summary>
+    /// This is how we translate availability into days of the week. Availability is stored like this:
+    /// 00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000
+    /// Each string of 0's represents a day of the week, starting with Friday. Each bit is an hour in 24-hour format
+    /// LSB is 0:00, MSB is 23:00
+    /// </summary>
     public static class AvailabilityHelper
     {
         private static readonly string[] DayLabels = { "Viernes", "Sábado", "Domingo", "Lunes" };
