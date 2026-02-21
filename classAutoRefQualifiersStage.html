@@ -159,6 +159,8 @@ Private Member Functions</h2></td></tr>
 <tr class="memitem:af8734fdfab4301e08f0c3a39d16da956" id="r_af8734fdfab4301e08f0c3a39d16da956"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#af8734fdfab4301e08f0c3a39d16da956">TryStateChange</a> (string banchoMsg)</td></tr>
 <tr class="memdesc:af8734fdfab4301e08f0c3a39d16da956"><td class="mdescLeft">&#160;</td><td class="mdescRight">The Brain of the operation. Evaluates the current state and incoming content to transition to the next state.  <br /></td></tr>
 <tr class="separator:af8734fdfab4301e08f0c3a39d16da956"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94c3b2344aa4a90d07b047d5c37e699" id="r_ac94c3b2344aa4a90d07b047d5c37e699"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#ac94c3b2344aa4a90d07b047d5c37e699">PreparePick</a> (string slot)</td></tr>
+<tr class="separator:ac94c3b2344aa4a90d07b047d5c37e699"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46c5a74ffe6a147045edd538ab7698a0" id="r_a46c5a74ffe6a147045edd538ab7698a0"><td class="memItemLeft" align="right" valign="top">async Task&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a46c5a74ffe6a147045edd538ab7698a0">StartQualifiersFlow</a> ()</td></tr>
 <tr class="memdesc:a46c5a74ffe6a147045edd538ab7698a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the Qualifier lifecycle. Resets the map index and triggers the first map load.  <br /></td></tr>
 <tr class="separator:a46c5a74ffe6a147045edd538ab7698a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -180,10 +182,14 @@ Private Attributes</h2></td></tr>
 <tr class="separator:aec20d5d365d71247e5984260e1b4e34f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba85de97653f4f5384c7cfb959bdf065" id="r_aba85de97653f4f5384c7cfb959bdf065"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#aba85de97653f4f5384c7cfb959bdf065">joined</a></td></tr>
 <tr class="separator:aba85de97653f4f5384c7cfb959bdf065"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c6f051957163cee47aed76c21f22c17" id="r_a2c6f051957163cee47aed76c21f22c17"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a2c6f051957163cee47aed76c21f22c17">stoppedPreviously</a></td></tr>
+<tr class="separator:a2c6f051957163cee47aed76c21f22c17"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a86221c93645e510124d8342f4de1d65c" id="r_a86221c93645e510124d8342f4de1d65c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a86221c93645e510124d8342f4de1d65c">currentMapIndex</a></td></tr>
 <tr class="separator:a86221c93645e510124d8342f4de1d65c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b1617bf36002aea47fbd985ff407833" id="r_a4b1617bf36002aea47fbd985ff407833"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a4b1617bf36002aea47fbd985ff407833">state</a></td></tr>
-<tr class="separator:a4b1617bf36002aea47fbd985ff407833"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5490118e5315e3618cca6f0f10aa1c11" id="r_a5490118e5315e3618cca6f0f10aa1c11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a5490118e5315e3618cca6f0f10aa1c11">currentState</a></td></tr>
+<tr class="separator:a5490118e5315e3618cca6f0f10aa1c11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05789314a2f67bd68852f3a95a9b5cd5" id="r_a05789314a2f67bd68852f3a95a9b5cd5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a05789314a2f67bd68852f3a95a9b5cd5">previousState</a></td></tr>
+<tr class="separator:a05789314a2f67bd68852f3a95a9b5cd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1c1498f64668337528d4c521b2f47da" id="r_ae1c1498f64668337528d4c521b2f47da"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#ae1c1498f64668337528d4c521b2f47da">mpLinkId</a></td></tr>
 <tr class="separator:ae1c1498f64668337528d4c521b2f47da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8648ab100f05d88a7cf69e0357ac434f" id="r_a8648ab100f05d88a7cf69e0357ac434f"><td class="memItemLeft" align="right" valign="top">List&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classAutoRefQualifiersStage.html#a8648ab100f05d88a7cf69e0357ac434f">usersInRoom</a> = new()</td></tr>
@@ -436,6 +442,32 @@ State Transition Diagram</h2>
 </div><div class="memdoc">
 
 <p>Iterates to the next map in the pool, applies mods, and sets the ready timer. Handles the exit condition when all maps have been played. </p>
+
+</div>
+</div>
+<a id="ac94c3b2344aa4a90d07b047d5c37e699" name="ac94c3b2344aa4a90d07b047d5c37e699"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac94c3b2344aa4a90d07b047d5c37e699">&#9670;&#160;</a></span>PreparePick()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">async Task AutoRefQualifiersStage::PreparePick </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>slot</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -717,6 +749,28 @@ State Transition Diagram</h2>
 
 </div>
 </div>
+<a id="a5490118e5315e3618cca6f0f10aa1c11" name="a5490118e5315e3618cca6f0f10aa1c11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5490118e5315e3618cca6f0f10aa1c11">&#9670;&#160;</a></span>currentState</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a> AutoRefQualifiersStage::currentState</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="aba85de97653f4f5384c7cfb959bdf065" name="aba85de97653f4f5384c7cfb959bdf065"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aba85de97653f4f5384c7cfb959bdf065">&#9670;&#160;</a></span>joined</h2>
 
@@ -827,6 +881,28 @@ State Transition Diagram</h2>
 
 </div>
 </div>
+<a id="a05789314a2f67bd68852f3a95a9b5cd5" name="a05789314a2f67bd68852f3a95a9b5cd5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05789314a2f67bd68852f3a95a9b5cd5">&#9670;&#160;</a></span>previousState</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a> AutoRefQualifiersStage::previousState</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a658529232a226e42f8773e061165c735" name="a658529232a226e42f8773e061165c735"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a658529232a226e42f8773e061165c735">&#9670;&#160;</a></span>refDisplayName</h2>
 
@@ -849,8 +925,8 @@ State Transition Diagram</h2>
 
 </div>
 </div>
-<a id="a4b1617bf36002aea47fbd985ff407833" name="a4b1617bf36002aea47fbd985ff407833"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b1617bf36002aea47fbd985ff407833">&#9670;&#160;</a></span>state</h2>
+<a id="a2c6f051957163cee47aed76c21f22c17" name="a2c6f051957163cee47aed76c21f22c17"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c6f051957163cee47aed76c21f22c17">&#9670;&#160;</a></span>stoppedPreviously</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -859,7 +935,7 @@ State Transition Diagram</h2>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classAutoRefQualifiersStage.html#ad4bf212adf42de2810fbfaae658a4621">MatchState</a> AutoRefQualifiersStage::state</td>
+          <td class="memname">bool AutoRefQualifiersStage::stoppedPreviously</td>
         </tr>
       </table>
   </td>

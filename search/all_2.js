@@ -14,5 +14,5 @@ var searchData=
   ['currentmapindex_11',['currentMapIndex',['../classAutoRefQualifiersStage.html#a86221c93645e510124d8342f4de1d65c',1,'AutoRefQualifiersStage']]],
   ['currentmapscores_12',['currentMapScores',['../classAutoRefEliminationStage.html#aef9237d3b39d7fe25f2e628bce09ad90',1,'AutoRefEliminationStage']]],
   ['currentmatch_13',['currentmatch',['../classAutoRefEliminationStage.html#a5aa66961852604ba4f012613f7c70e69',1,'AutoRefEliminationStage::currentMatch'],['../classAutoRefQualifiersStage.html#a3256a2044899c9bf982033ed9c6d41a6',1,'AutoRefQualifiersStage::currentMatch']]],
-  ['currentstate_14',['currentState',['../classAutoRefEliminationStage.html#a15e2503b5e069f45a32db7efda7dcbe2',1,'AutoRefEliminationStage']]]
+  ['currentstate_14',['currentstate',['../classAutoRefEliminationStage.html#a15e2503b5e069f45a32db7efda7dcbe2',1,'AutoRefEliminationStage::currentState'],['../classAutoRefQualifiersStage.html#a5490118e5315e3618cca6f0f10aa1c11',1,'AutoRefQualifiersStage::currentState']]]
 ];

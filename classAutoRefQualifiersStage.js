@@ -14,6 +14,7 @@ var classAutoRefQualifiersStage =
     [ "InitializeLobbySettings", "classAutoRefQualifiersStage.html#a5d0db800cdd312629c557b41892919e0", null ],
     [ "PeruTrim", "classAutoRefQualifiersStage.html#aa09206f583bbc12352f235e9c1d10adb", null ],
     [ "PrepareNextQualifierMap", "classAutoRefQualifiersStage.html#ab9cec20f3835fd209d87a4bd4bdfb519", null ],
+    [ "PreparePick", "classAutoRefQualifiersStage.html#ac94c3b2344aa4a90d07b047d5c37e699", null ],
     [ "SearchKeywords", "classAutoRefQualifiersStage.html#aa4c78d090710024e2cf9a0d135fab120", null ],
     [ "SendMessageBothWays", "classAutoRefQualifiersStage.html#a9c444fb5ae2a7cc65f7a907ba550cf5c", null ],
     [ "SendMessageFromDiscord", "classAutoRefQualifiersStage.html#a968b5d7bd9c58d32056d978427a75723", null ],
@@ -25,12 +26,14 @@ var classAutoRefQualifiersStage =
     [ "client", "classAutoRefQualifiersStage.html#ae91bb0ea4504cfb91908b74c1c5262be", null ],
     [ "currentMapIndex", "classAutoRefQualifiersStage.html#a86221c93645e510124d8342f4de1d65c", null ],
     [ "currentMatch", "classAutoRefQualifiersStage.html#a3256a2044899c9bf982033ed9c6d41a6", null ],
+    [ "currentState", "classAutoRefQualifiersStage.html#a5490118e5315e3618cca6f0f10aa1c11", null ],
     [ "joined", "classAutoRefQualifiersStage.html#aba85de97653f4f5384c7cfb959bdf065", null ],
     [ "lobbyChannelName", "classAutoRefQualifiersStage.html#aec20d5d365d71247e5984260e1b4e34f", null ],
     [ "matchId", "classAutoRefQualifiersStage.html#ad2b77ee5629c833f4bb83eb0e2ad4a45", null ],
     [ "mpLinkId", "classAutoRefQualifiersStage.html#ae1c1498f64668337528d4c521b2f47da", null ],
     [ "msgCallback", "classAutoRefQualifiersStage.html#a57aa39ce90379a53c9d9e586e9c5eed1", null ],
+    [ "previousState", "classAutoRefQualifiersStage.html#a05789314a2f67bd68852f3a95a9b5cd5", null ],
     [ "refDisplayName", "classAutoRefQualifiersStage.html#a658529232a226e42f8773e061165c735", null ],
-    [ "state", "classAutoRefQualifiersStage.html#a4b1617bf36002aea47fbd985ff407833", null ],
+    [ "stoppedPreviously", "classAutoRefQualifiersStage.html#a2c6f051957163cee47aed76c21f22c17", null ],
     [ "usersInRoom", "classAutoRefQualifiersStage.html#a8648ab100f05d88a7cf69e0357ac434f", null ]
 ];
