@@ -89,6 +89,7 @@ All commands are restricted to tournament staff holding the designated Referee r
 
 #### Scoring & Match Tracking
 - `/matchups`: Displays a paginated list of all scheduled matches and their starting times.
+- `/stats [roundId]`: Shows current leaderboard standings. Uses Z-Sum for the calculation, see more info [here](https://osu.ppy.sh/wiki/en/Tournaments/Common_seeding_methods). Limited to admin role
 - `/importscores [osuLobbyId] [dbRoomId]`: Provide the Bancho lobby ID from the osu! website, and the bot will automatically fetch the match data via the osu! API, calculate grades, and securely save all player scores into the database. **Note:** The bot does not keep track of what lobbys have been parsed. Be careful and try to not double-parse the same room. If you do, you will have to get on Adminer to manually remove them.
 - `/importscores-privaterooms [matchId] [file]`: A fallback method for private or unlisted lobbies. Allows a referee to upload a raw `.csv` file containing the match results ([check out LeoFLT's userscript for this](https://gist.github.com/LeoFLT/2a7e0c3c201a327f022aa5b61b679d3f)) to parse and save them manually.
 - `/addmplinkid [matchId] [mpLinkId]`: Attaches an MP Link to a match for record-keeping. This is also a fallback in the case anything goes wrong, because currently **MP links are automatically saved once you do /endref, so there is no need to use this under normal circumstances.**
