@@ -9,6 +9,7 @@ var classSlashCommandManager =
     [ "CreateMatchEmbed", "classSlashCommandManager.html#af31868be3c8b54018b7f7015df7fe041", null ],
     [ "CreateQualifiersRoom", "classSlashCommandManager.html#aa1a6d85caced353067e065e49264030f", null ],
     [ "EndRefAsync", "classSlashCommandManager.html#ac866fe33be7a8ba16a350ae58f428462", null ],
+    [ "GenerateZSumResultsAsync", "classSlashCommandManager.html#a68dd3fad03d095898e2d17ed410dc80d", null ],
     [ "HandleDaySelection", "classSlashCommandManager.html#a7fcb86f9e7ae4574304c61059598418f", null ],
     [ "HandleHourSelection", "classSlashCommandManager.html#a2916a0daf35184717352bdeb154fb5a7", null ],
     [ "HandleMatchPaginationAsync", "classSlashCommandManager.html#a8eda05a5c7fceca5b294e91ea4608b17", null ],
