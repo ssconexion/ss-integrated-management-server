@@ -325,8 +325,7 @@ namespace ss.Internal.Management.Server.Tests.AutoRef
             autoRef.currentState = AutoRefEliminationStage.MatchState.Idle;
             autoRef.bannedMaps = new List<Models.RoundChoice>();
             autoRef.pickedMaps = new List<Models.RoundChoice>();
-
-            // Mappool gigante para un BO9 con 4 bans en total
+            
             var mappool = new List<Models.RoundBeatmap>();
             string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
             for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
