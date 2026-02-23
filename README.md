@@ -170,6 +170,8 @@ The match logic is governed by a complex state machine that dictates whose turn 
 - Tiebreaker is automatically picked if the conditions for it are met.
 
 - Scores are processed with the following regex: `^(.*) finished playing \(Score: (\d+),`. This helps determine who wins the point and show it to the players afterwards
+
+- If the pick stage timer runs out and the player hasnt picked a map yet, the opponent will get to pick for them instead without altering the picking order
     
 - If the round configuration specifies `BanRounds == 2` and `BanMode == SpanishShowdown`, the system interrupts the picking phase after 4 maps have been played to allow a second set of bans. This can be modified to your liking in order to have the ban rounds however you see fit.
 
