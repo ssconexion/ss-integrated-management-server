@@ -753,6 +753,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                     if (pickedMaps.Count == currentMatch.Round.BestOf - 1)
                     {
                         await PreparePick("TB1");
+                        pickedMaps.Add(new Models.RoundChoice { Slot = "TB1", TeamColor = Models.TeamColor.None });
                         return;
                     }
 
