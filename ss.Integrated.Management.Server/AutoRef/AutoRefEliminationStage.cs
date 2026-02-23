@@ -92,6 +92,7 @@ public partial class AutoRefEliminationStage : IAutoRef
     private int[] matchScore = [0, 0];
     
     internal bool joined = false;
+    private bool isStolenPick = false;
 
     private bool redTimeoutRequest;
     private bool blueTimeoutRequest;
@@ -601,6 +602,40 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         #endregion
 
+        #region CountdownForPickFinished
+
+        if (currentState == MatchState.WaitingForPickBlue)
+        {
+            if (content.Contains("Countdown finished") && sender == "BanchoBot")
+            {
+                await SendMessageBothWays($"The timer has ran out, the opponent will be picking now. {currentMatch!.TeamRed.DisplayName}, please state your pick in chat.");
+                await Task.Delay(250);
+                await SendMessageBothWays("!mp timer 60");
+                await Task.Delay(250);
+                currentState = MatchState.WaitingForPickRed;
+                isStolenPick = true;
+                await SendMatchStatus();
+                return;
+            }
+        }
+        
+        if (currentState == MatchState.WaitingForPickRed)
+        {
+            if (content.Contains("Countdown finished") && sender == "BanchoBot")
+            {
+                await SendMessageBothWays($"The timer has ran out, the opponent will be picking now. {currentMatch!.TeamBlue.DisplayName}, please state your pick in chat.");
+                await Task.Delay(250);
+                await SendMessageBothWays("!mp timer 60");
+                await Task.Delay(250);
+                currentState = MatchState.WaitingForPickBlue;
+                isStolenPick = true;
+                await SendMatchStatus();
+                return;
+            }
+        }  
+
+        #endregion
+
         #region BanningPhaseRegion
 
         if (currentState == MatchState.BanPhaseStart)
@@ -708,9 +743,17 @@ public partial class AutoRefEliminationStage : IAutoRef
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
-                lastPick = Models.TeamColor.TeamRed;
+                
+                if (isStolenPick)
+                {
+                    lastPick = Models.TeamColor.TeamBlue; 
+                    isStolenPick = false;
+                }
+                else
+                {
+                    lastPick = Models.TeamColor.TeamRed;
+                }
             }
-            
             return;
         }
 
@@ -721,9 +764,17 @@ public partial class AutoRefEliminationStage : IAutoRef
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
                 await PreparePick(content.ToUpper());
-                lastPick = Models.TeamColor.TeamBlue;
+                
+                if (isStolenPick)
+                {
+                    lastPick = Models.TeamColor.TeamRed; 
+                    isStolenPick = false;
+                }
+                else
+                {
+                    lastPick = Models.TeamColor.TeamBlue;
+                }
             }
-            
             return;
         }
 
