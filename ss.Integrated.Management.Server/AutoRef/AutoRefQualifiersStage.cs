@@ -45,20 +45,20 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// </remarks>
 public partial class AutoRefQualifiersStage : IAutoRef
 {
-    private Models.QualifierRoom? currentMatch;
+    internal Models.QualifierRoom? currentMatch;
     private readonly string matchId;
     private readonly string refDisplayName;
 
-    private IBanchoClient? client;
-    private string? lobbyChannelName;
+    internal IBanchoClient? client;
+    internal string? lobbyChannelName;
     
-    private bool joined;
+    internal bool joined;
     private bool stoppedPreviously;
 
     private int currentMapIndex;
     
-    private MatchState currentState;
-    private MatchState previousState;
+    internal MatchState currentState;
+    internal MatchState previousState;
 
     private int mpLinkId;
 
@@ -165,7 +165,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
     /// <summary>
     /// The core event loop. Intercepts every message in the IRC channel to drive the State Machine.
     /// </summary>
-    private async Task HandleIrcMessage(IIrcMessage msg)
+    internal async Task HandleIrcMessage(IIrcMessage msg)
     {
         string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
         string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;

@@ -6,8 +6,12 @@ namespace ss.Internal.Management.Server
 {
 	public static class Program
 	{
+		#if DEBUG
+		public const string TournamentName = "SS26_Test";
+		#else
 		public const string TournamentName = "SS26";
-		
+		#endif
+
 		public static async Task Main(string[] args)
 		{
 			Console.WriteLine("hola server de jd");

@@ -82,16 +82,16 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// </remarks>
 public partial class AutoRefEliminationStage : IAutoRef
 {
-    private Models.MatchRoom? currentMatch;
+    internal Models.MatchRoom? currentMatch;
     private readonly string matchId;
     private readonly string refDisplayName;
 
-    private IBanchoClient? client;
-    private string? lobbyChannelName;
+    internal IBanchoClient? client;
+    internal string? lobbyChannelName;
 
     private int[] matchScore = [0, 0];
     
-    private bool joined = false;
+    internal bool joined = false;
 
     private bool redTimeoutRequest;
     private bool blueTimeoutRequest;
@@ -111,7 +111,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private Models.TeamColor lastPick = Models.TeamColor.None;
 
-    private MatchState currentState;
+    internal MatchState currentState;
     private MatchState previousState;
 
     private bool stoppedPreviously;
@@ -233,7 +233,7 @@ public partial class AutoRefEliminationStage : IAutoRef
     /// <summary>
     /// The core event loop. Intercepts every message in the IRC channel to drive the State Machine.
     /// </summary>
-    private async Task HandleIrcMessage(IIrcMessage msg)
+    internal async Task HandleIrcMessage(IIrcMessage msg)
     {
         string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
         string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
