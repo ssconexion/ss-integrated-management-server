@@ -104,8 +104,8 @@ public partial class AutoRefEliminationStage : IAutoRef
     private Models.TeamColor firstPick = Models.TeamColor.None;
     private Models.TeamColor firstBan = Models.TeamColor.None;
 
-    private List<Models.RoundChoice> bannedMaps = [];
-    private List<Models.RoundChoice> pickedMaps = [];
+    internal List<Models.RoundChoice> bannedMaps = [];
+    internal List<Models.RoundChoice> pickedMaps = [];
 
     private Dictionary<string, int> currentMapScores = new(); // Nickname -> Score
 
@@ -132,6 +132,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         WaitingForBanRed,
         WaitingForBanBlue,
         PickPhaseStart,
+        SecondBanPhaseStart,
         WaitingForPickRed,
         WaitingForPickBlue,
         WaitingForStart,
@@ -305,7 +306,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
 
         // 4. Drive the State Machine
-        _ = TryStateChange(senderNick, content);
+        await TryStateChange(senderNick, content);
         
         // 5. Admin Commands
         if (content.StartsWith('>'))
@@ -530,7 +531,13 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     private async Task PreparePick(string slot)
     {
-        var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot);
+        var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot.ToUpper());
+
+        if (beatmap == null)
+        {
+            await SendMessageBothWays($"{slot.ToUpper()} does not exist in the current mappool");
+            return;
+        }
 
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
@@ -609,6 +616,20 @@ public partial class AutoRefEliminationStage : IAutoRef
                 currentState = MatchState.WaitingForBanBlue;
             }
         }
+        
+        if (currentState == MatchState.SecondBanPhaseStart)
+        {
+            if (firstBan == Models.TeamColor.TeamRed)
+            {
+                await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
+                currentState = MatchState.WaitingForBanBlue;
+            }
+            else
+            {
+                await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
+                currentState = MatchState.WaitingForBanRed;
+            }
+        }
 
         if (currentState == MatchState.WaitingForBanRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_'))
         {
@@ -623,6 +644,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 {
                     currentState = MatchState.PickPhaseStart;
                     repeat = 2;
+                    await TryStateChange("a", "a");
                 }
                 else
                 {
@@ -630,7 +652,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 }
             }
-
+            
             return;
         }
 
@@ -647,6 +669,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 {
                     currentState = MatchState.PickPhaseStart;
                     repeat = 2;
+                    await TryStateChange("a", "a");
                 }
                 else
                 {
@@ -654,7 +677,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 }
             }
-
+            
             return;
         }
 
@@ -674,7 +697,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                 currentState = MatchState.WaitingForPickBlue;
             }
-
+            
             return;
         }
 
@@ -687,7 +710,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await PreparePick(content.ToUpper());
                 lastPick = Models.TeamColor.TeamRed;
             }
-
+            
             return;
         }
 
@@ -700,7 +723,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await PreparePick(content.ToUpper());
                 lastPick = Models.TeamColor.TeamBlue;
             }
-
+            
             return;
         }
 
@@ -721,8 +744,9 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
                     // Logic for "Double Ban" rounds (Ban -> Pick 4 -> Ban -> Pick rest)
-                    currentState = MatchState.BanPhaseStart;
+                    currentState = MatchState.SecondBanPhaseStart;
                     await SendMessageBothWays(Strings.SecondBanRound);
+                    await TryStateChange("a", "a");
                 }
                 else
                 {

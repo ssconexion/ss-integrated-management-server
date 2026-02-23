@@ -369,6 +369,12 @@ public partial class AutoRefQualifiersStage : IAutoRef
     {
         var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot.ToUpper());
 
+        if (beatmap == null)
+        {
+            await SendMessageBothWays($"{slot.ToUpper()} does not exist in the current mappool");
+            return;
+        }
+        
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");
