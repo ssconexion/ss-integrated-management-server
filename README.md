@@ -32,6 +32,14 @@ Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
 
 - Get it filled with tools such as Adminer
 
+### For Development
+
+- Use an IDE of your liking (such as Rider)
+
+- Open the .sln file
+
+- To add features without having to deal with database stuff, do it so by making tests for everything
+
 ## ✨ System Capabilities & Key Features
 
 - **Testing Suite:** Lots of tests included to verify all the tournament matches flow
