@@ -267,8 +267,8 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
     }
 
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
-    [SlashCommand("stats", "Calcula stats para una ronda dada")]
-    public async Task GenerateZSumResultsAsync(int roundId)
+    [SlashCommand("preparescores", "Genera un CSV para ser usado por el generador de bracket.json de DIO")]
+    public async Task PrepareScoresAsync(int roundId)
     {
         await DeferAsync(ephemeral: false);
 
@@ -287,12 +287,12 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         }
         
         var mapStats = scores.GroupBy(s => s.Slot)
-            .ToDictionary(g => g.Key, g => 
+            .ToDictionary(g => g.Key, g =>
             {
                 double average = g.Average(s => s.Score);
                 double sumOfSquares = g.Sum(s => Math.Pow(s.Score - average, 2));
-                double stdDev = g.Count() > 1 ? Math.Sqrt(sumOfSquares / (g.Count() - 1)) : 0; 
-            
+                double stdDev = g.Count() > 1 ? Math.Sqrt(sumOfSquares / (g.Count() - 1)) : 0;
+
                 return new { Average = average, StdDev = stdDev };
             });
         
@@ -303,34 +303,38 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                     .Select((s, index) => new { s.UserId, Rank = index + 1 })
                     .ToDictionary(x => x.UserId, x => x.Rank)
             );
-
+        
         var playerStats = scores.GroupBy(s => s.UserId)
-            .Select(g => 
+            .Select(g =>
             {
                 double zSum = 0;
-                double totalRawScore = 0;
-                var playerScores = new Dictionary<string, string>();
+                var userScores = new Dictionary<string, int>();
+                var userRanks = new Dictionary<string, int>();
 
                 foreach (var score in g)
                 {
                     var stats = mapStats[score.Slot];
+
                     if (stats.StdDev > 0)
                     {
                         zSum += (score.Score - stats.Average) / stats.StdDev;
                     }
-                
-                    totalRawScore += score.Score;
-                    
-                    int rank = mapRanks[score.Slot][score.UserId];
-                    playerScores[score.Slot] = $"#{rank} {score.Score}";
+
+                    userScores[score.Slot] = score.Score;
+                    userRanks[score.Slot] = mapRanks[score.Slot][score.UserId];
                 }
-                
-                return new 
+
+                var team = g.First().Team;
+                var osuData = team.OsuData;
+
+                return new
                 {
-                    Username = g.First().Team.DisplayName, 
-                    ZSum = Math.Round(zSum, 2),
-                    AvgScore = Math.Round(totalRawScore / g.Count(), 0),
-                    Scores = playerScores
+                    Username = team.DisplayName,
+                    OsuId = osuData?.Id ?? 0,
+                    CountryCode = "ES", // NO voy a actualizar models para esto.
+                    ZSum = zSum,
+                    Scores = userScores,
+                    Ranks = userRanks
                 };
             })
             .OrderByDescending(p => p.ZSum)
@@ -338,14 +342,10 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         
         var modOrder = new Dictionary<string, int>
         {
-            { "NM", 1 },
-            { "HD", 2 },
-            { "HR", 3 },
-            { "DT", 4 },
-            { "TB", 5 }
+            { "NM", 1 }, { "HD", 2 }, { "HR", 3 }, { "DT", 4 }, { "TB", 5 }
         };
-        
-        var mapSlots = mapStats.Keys.OrderBy(k => 
+
+        var mapSlots = mapStats.Keys.OrderBy(k =>
         {
             string mod = new string(k.TakeWhile(char.IsLetter).ToArray()).ToUpper();
             int num = int.TryParse(new string(k.Where(char.IsDigit).ToArray()), out int n) ? n : 0;
@@ -355,6 +355,133 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         
         var csvBuilder = new System.Text.StringBuilder();
         
+        string mapsHeader = string.Join(",", mapSlots);
+        csvBuilder.AppendLine($"team name,flag ISO,{mapsHeader},Seed,NM Seed,HD Seed,HR Seed,DT Seed,{mapsHeader},team size,p1 ID,p1 flag code");
+
+        int currentSeed = 1;
+        int totalPlayers = playerStats.Count;
+
+        foreach (var player in playerStats)
+        {
+            var playerMapScores = mapSlots.Select(slot =>
+                player.Scores.ContainsKey(slot) ? player.Scores[slot].ToString() : "0");
+            
+            var playerMapRanks = mapSlots.Select(slot =>
+                player.Ranks.ContainsKey(slot) ? player.Ranks[slot].ToString() : totalPlayers.ToString());
+
+            string scoresStr = string.Join(",", playerMapScores);
+            string ranksStr = string.Join(",", playerMapRanks);
+            
+            csvBuilder.AppendLine($"{player.Username},{player.Username},{scoresStr},{currentSeed},1,1,1,1,{ranksStr},1,{player.OsuId},{player.CountryCode}");
+
+            currentSeed++;
+        }
+
+        var embed = new EmbedBuilder()
+            .WithTitle("Archivo de Scores Generado")
+            .WithColor(Color.Green)
+            .WithDescription(
+                $"Se ha generado el archivo de puntuaciones y seeding para la ronda `{roundId}` con un total de **{playerStats.Count} jugadores**.");
+
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString()));
+
+        await FollowupWithFileAsync(
+            stream,
+            $"seeding_ronda_{roundId}.csv",
+            embed: embed.Build()
+        );
+    }
+
+    [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("stats", "Calcula stats para una ronda dada")]
+    public async Task GenerateZSumResultsAsync(int roundId)
+    {
+        await DeferAsync(ephemeral: false);
+
+        await using var db = new ModelsContext();
+
+        var scores = await db.Scores
+            .Include(s => s.Team)
+            .ThenInclude(u => u.OsuData)
+            .Where(s => s.RoundId == roundId)
+            .ToListAsync();
+
+        if (!scores.Any())
+        {
+            await FollowupAsync("No hay resultados registrados para esta ronda.");
+            return;
+        }
+
+        var mapStats = scores.GroupBy(s => s.Slot)
+            .ToDictionary(g => g.Key, g =>
+            {
+                double average = g.Average(s => s.Score);
+                double sumOfSquares = g.Sum(s => Math.Pow(s.Score - average, 2));
+                double stdDev = g.Count() > 1 ? Math.Sqrt(sumOfSquares / (g.Count() - 1)) : 0;
+
+                return new { Average = average, StdDev = stdDev };
+            });
+
+        var mapRanks = scores.GroupBy(s => s.Slot)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(s => s.Score)
+                    .Select((s, index) => new { s.UserId, Rank = index + 1 })
+                    .ToDictionary(x => x.UserId, x => x.Rank)
+            );
+
+        var playerStats = scores.GroupBy(s => s.UserId)
+            .Select(g =>
+            {
+                double zSum = 0;
+                double totalRawScore = 0;
+                var playerScores = new Dictionary<string, string>();
+
+                foreach (var score in g)
+                {
+                    var stats = mapStats[score.Slot];
+
+                    if (stats.StdDev > 0)
+                    {
+                        zSum += (score.Score - stats.Average) / stats.StdDev;
+                    }
+
+                    totalRawScore += score.Score;
+
+                    int rank = mapRanks[score.Slot][score.UserId];
+                    playerScores[score.Slot] = $"#{rank} {score.Score}";
+                }
+
+                return new
+                {
+                    Username = g.First().Team.DisplayName,
+                    ZSum = Math.Round(zSum, 2),
+                    AvgScore = Math.Round(totalRawScore / g.Count(), 0),
+                    Scores = playerScores
+                };
+            })
+            .OrderByDescending(p => p.ZSum)
+            .ToList();
+
+        var modOrder = new Dictionary<string, int>
+        {
+            { "NM", 1 },
+            { "HD", 2 },
+            { "HR", 3 },
+            { "DT", 4 },
+            { "TB", 5 }
+        };
+
+        var mapSlots = mapStats.Keys.OrderBy(k =>
+        {
+            string mod = new string(k.TakeWhile(char.IsLetter).ToArray()).ToUpper();
+            int num = int.TryParse(new string(k.Where(char.IsDigit).ToArray()), out int n) ? n : 0;
+            int orderWeight = modOrder.ContainsKey(mod) ? modOrder[mod] : 99;
+            return (orderWeight, num);
+        }).ToList();
+
+        var csvBuilder = new System.Text.StringBuilder();
+
         csvBuilder.AppendLine($"Rank,Jugador,Z-Sum,Avg. Score,{string.Join(",", mapSlots)}");
 
         int rank = 1;
@@ -367,7 +494,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             csvBuilder.AppendLine($"{rank},{player.Username},{player.ZSum},{player.AvgScore},{string.Join(",", playerMapScores)}");
             rank++;
         }
-        
+
         var embed = new EmbedBuilder()
             .WithTitle("Qualifiers Standing")
             .WithColor(Color.Purple)
@@ -380,7 +507,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             var p = playerStats[i];
             embed.AddField($"#{i + 1} `{p.Username}`", $"**Z-Sum:** {p.ZSum} | **Avg:** {p.AvgScore:N0}", inline: false);
         }
-        
+
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString()));
 
         await FollowupWithFileAsync(
