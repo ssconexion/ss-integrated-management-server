@@ -13,6 +13,7 @@
       <PackageReference Include="BanchoSharp" Version="1.5.0" />
       <PackageReference Include="Discord.Net" Version="3.18.0" />
       <PackageReference Include="DotNetEnv" Version="3.1.1" />
+      <PackageReference Include="Google.OrTools" Version="9.15.6755" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.12" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.12">
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

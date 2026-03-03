@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.Resources;
+using Google.OrTools.Sat;
 
 namespace ss.Internal.Management.Server.Discord;
 
@@ -273,7 +274,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         await DeferAsync(ephemeral: false);
 
         await using var db = new ModelsContext();
-        
+
         var scores = await db.Scores
             .Include(s => s.Team)
             .ThenInclude(u => u.OsuData)
@@ -285,7 +286,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             await FollowupAsync("No hay resultados registrados para esta ronda.");
             return;
         }
-        
+
         var mapStats = scores.GroupBy(s => s.Slot)
             .ToDictionary(g => g.Key, g =>
             {
@@ -295,7 +296,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
 
                 return new { Average = average, StdDev = stdDev };
             });
-        
+
         var mapRanks = scores.GroupBy(s => s.Slot)
             .ToDictionary(
                 g => g.Key,
@@ -303,7 +304,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
                     .Select((s, index) => new { s.UserId, Rank = index + 1 })
                     .ToDictionary(x => x.UserId, x => x.Rank)
             );
-        
+
         var playerStats = scores.GroupBy(s => s.UserId)
             .Select(g =>
             {
@@ -339,7 +340,7 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             })
             .OrderByDescending(p => p.ZSum)
             .ToList();
-        
+
         var modOrder = new Dictionary<string, int>
         {
             { "NM", 1 }, { "HD", 2 }, { "HR", 3 }, { "DT", 4 }, { "TB", 5 }
@@ -352,9 +353,9 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
             int orderWeight = modOrder.ContainsKey(mod) ? modOrder[mod] : 99;
             return (orderWeight, num);
         }).ToList();
-        
+
         var csvBuilder = new System.Text.StringBuilder();
-        
+
         string mapsHeader = string.Join(",", mapSlots);
         csvBuilder.AppendLine($"team name,flag ISO,{mapsHeader},Seed,NM Seed,HD Seed,HR Seed,DT Seed,{mapsHeader},team size,p1 ID,p1 flag code");
 
@@ -365,13 +366,13 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         {
             var playerMapScores = mapSlots.Select(slot =>
                 player.Scores.ContainsKey(slot) ? player.Scores[slot].ToString() : "0");
-            
+
             var playerMapRanks = mapSlots.Select(slot =>
                 player.Ranks.ContainsKey(slot) ? player.Ranks[slot].ToString() : totalPlayers.ToString());
 
             string scoresStr = string.Join(",", playerMapScores);
             string ranksStr = string.Join(",", playerMapRanks);
-            
+
             csvBuilder.AppendLine($"{player.Username},{player.Username},{scoresStr},{currentSeed},1,1,1,1,{ranksStr},1,{player.OsuId},{player.CountryCode}");
 
             currentSeed++;
@@ -972,6 +973,452 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         return eb.Build();
     }
 
+    [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("generate-groups", "NO voy a generar todos los grupos uno a uno")]
+    public async Task GenerateGroupMatchesAsync(int roundId)
+    {
+        await DeferAsync(ephemeral: false);
+
+        var sorteoGrupos = new Dictionary<string, List<int>>
+        {
+            { "A", new List<int> { 8433636, 15254495, 17594074, 35745799 } },
+            { "B", new List<int> { 3938945, 14791081, 4638940, 19744046 } },
+            { "C", new List<int> { 21622646, 8335721, 36396047, 15049805 } },
+            { "D", new List<int> { 15907157, 15207748, 13174212, 18202514 } },
+            { "E", new List<int> { 14153496, 22037489, 10771616, 36687057 } },
+            { "F", new List<int> { 15101114, 15289150, 15842178, 12781215 } },
+            { "G", new List<int> { 11830831, 12048359, 18296881, 21412869 } },
+            { "H", new List<int> { 10596572, 15961685, 15627043, 23762052 } }
+        };
+
+        await using var db = new ModelsContext();
+
+        var roundExists = await db.Rounds.AnyAsync(r => r.Id == roundId);
+
+        if (!roundExists)
+        {
+            await FollowupAsync($"La ronda con ID `{roundId}` no existe en la base de datos.");
+            return;
+        }
+
+        var allOsuIds = sorteoGrupos.Values.SelectMany(x => x).ToList();
+
+        var users = await db.Users
+            .Where(u => allOsuIds.Contains(u.OsuID))
+            .Select(u => new { u.OsuID, u.Id })
+            .ToListAsync();
+
+        var osuIdToInternalId = users.ToDictionary(u => u.OsuID, u => u.Id);
+
+        var missingPlayers = allOsuIds.Where(id => !osuIdToInternalId.ContainsKey(id)).ToList();
+
+        if (missingPlayers.Any())
+        {
+            await FollowupAsync($"**Error:** Faltan estos osu! IDs en la BD: {string.Join(", ", missingPlayers)}");
+            return;
+        }
+
+        var nuevosPartidos = new List<Models.MatchRoom>();
+
+        foreach (var grupo in sorteoGrupos)
+        {
+            var internalPlayers = grupo.Value.Select(osuId => osuIdToInternalId[osuId]).ToList();
+
+            var matchups = new List<(int, int)>
+            {
+                (internalPlayers[0], internalPlayers[1]),
+                (internalPlayers[2], internalPlayers[3]),
+                (internalPlayers[0], internalPlayers[2]),
+                (internalPlayers[1], internalPlayers[3]),
+                (internalPlayers[0], internalPlayers[3]),
+                (internalPlayers[1], internalPlayers[2])
+            };
+
+            int i = 1;
+
+            foreach (var (p1, p2) in matchups)
+            {
+                nuevosPartidos.Add(new Models.MatchRoom
+                {
+                    RoundId = roundId,
+                    TeamRedId = p1,
+                    TeamBlueId = p2,
+                    Id = $"{grupo.Key}{i}"
+                });
+
+                i++;
+            }
+        }
+        
+        await db.MatchRooms.AddRangeAsync(nuevosPartidos);
+        await db.SaveChangesAsync();
+
+        var embed = new EmbedBuilder()
+            .WithTitle("✅ Fase de Grupos Generada")
+            .WithColor(Color.Blue)
+            .WithDescription($"Se han insertado exitosamente **{nuevosPartidos.Count}** partidos en la ronda `{roundId}`.");
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
+    [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("generate-schedules", "Genera los horarios de la ronda especificada automáticamente según la disponibilidad.")]
+    public async Task GenerateGroupScheduleAsync(int roundId, string fechaInicioViernes)
+    {
+        await DeferAsync(ephemeral: false);
+
+        if (!DateTime.TryParse(fechaInicioViernes, out DateTime baseDate))
+        {
+            await FollowupAsync("Formato de fecha inválido. Usa un formato como DD/MM/YYYY (ej: 06/03/2026).");
+            return;
+        }
+
+        await using var db = new ModelsContext();
+
+        var matches = await db.MatchRooms
+            .Include(m => m.TeamRed)
+            .Include(m => m.TeamBlue)
+            .Where(m => m.RoundId == roundId)
+            .ToListAsync();
+
+        if (!matches.Any())
+        {
+            await FollowupAsync("No hay partidos programados para esta ronda en la DB.");
+            return;
+        }
+
+        var userIds = matches.Select(m => m.TeamRedId).Concat(matches.Select(m => m.TeamBlueId)).Distinct().ToList();
+        var players = await db.Players.Where(p => userIds.Contains(p.UserId)).ToListAsync();
+
+        var slots = new List<TimeSlot>();
+        int slotIdCounter = 0;
+
+        for (int week = 1; week <= 2; week++)
+        {
+            for (int day = 0; day < 4; day++)
+            {
+                int penalty = (day == 0) ? 3 : (day == 3) ? 50 : 0;
+
+                for (int hour = 16; hour <= 23; hour++)
+                {
+                    slots.Add(new TimeSlot { Id = ++slotIdCounter, DayIndex = day, Hour = hour, PenaltyScore = penalty, Week = week });
+                }
+            }
+        }
+
+        slots.Add(new TimeSlot { Id = 999, DayIndex = -1, Hour = 0, PenaltyScore = 10000, Week = 0 });
+
+        var model = new CpModel();
+        var matchVars = new Dictionary<(string, int), BoolVar>();
+
+        foreach (var match in matches)
+        {
+            foreach (var slot in slots)
+            {
+                matchVars[(match.Id, slot.Id)] = model.NewBoolVar($"match_{match.Id}_slot_{slot.Id}");
+            }
+        }
+
+        foreach (var match in matches)
+        {
+            var matchSlots = slots.Select(s => matchVars[(match.Id, s.Id)]).ToArray();
+            model.AddExactlyOne(matchSlots);
+        }
+
+        foreach (var match in matches)
+        {
+            var p1 = players.FirstOrDefault(p => p.UserId == match.TeamRedId);
+            var p2 = players.FirstOrDefault(p => p.UserId == match.TeamBlueId);
+
+            foreach (var slot in slots)
+            {
+                if (slot.Id == 999) continue;
+
+                bool p1Avail = p1 != null && AvailabilityHelper.IsAvailable(p1.Availability, slot.DayIndex, slot.Hour);
+                bool p2Avail = p2 != null && AvailabilityHelper.IsAvailable(p2.Availability, slot.DayIndex, slot.Hour);
+
+                if (!p1Avail || !p2Avail)
+                {
+                    model.Add(matchVars[(match.Id, slot.Id)] == 0);
+                }
+            }
+        }
+
+        foreach (var uid in userIds)
+        {
+            var playerMatches = matches.Where(m => m.TeamRedId == uid || m.TeamBlueId == uid).ToList();
+
+            foreach (var slot in slots)
+            {
+                if (slot.Id == 999) continue;
+
+                var varsInSlot = playerMatches.Select(m => matchVars[(m.Id, slot.Id)]).ToArray();
+                model.AddAtMostOne(varsInSlot);
+            }
+        }
+
+        foreach (var uid in userIds)
+        {
+            var playerMatches = matches.Where(m => m.TeamRedId == uid || m.TeamBlueId == uid).ToList();
+
+            foreach (var week in new[] { 1, 2 })
+            {
+                var slotsInWeek = slots.Where(s => s.Week == week).Select(s => s.Id).ToList();
+                var varsInWeek = playerMatches.SelectMany(m => slotsInWeek.Select(sid => matchVars[(m.Id, sid)])).ToList();
+
+                model.Add(LinearExpr.Sum(varsInWeek) <= 2);
+            }
+        }
+
+        var penaltyTerms = new List<LinearExpr>();
+
+        foreach (var match in matches)
+        {
+            foreach (var slot in slots)
+            {
+                if (slot.PenaltyScore > 0)
+                {
+                    penaltyTerms.Add(LinearExpr.Term(matchVars[(match.Id, slot.Id)], slot.PenaltyScore));
+                }
+            }
+        }
+
+        foreach (var slot in slots)
+        {
+            if (slot.Id == 999) continue;
+
+            var matchesInSlot = matches.Select(m => matchVars[(m.Id, slot.Id)]).ToArray();
+            var matchesCount = model.NewIntVar(0, matches.Count, $"count_slot_{slot.Id}");
+
+            model.Add(matchesCount == LinearExpr.Sum(matchesInSlot));
+
+            var countSquared = model.NewIntVar(0, matches.Count * matches.Count, $"sq_count_{slot.Id}");
+            model.AddMultiplicationEquality(countSquared, new[] { matchesCount, matchesCount });
+
+            penaltyTerms.Add(LinearExpr.Term(countSquared, 20));
+        }
+
+        model.Minimize(LinearExpr.Sum(penaltyTerms));
+        var solver = new CpSolver { StringParameters = "max_time_in_seconds: 30.0" };
+        var status = solver.Solve(model);
+
+        if (status == CpSolverStatus.Optimal || status == CpSolverStatus.Feasible)
+        {
+            var resultados = new List<(string MatchId, int Week, int DayIndex, int Hour, string RedName, string BlueName, bool IsLimbo)>();
+            int matchesInLimbo = 0;
+
+            foreach (var match in matches)
+            {
+                foreach (var slot in slots)
+                {
+                    if (solver.BooleanValue(matchVars[(match.Id, slot.Id)]))
+                    {
+                        bool isLimbo = slot.Id == 999;
+                        if (isLimbo) matchesInLimbo++;
+
+                        resultados.Add((
+                            MatchId: match.Id,
+                            Week: slot.Week,
+                            DayIndex: slot.DayIndex,
+                            Hour: slot.Hour,
+                            RedName: match.TeamRed?.DisplayName ?? "Desconocido",
+                            BlueName: match.TeamBlue?.DisplayName ?? "Desconocido",
+                            IsLimbo: isLimbo
+                        ));
+
+                        break;
+                    }
+                }
+            }
+
+            var resultadosOrdenados = resultados
+                .OrderBy(r => r.IsLimbo ? 1 : 0)
+                .ThenBy(r => r.Week)
+                .ThenBy(r => r.DayIndex)
+                .ThenBy(r => r.Hour)
+                .ToList();
+
+            var csvBuilder = new System.Text.StringBuilder();
+            csvBuilder.AppendLine("Match ID,Semana,Día,Hora (UTC),Red Team,Blue Team");
+
+            foreach (var r in resultadosOrdenados)
+            {
+                var matchToUpdate = matches.First(m => m.Id == r.MatchId);
+
+                if (r.IsLimbo)
+                {
+                    csvBuilder.AppendLine($"{r.MatchId},N/A,Sin Asignar (Incompatibles),N/A,{r.RedName},{r.BlueName}");
+
+                    matchToUpdate.StartTime = null;
+                }
+                else
+                {
+                    string dayName = AvailabilityHelper.DayToName(r.DayIndex);
+                    csvBuilder.AppendLine($"{r.MatchId},{r.Week},{dayName},{r.Hour}:00,{r.RedName},{r.BlueName}");
+
+                    // Sumamos (r.Week - 1) * 7 para saltar a la segunda semana si hace falta
+                    // Sumamos r.DayIndex para movernos del Viernes al Sábado/Domingo/Lunes
+                    // Sumamos r.Hour para fijar la hora UTC
+                    int daysToAdd = ((r.Week - 1) * 7) + r.DayIndex;
+                    DateTime finalDate = baseDate.Date.AddDays(daysToAdd).AddHours(r.Hour - 1); // La disponibilidad esta en utc+1, ajustamos acorde. 
+
+                    matchToUpdate.StartTime = DateTime.SpecifyKind(finalDate, DateTimeKind.Utc);
+                }
+            }
+
+            await db.SaveChangesAsync();
+
+            foreach (var r in resultadosOrdenados)
+            {
+                if (r.IsLimbo)
+                {
+                    csvBuilder.AppendLine($"{r.MatchId},N/A,Sin Asignar (Incompatibles),N/A,{r.RedName},{r.BlueName}");
+                }
+                else
+                {
+                    string dayName = AvailabilityHelper.DayToName(r.DayIndex);
+                    csvBuilder.AppendLine($"{r.MatchId},{r.Week},{dayName},{r.Hour}:00,{r.RedName},{r.BlueName}");
+                }
+            }
+
+            string extraInfo = matchesInLimbo > 0
+                ? $"\n**Atención:** Hay **{matchesInLimbo} partido(s)** sin asignar en el limbo debido a incompatibilidades horarias."
+                : "\nTodos los partidos se han programado con éxito!";
+
+            var embed = new EmbedBuilder()
+                .WithTitle("✅ Horarios Generados")
+                .WithColor(matchesInLimbo > 0 ? Color.Orange : Color.Green)
+                .WithDescription(
+                    $"Horarios calculados y ordenados cronológicamente para la ronda `{roundId}`.\nCoste algorítmico: **{solver.ObjectiveValue}**{extraInfo}");
+
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString()));
+
+            await FollowupWithFileAsync(
+                stream,
+                $"horarios_ronda_{roundId}.csv",
+                embed: embed.Build()
+            );
+        }
+        else
+        {
+            await FollowupAsync("**Error crítico:** Ni siquiera usando el Limbo se ha podido generar el horario. Revisa las reglas base del torneo.");
+        }
+    }
+
+    [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("import-schedules", "Importa un archivo CSV modificado y actualiza los horarios en la BD")]
+    public async Task ImportSchedulesAsync(int roundId, string fechaInicioViernes, IAttachment csvFile)
+    {
+        await DeferAsync(ephemeral: false);
+
+        if (!DateTime.TryParse(fechaInicioViernes, out DateTime baseDate))
+        {
+            await FollowupAsync("Formato de fecha inválido. Usa un formato como DD/MM/YYYY (ej: 06/03/2026).");
+            return;
+        }
+
+        if (!csvFile.Filename.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            await FollowupAsync("El archivo debe ser un `.csv` válido.");
+            return;
+        }
+
+        using var httpClient = new HttpClient();
+        var csvContent = await httpClient.GetStringAsync(csvFile.Url);
+
+        var lines = csvContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length <= 1)
+        {
+            await FollowupAsync("El archivo CSV está vacío o no tiene las columnas correctas.");
+            return;
+        }
+
+        await using var db = new ModelsContext();
+
+        int actualizados = 0;
+        int enviadosAlLimbo = 0;
+        int errores = 0;
+
+        foreach (var line in lines.Skip(1))
+        {
+            var cols = line.Split(',');
+            if (cols.Length < 4) continue;
+
+            string matchId = cols[0].Trim();
+            string weekStr = cols[1].Trim();
+            string dayStr = cols[2].Trim();
+            string hourStr = cols[3].Trim();
+
+            var match = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId && m.RoundId == roundId);
+
+            if (match == null)
+            {
+                errores++;
+                continue;
+            }
+
+            if (weekStr == "N/A" || dayStr.Contains("Sin Asignar", StringComparison.OrdinalIgnoreCase))
+            {
+                match.StartTime = null;
+                enviadosAlLimbo++;
+                continue;
+            }
+
+            if (int.TryParse(weekStr, out int week))
+            {
+                int dayIndex = dayStr.ToLower() switch
+                {
+                    "viernes" => 0,
+                    "sábado" => 1,
+                    "sabado" => 1, // yep
+                    "domingo" => 2,
+                    "lunes" => 3,
+                    _ => -1
+                };
+
+                if (dayIndex != -1 && hourStr.Contains(':'))
+                {
+                    string hourPart = hourStr.Split(':')[0];
+
+                    if (int.TryParse(hourPart, out int hour))
+                    {
+                        int daysToAdd = ((week - 1) * 7) + dayIndex;
+
+                        DateTime finalDate = baseDate.Date.AddDays(daysToAdd).AddHours(hour - 1);
+                        match.StartTime = DateTime.SpecifyKind(finalDate, DateTimeKind.Utc);
+
+                        actualizados++;
+                    }
+                    else
+                    {
+                        errores++;
+                    }
+                }
+                else
+                {
+                    errores++;
+                }
+            }
+            else
+            {
+                errores++;
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        var embed = new EmbedBuilder()
+            .WithTitle("Horarios Importados con Éxito")
+            .WithColor(errores > 0 ? Color.Orange : Color.Green)
+            .WithDescription($"Se ha procesado y sincronizado el archivo **{csvFile.Filename}** con la base de datos para la ronda `{roundId}`.")
+            .AddField("Actualizados", $"`{actualizados}` partidos", inline: true)
+            .AddField("En el Limbo", $"`{enviadosAlLimbo}` partidos", inline: true)
+            .AddField("Errores / No encontrados", $"`{errores}` partidos", inline: true);
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
     /// <summary>
     /// This is how we translate availability into days of the week. Availability is stored like this:
     /// 00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000|00000000000000000000000000000000
@@ -991,5 +1438,41 @@ public class SlashCommandManager : InteractionModuleBase<SocketInteractionContex
         }
 
         public static string DayToName(int i) => i >= 0 && i < DayLabels.Length ? DayLabels[i] : "Día no preferente.";
+
+        public static bool IsAvailable(string availability, int dayIndex, int hour)
+        {
+            if (string.IsNullOrWhiteSpace(availability)) return false;
+
+            var days = availability.Split('|');
+            if (dayIndex >= days.Length) return false;
+
+            string dayStr = days[dayIndex];
+
+            if (dayStr.Length < 24) return false;
+
+            int index = dayStr.Length - 1 - hour;
+
+            if (index < 0 || index >= dayStr.Length) return false;
+
+            return dayStr[index] == '1';
+        }
+
+        public static string GetDayName(int dayIndex) => dayIndex switch
+        {
+            0 => "Viernes",
+            1 => "Sábado",
+            2 => "Domingo",
+            3 => "Lunes",
+            _ => "Otro día"
+        };
+    }
+
+    public class TimeSlot
+    {
+        public int Id { get; set; }
+        public int DayIndex { get; set; }
+        public int Hour { get; set; }
+        public int PenaltyScore { get; set; }
+        public int Week { get; set; }
     }
 }

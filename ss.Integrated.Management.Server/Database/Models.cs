@@ -171,7 +171,7 @@ public class Models
         /// The numerical ID of the Bancho Match History (e.g. https://osu.ppy.sh/community/matches/{MpLinkId}).
         /// </summary>
         [Column("mp_link_id")]
-        public int MpLinkId { get; set; }
+        public int? MpLinkId { get; set; }
 
         [ForeignKey("RoundId")]
         public virtual Round Round { get; set; }

@@ -96,6 +96,9 @@ All commands are restricted to tournament staff holding the designated Referee r
 - `/removematchup [matchId]`: Cancels and deletes a Head-to-Head match from the database.
 - `/createqualifierslobby [roomId] [date] [hour] [roundId]`: Schedules a new Qualifier room.
 - `/removequalifiersroom [roomId]`: Cancels and deletes a Qualifier room.
+- `/generate-groups [roundId]`: Creates all 48 matches for a 8-group round robin group stage. It is hardcoded with our groups currently because of the way we formed them.
+- `/generate-schedules [roundId] [fridayDate]`: Using the given availability provided by players, generates an optimal schedule for a given round. Also prints a CSV to ease editing later.
+- `/import-schedules [roundId] [fridayDate] [csvAttachment]`: Imports and updates all match dates using the provided CSV file.
 
 #### Scoring & Match Tracking
 - `/matchups`: Displays a paginated list of all scheduled matches and their starting times.
