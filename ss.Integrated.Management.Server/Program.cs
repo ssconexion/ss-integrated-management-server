@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using DotNetEnv;
+using Microsoft.Extensions.DependencyInjection;
 using ss.Internal.Management.Server.Discord;
 
 namespace ss.Internal.Management.Server
@@ -20,7 +21,11 @@ namespace ss.Internal.Management.Server
 
 			CultureInfo.CurrentUICulture = new CultureInfo(Environment.GetEnvironmentVariable("LANGUAGE") ?? "en");
 			
-			var manager = new DiscordManager(Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN") ?? throw new InvalidOperationException());
+			var services = new ServiceCollection();
+			services.AddSingleton(provider => new DiscordManager(Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN") ?? string.Empty));
+			var serviceProvider = services.BuildServiceProvider();
+			
+			var manager = serviceProvider.GetRequiredService<DiscordManager>();
 			await manager.StartAsync();
 			
 			await Task.Delay(-1);

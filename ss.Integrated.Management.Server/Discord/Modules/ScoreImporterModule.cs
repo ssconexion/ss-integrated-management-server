@@ -7,11 +7,11 @@ namespace ss.Internal.Management.Server.Discord;
 /// <summary>
 /// Helper class for parsing match results from external files (CSV/TXT) and saving them to the database.
 /// </summary>
-public class ScoreImporter
+public class ScoreImporterModule
 {
     private readonly ModelsContext db;
 
-    public ScoreImporter(ModelsContext db)
+    public ScoreImporterModule(ModelsContext db)
     {
         this.db = db;
     }
