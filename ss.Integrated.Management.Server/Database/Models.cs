@@ -398,5 +398,6 @@ public class Models
     {
         public string Slot { get; set; }
         public TeamColor TeamColor { get; set; }
+        public TeamColor? Winner { get; set; }
     }
 }
