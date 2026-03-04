@@ -689,14 +689,15 @@ namespace ss.Internal.Management.Server.Tests.AutoRef
 
             var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
             {
-            });
-
-            autoRef.client = mockBancho.Object;
-            autoRef.joined = true;
-            autoRef.lobbyChannelName = channel;
-            autoRef.currentState = AutoRefEliminationStage.MatchState.Idle;
-            autoRef.bannedMaps = new List<Models.RoundChoice>();
-            autoRef.pickedMaps = new List<Models.RoundChoice>();
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
 
             var mappool = new List<Models.RoundBeatmap>();
             string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
@@ -744,6 +745,123 @@ namespace ss.Internal.Management.Server.Tests.AutoRef
             
             await SendMsg("BanchoBot", "Countdown finished");
             Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForStart, autoRef.currentState);
+        }
+        
+        [Fact]
+        public async Task AssistedMode_ShouldIgnorePlayerPicksAndBans_AndAcceptRefOverride()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+            
+            await SendMsg(refName, ">firstpick red");
+            await SendMsg(refName, ">firstban blue");
+            await SendMsg(refName, ">start assisted");
+            
+            Assert.Equal(AutoRefEliminationStage.OperationMode.Assisted, autoRef.currentMode);
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanBlue, autoRef.currentState);
+            
+            await SendMsg("BlueTeam", "NM1");
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanBlue, autoRef.currentState);
+            Assert.Empty(autoRef.bannedMaps);
+            
+            await SendMsg(refName, ">next NM1");
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanRed, autoRef.currentState);
+            Assert.Contains(autoRef.bannedMaps, m => m.Slot == "NM1");
+            
+            await SendMsg("RedTeam", "HD1");
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanRed, autoRef.currentState);
+            
+            await SendMsg(refName, ">next HD1");
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickRed, autoRef.currentState);
+        }
+
+        [Fact]
+        public async Task Timeouts_ShouldBeIgnoredInAssistedMode_AndWorkInAutoMode()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+            
+            await SendMsg(refName, ">firstpick red");
+            await SendMsg(refName, ">firstban red");
+            await SendMsg(refName, ">start assisted");
+            Assert.Equal(AutoRefEliminationStage.OperationMode.Assisted, autoRef.currentMode);
+            
+            await SendMsg("RedTeam", "!timeout");
+            Assert.NotEqual(AutoRefEliminationStage.MatchState.OnTimeout, autoRef.currentState);
+            
+            await SendMsg(refName, ">operation auto");
+            Assert.Equal(AutoRefEliminationStage.OperationMode.Automatic, autoRef.currentMode);
+            
+            await SendMsg("RedTeam", "!timeout");
+            Assert.Equal(AutoRefEliminationStage.MatchState.OnTimeout, autoRef.currentState);
         }
     }
 }

@@ -113,6 +113,8 @@ public partial class AutoRefEliminationStage : IAutoRef
     private Models.TeamColor lastPick = Models.TeamColor.None;
 
     internal MatchState currentState;
+    internal OperationMode currentMode;
+    
     private MatchState previousState;
 
     private bool stoppedPreviously;
@@ -142,6 +144,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         OnTimeout,
         MatchOnHold,
     };
+
+    public enum OperationMode
+    {
+        Automatic,
+        Assisted
+    }
 
     public AutoRefEliminationStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
     {
@@ -434,6 +442,26 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(Strings.AutoAlreadyEngaged);
                     break;
                 }
+
+                if (args.Length < 2)
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+                else
+                {
+                    if (args[1] == "auto")
+                    {
+                        currentMode = OperationMode.Automatic;
+                    } else if (args[1] == "assisted")
+                    {
+                        currentMode = OperationMode.Assisted;
+                    }
+                    else
+                    {
+                        await SendMessageBothWays(Strings.NotEnoughArgs);
+                        return;
+                    }
+                }
                 
                 if (!stoppedPreviously)
                 {
@@ -462,6 +490,43 @@ public partial class AutoRefEliminationStage : IAutoRef
                 previousState = currentState;
                 currentState = MatchState.Idle;
                 stoppedPreviously = true;
+                break;
+            
+            case "next":
+                if (currentMode == OperationMode.Automatic)
+                {
+                    await SendMessageBothWays("Auto mode is engaged, engage assisted mode for this.");
+                    break;
+                }
+                
+                if (args.Length < 2)
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+                
+                await TryStateChange("🏃‍♀️‍➡️ Override", args[1]);
+                break;
+            
+            case "operation":
+                if (args.Length < 2)
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+                
+                if (args[1] == "auto")
+                {
+                    currentMode = OperationMode.Automatic;
+                    await SendMessageBothWays("Switched to auto mode");
+                } else if (args[1] == "assisted")
+                {
+                    currentMode = OperationMode.Assisted;
+                    await SendMessageBothWays("Switched to assited mode");
+                }
+                else
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+                
                 break;
 
             case "firstpick":
@@ -571,7 +636,7 @@ public partial class AutoRefEliminationStage : IAutoRef
              currentState == MatchState.WaitingForBanBlue ||
              currentState == MatchState.WaitingForBanRed ||
              currentState == MatchState.WaitingForPickBlue ||
-             currentState == MatchState.WaitingForPickRed) && content == "!timeout")
+             currentState == MatchState.WaitingForPickRed) && content == "!timeout" && currentMode == OperationMode.Automatic)
         {
             if (sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && !redTimeoutRequest)
             {
@@ -604,7 +669,7 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         #region CountdownForPickFinished
 
-        if (currentState == MatchState.WaitingForPickBlue)
+        if (currentState == MatchState.WaitingForPickBlue && currentMode == OperationMode.Automatic)
         {
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
@@ -619,7 +684,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             }
         }
         
-        if (currentState == MatchState.WaitingForPickRed)
+        if (currentState == MatchState.WaitingForPickRed && currentMode == OperationMode.Automatic)
         {
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
@@ -666,7 +731,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             }
         }
 
-        if (currentState == MatchState.WaitingForBanRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_'))
+        if (currentState == MatchState.WaitingForBanRed && 
+            ((sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
@@ -691,7 +758,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             return;
         }
 
-        if (currentState == MatchState.WaitingForBanBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_'))
+        if (currentState == MatchState.WaitingForBanBlue && 
+            ((sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
@@ -736,7 +805,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             return;
         }
 
-        if (currentState == MatchState.WaitingForPickRed && sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_'))
+        if (currentState == MatchState.WaitingForPickRed && 
+            ((sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
@@ -757,7 +828,9 @@ public partial class AutoRefEliminationStage : IAutoRef
             return;
         }
 
-        if (currentState == MatchState.WaitingForPickBlue && sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_'))
+        if (currentState == MatchState.WaitingForPickBlue && 
+            ((sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
