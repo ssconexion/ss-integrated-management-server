@@ -139,6 +139,12 @@ public class Models
 
         [Column("team_blue_id")]
         public int TeamBlueId { get; set; }
+        
+        [Column("team_red_points")]
+        public int? TeamRedScore { get; set; }
+        
+        [Column("team_blue_points")]
+        public int? TeamBlueScore { get; set; }
 
         /// <summary>
         /// The ID of the referee assigned to this match, if any.

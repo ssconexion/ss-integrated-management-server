@@ -114,8 +114,11 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     internal MatchState currentState;
     internal OperationMode currentMode;
+    private string currentBeatmapSlot;
     
     private MatchState previousState;
+
+    private int refId;
 
     private bool stoppedPreviously;
 
@@ -187,6 +190,9 @@ public partial class AutoRefEliminationStage : IAutoRef
                 .SetProperty(m => m.PickedMaps, pickedMaps) 
                 .SetProperty(m => m.BannedMaps, bannedMaps)
                 .SetProperty(m => m.EndTime, DateTime.UtcNow)
+                .SetProperty(m => m.TeamRedScore, matchScore[0])
+                .SetProperty(m => m.TeamBlueScore, matchScore[1])
+                .SetProperty(m => m.RefereeId, currentMatch!.Referee.Id)
             );
 
         await db.SaveChangesAsync();
@@ -358,11 +364,15 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             matchScore[0]++;
             await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
+            var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+            if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
         }
         else
         {
             matchScore[1]++;
             await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
+            var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+            if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
         }
 
         currentMapScores.Clear();
@@ -813,6 +823,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
+                currentBeatmapSlot = content.ToUpper();
                 await PreparePick(content.ToUpper());
                 
                 if (isStolenPick)
@@ -836,6 +847,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             {
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
+                currentBeatmapSlot = content.ToUpper();
                 await PreparePick(content.ToUpper());
                 
                 if (isStolenPick)
