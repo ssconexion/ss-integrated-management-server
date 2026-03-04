@@ -2,6 +2,7 @@
 using Discord.Interactions;
 using Discord.WebSocket;
 using Google.OrTools.Sat;
+using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.Discord.Helpers;
@@ -10,17 +11,20 @@ namespace ss.Internal.Management.Server.Discord.Modules;
 
 public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
 {
-    
+
     public static Dictionary<string, DiscordModels.PendingMatch> PendingMatches = new();
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
-    [SlashCommand("reschedulematchup", "Crea una match verificando disponibilidad")]
+    [SlashCommand("reschedulematchup", "Reschedulea una match. Introduce el tiempo en UTC.")]
     public async Task UpdateMatchTimeAsync(string matchId, string date, string hour)
     {
         await DeferAsync(ephemeral: false);
         await using var db = new ModelsContext();
 
-        var match = await db.MatchRooms.FirstOrDefaultAsync(room => room.Id == matchId);
+        var match = await db.MatchRooms
+            .Include(matchRoom => matchRoom.TeamRed)
+            .Include(matchRoom => matchRoom.TeamBlue)
+            .FirstOrDefaultAsync(room => room.Id == matchId);
 
         if (match == null)
         {
@@ -41,9 +45,22 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
         match.StartTime = DateTime.SpecifyKind(result, DateTimeKind.Utc);
 
         await db.SaveChangesAsync();
-        await FollowupAsync($"Se ha rescheduleado la match con ID `{match.Id}` a las `{match.StartTime}`");
+
+        long unixTime = 1;
+
+        if (match.StartTime != null)
+        {
+            unixTime = ((DateTimeOffset)match.StartTime).ToUnixTimeSeconds();
+        }
+
+        var embed = new EmbedBuilder()
+            .WithTitle($"✅ Reschedule exitoso para match {match.Id}")
+            .WithColor(Color.Green)
+            .WithDescription($"`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora nueva de comienzo: <t:{unixTime}:f>");
+
+        await FollowupAsync(embed: embed.Build());
     }
-    
+
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
     [SlashCommand("generate-schedules", "Genera los horarios de la ronda especificada automáticamente según la disponibilidad.")]
     public async Task GenerateGroupScheduleAsync(int roundId, string fechaInicioViernes)
@@ -398,6 +415,108 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
             .AddField("Actualizados", $"`{actualizados}` partidos", inline: true)
             .AddField("En el Limbo", $"`{enviadosAlLimbo}` partidos", inline: true)
             .AddField("Errores / No encontrados", $"`{errores}` partidos", inline: true);
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("lookup-match", "Devuelve la información de una match a partir de una ID")]
+    public async Task LookupMatch(string matchId)
+    {
+        await DeferAsync(ephemeral: false);
+        await using var db = new ModelsContext();
+
+        var match = await db.MatchRooms
+            .Include(room => room.TeamBlue)
+            .Include(room => room.TeamRed)
+            .FirstOrDefaultAsync(room => room.Id == matchId);
+
+        if (match == null)
+        {
+            await FollowupAsync("No se ha encontrado una match con la ID especificada");
+            return;
+        }
+
+        long unixTime = 1;
+
+        if (match.StartTime != null)
+        {
+            unixTime = ((DateTimeOffset)match.StartTime).ToUnixTimeSeconds();
+        }
+
+        var embed = new EmbedBuilder()
+            .WithTitle($"Match {match.Id}")
+            .WithColor(Color.Green)
+            .WithDescription($"`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora de comienzo: <t:{unixTime}:f>");
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("check-availability", "Muestra la disponibilidad visual de ambos jugadores de un match")]
+    public async Task CheckMatchAvailabilityAsync(string matchId)
+    {
+        await DeferAsync(ephemeral: false);
+        await using var db = new ModelsContext();
+
+        var match = await db.MatchRooms
+            .Include(m => m.TeamRed)
+            .Include(m => m.TeamBlue)
+            .FirstOrDefaultAsync(m => m.Id == matchId);
+
+        if (match == null)
+        {
+            await FollowupAsync("No se ha encontrado un partido con la ID especificada");
+            return;
+        }
+
+        var p1 = await db.Players.FirstOrDefaultAsync(p => p.UserId == match.TeamRedId);
+        var p2 = await db.Players.FirstOrDefaultAsync(p => p.UserId == match.TeamBlueId);
+
+        string redName = match.TeamRed?.DisplayName ?? "Desconocido";
+        string blueName = match.TeamBlue?.DisplayName ?? "Desconocido";
+
+        var embed = new EmbedBuilder()
+            .WithTitle($"Disponibilidad - Match {match.Id}")
+            .WithDescription($"**Rojo:** `{redName}` vs **Azul:** `{blueName}`\n*Mostrando franja de 16:00 a 23:00 UTC*")
+            .WithFooter("Te metes al adminer pa mirar el resto")
+            .WithColor(Color.Blue);
+
+        int startHour = 16;
+        int endHour = 23;
+
+        var horasArray = Enumerable.Range(startHour, endHour - startHour + 1).Select(h => h.ToString("00"));
+        string headerHoras = "`" + string.Join(" ", horasArray) + "`";
+
+        for (int day = 0; day < 4; day++)
+        {
+            string dayName = AvailabilityHelper.DayToName(day);
+
+            string p1Emojis = "";
+            string p2Emojis = "";
+
+            for (int hour = startHour; hour <= endHour; hour++)
+            {
+                bool p1Avail = p1 != null && AvailabilityHelper.IsAvailable(p1.Availability, day, hour);
+                bool p2Avail = p2 != null && AvailabilityHelper.IsAvailable(p2.Availability, day, hour);
+
+                p1Emojis += p1Avail ? "🟢 " : "🔴 ";
+                p2Emojis += p2Avail ? "🟢 " : "🔴 ";
+            }
+
+            string fieldContent =
+                $"{headerHoras}\n" +
+                $"{p1Emojis} **{redName}**\n" +
+                $"{p2Emojis} **{blueName}**";
+
+            embed.AddField(dayName, fieldContent, inline: false);
+        }
+
+        if (p1 == null || string.IsNullOrWhiteSpace(p1.Availability))
+            embed.Description += $"\n⚠️ *{redName} no tiene registrada su disponibilidad en la BD.*";
+
+        if (p2 == null || string.IsNullOrWhiteSpace(p2.Availability))
+            embed.Description += $"\n⚠️ *{blueName} no tiene registrada su disponibilidad en la BD.*";
 
         await FollowupAsync(embed: embed.Build());
     }
