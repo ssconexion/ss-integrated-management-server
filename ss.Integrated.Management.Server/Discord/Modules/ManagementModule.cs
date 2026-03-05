@@ -66,36 +66,39 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("importscores", "Importa las scores de un lobby de osu! directamente desde la API")]
-    public async Task ImportScoresAsync(
-        [Summary(description: "El ID del lobby en la web de osu! (ej. 118575195)")]
-        string osuLobbyIdStr,
-        [Summary(description: "El ID de la sala en la Base de Datos (ej. A1, 56, EX2)")]
-        string dbRoomId)
+    public async Task ImportScoresAsync(string matchId)
     {
         await DeferAsync(ephemeral: false);
 
-        if (!long.TryParse(osuLobbyIdStr, out long osuLobbyId))
-        {
-            await FollowupAsync("El ID del lobby de osu! debe ser un número válido.");
-            return;
-        }
-
         await using var db = new ModelsContext();
 
-        var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == dbRoomId);
-        var qualsRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == dbRoomId);
+        var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
+        var qualsRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == matchId);
 
         int roundId;
+        bool isPlayoffs = false;
 
-        if (matchRoom != null) roundId = matchRoom.RoundId;
+        if (matchRoom != null)
+        {
+            roundId = matchRoom.RoundId;
+            isPlayoffs = true;
+        }
         else if (qualsRoom != null) roundId = qualsRoom.RoundId;
         else
         {
-            await FollowupAsync($"No se encontró ninguna sala en la base de datos con el ID `{dbRoomId}`.");
+            await FollowupAsync($"No se encontró ninguna sala en la base de datos con el ID `{matchId}`.");
             return;
         }
 
-        var games = await OsuMatchImporter.FetchAllGamesAsync(osuLobbyId);
+        int? osuMpId = isPlayoffs ? matchRoom!.MpLinkId : qualsRoom!.MpLinkId;
+
+        if (osuMpId == null)
+        {
+            await FollowupAsync($"La match con ID `{matchId}` no tiene un MP link asignado.");
+            return;
+        }
+        
+        var games = await OsuMatchImporter.FetchAllGamesAsync(osuMpId.Value);
 
         if (games == null || games.Count == 0)
         {
@@ -139,7 +142,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
         }
 
         await db.SaveChangesAsync();
-        await FollowupAsync($"Guardadas {importedScores} scores en la DB para la sala `{dbRoomId}`");
+        await FollowupAsync($"Guardadas {importedScores} scores en la DB para la sala `{matchId}`");
     }
 
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
