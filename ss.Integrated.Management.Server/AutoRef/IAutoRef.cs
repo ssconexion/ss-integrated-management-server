@@ -6,6 +6,11 @@
 public interface IAutoRef
 {
     /// <summary>
+    /// Triggers whenever there's a state change. Used for discord live match display
+    /// </summary>
+    public event Func<string, Task>? OnStateUpdated;
+    
+    /// <summary>
     /// Initializes the connection to Bancho and joins the match lobby.
     /// </summary>
     Task StartAsync();

@@ -51,6 +51,9 @@ public partial class AutoRefQualifiersStage : IAutoRef
 
     internal IBanchoClient? client;
     internal string? lobbyChannelName;
+
+    /// <inheritdoc />
+    public event Func<string, Task>? OnStateUpdated;
     
     internal bool joined;
     private bool stoppedPreviously;

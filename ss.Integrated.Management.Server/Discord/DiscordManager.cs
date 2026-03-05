@@ -24,8 +24,9 @@ public class DiscordManager
     
     // activeChannels => <match_id, thread_id>
     // activeMatches  => <match_id, autoref_instance>
-    private ConcurrentDictionary<string, ulong> activeChannels = new();
-    private ConcurrentDictionary<string, IAutoRef> activeMatches = new();
+    private readonly ConcurrentDictionary<string, ulong> activeChannels = new();
+    private readonly ConcurrentDictionary<string, IAutoRef?> activeMatches = new();
+    private readonly ConcurrentDictionary<string, ulong> liveEmbedMessages = new();
 
     public DiscordManager(string token)
     {
@@ -133,6 +134,7 @@ public class DiscordManager
         try
         {
             _ = worker.StartAsync();
+            worker.OnStateUpdated += UpdateLiveEmbedAsync;
         }
         catch (Exception ex)
         {
@@ -173,6 +175,72 @@ public class DiscordManager
 
         return true;
     }
+    
+    private Embed BuildLiveMatchEmbed(AutoRefEliminationStage autoRef)
+    {
+        var match = autoRef.currentMatch;
+        if (match == null) return new EmbedBuilder().WithTitle("Cargando partido...").Build();
+        
+        var embed = new EmbedBuilder()
+            .WithTitle($"{match.Id}: {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName}")
+            .WithUrl($"https://osu.ppy.sh/mp/{match.MpLinkId}")
+            .AddField("Marcador", $"🔴 **{autoRef.MatchScore[0]}** - **{autoRef.MatchScore[1]}** 🔵", false)
+            .AddField("Estado Actual", $"`{autoRef.currentState}`", false);
+        
+        string bans = autoRef.bannedMaps.Any() 
+            ? string.Join("\n", autoRef.bannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}")) 
+            : "*Ninguno todavía*";
+        
+        string picks = autoRef.pickedMaps.Any() 
+            ? string.Join("\n", autoRef.pickedMaps.Select(m => 
+            {
+                string picker = m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵";
+                
+                string winnerIndicator = "";
+                if (m.Winner == Models.TeamColor.TeamRed)
+                    winnerIndicator = " ➔ 🔴 Wins!";
+                else if (m.Winner == Models.TeamColor.TeamBlue)
+                    winnerIndicator = " ➔ 🔵 Wins!";
+
+                else if (m.TeamColor == Models.TeamColor.None)
+                    picker = "🟣";
+
+                return $"{picker} **{m.Slot}**{winnerIndicator}";
+            })) 
+            : "*Ninguno todavía*";
+
+        embed.AddField("Bans", bans, true);
+        embed.AddField("Picks", picks, true);
+        
+        embed.WithFooter($"Árbitro: {match.Referee.DisplayName}");
+        embed.WithCurrentTimestamp();
+
+        return embed.Build();
+    }
+    
+    private async Task UpdateLiveEmbedAsync(string matchId)
+    {
+        if (!activeMatches.TryGetValue(matchId, out var autoRefInterface)) return;
+        
+        if (autoRefInterface is not AutoRefEliminationStage autoRef) return;
+        
+        if (client.GetChannel(parentChannelId) is not IMessageChannel channel) return;
+        
+        var embed = BuildLiveMatchEmbed(autoRef);
+        
+        if (liveEmbedMessages.TryGetValue(matchId, out ulong messageId))
+        {
+            if (await channel.GetMessageAsync(messageId) is IUserMessage message)
+            {
+                await message.ModifyAsync(x => x.Embed = embed);
+            }
+        }
+        else
+        {
+            var sentMessage = await channel.SendMessageAsync(embed: embed);
+            liveEmbedMessages.TryAdd(matchId, sentMessage.Id);
+        }
+    }
 
     /// <summary>
     /// Registers a new referee in the database with their IRC credentials.
@@ -208,11 +276,11 @@ public class DiscordManager
 
         if (message.Content == "ITS ME") // ITS ME
         {
-            string s1 = "https://methalox.s-ul.eu/ReZNgSND";
-            string s2 = "https://methalox.s-ul.eu/rI0fEYx9";
-            string s3 = "https://methalox.s-ul.eu/xKGEVh9c";
-            string s4 = "https://methalox.s-ul.eu/NSs8jJAA";
-            string[] list = { s1, s2, s3, s4 };
+            const string s1 = "https://methalox.s-ul.eu/ReZNgSND";
+            const string s2 = "https://methalox.s-ul.eu/rI0fEYx9";
+            const string s3 = "https://methalox.s-ul.eu/xKGEVh9c";
+            const string s4 = "https://methalox.s-ul.eu/NSs8jJAA";
+            string[] list = [s1, s2, s3, s4];
 
             var rnd = new Random();
             await message.Channel.SendMessageAsync(list[rnd.Next(0, list.Length)]);
