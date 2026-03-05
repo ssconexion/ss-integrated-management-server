@@ -187,13 +187,15 @@ public partial class AutoRefEliminationStage : IAutoRef
             .Where(m => m.Id == matchId)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(m => m.MpLinkId, mpLinkId)
-                .SetProperty(m => m.PickedMaps, pickedMaps) 
-                .SetProperty(m => m.BannedMaps, bannedMaps)
                 .SetProperty(m => m.EndTime, DateTime.UtcNow)
                 .SetProperty(m => m.TeamRedScore, matchScore[0])
                 .SetProperty(m => m.TeamBlueScore, matchScore[1])
                 .SetProperty(m => m.RefereeId, currentMatch!.Referee.Id)
             );
+        
+        var match = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
+        match!.PickedMaps = pickedMaps;
+        match!.BannedMaps = bannedMaps;
 
         await db.SaveChangesAsync();
         
@@ -271,7 +273,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await client!.JoinChannelAsync(lobbyChannelName);
                 await InitializeLobbySettings();
                 joined = true;
-                msgCallback(matchId, $"🗣️ {matchId} mp link: https://osu.ppy.sh/mp/{mpLinkId}"); // surely no player will type an emoji on a lobby right
+                msgCallback(matchId, $"🗣️{matchId} mp link: https://osu.ppy.sh/mp/{mpLinkId}"); // surely no player will type an emoji on a lobby right
                 return;
             case "BanchoBot" when chatResponseTcs != null && SearchKeywords(content):
                 chatResponseTcs.TrySetResult(content);

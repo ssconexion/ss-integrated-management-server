@@ -232,7 +232,7 @@ public class DiscordManager
                     if (messageContent.StartsWith("🗣️", StringComparison.OrdinalIgnoreCase))
                     {
                         shouldPin = true;
-                        messageContent = messageContent.Substring(5).Trim();
+                        messageContent = messageContent.Substring(6).Trim();
                     }
 
                     string replaced = messageContent.Replace("_", @"\_");
