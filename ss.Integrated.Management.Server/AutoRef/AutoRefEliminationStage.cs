@@ -289,7 +289,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         // 2. Gameplay Events (Score processing & Match finish)
         if (senderNick == "BanchoBot")
         {
-            if (content.Contains("finished playing"))
+            if (content.Contains("finished playing") && currentMode == OperationMode.Automatic)
             {
                 // Regex for Nick and Score
                 var match = Regex.Match(content, @"^(.*) finished playing \(Score: (\d+),");
@@ -302,12 +302,11 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
             }
 
-            if (content.Contains("The match has finished!"))
+            if (content.Contains("The match has finished!") && currentMode == OperationMode.Automatic)
             {
                 await ProcessFinalScores();
             }
             
-            // Small buffer to ensure regex processing finishes before state transitions
             await Task.Delay(250);
         }
 
@@ -437,15 +436,32 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(Strings.SetMapFail);
                     break;
                 }
+                previousState =  currentState;
                 await PreparePick(args[1]);
-                currentState = MatchState.Idle;
+                currentState = previousState;
                 break;
             
             case "timeout":
-                await SendMessageBothWays(Strings.RefTimeout);
-                await Task.Delay(250);
-                previousState = currentState;
-                currentState = MatchState.OnTimeout;
+                if (args.Length < 1)
+                {
+                    await SendMessageBothWays(Strings.RefTimeout);
+                    await Task.Delay(250);
+                    previousState = currentState;
+                    currentState = MatchState.OnTimeout;
+                }
+                else
+                {
+                    if (args[1] == "red")
+                    {
+                        redTimeoutRequest = true;
+                        await SendMessageBothWays("!mp timer 120");
+                    } 
+                    else if (args[1] == "blue")
+                    {
+                        currentMode = OperationMode.Assisted;
+                        await SendMessageBothWays("Switched to assisted mode");
+                    }
+                }
                 break;
 
             case "start":
@@ -545,6 +561,35 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(Strings.NotEnoughArgs);
                 }
                 
+                break;
+            
+            case "win":
+                if (args.Length > 1 || currentMode == OperationMode.Assisted)
+                {
+                    if (args[1] == "red")
+                    {
+                        matchScore[0]++;
+                        var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+                        if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
+                        await SendMessageBothWays(
+                            $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
+                    }
+                    else if (args[1] == "blue")
+                    {
+                        matchScore[1]++;
+                        var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+                        if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
+                        await SendMessageBothWays(
+                            $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
+                    }
+
+                    await TryStateChange("🏃‍♀️‍➡️ Override", "go"); // playing -> whatever
+                }
+                else
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+
                 break;
 
             case "firstpick":
@@ -890,14 +935,15 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if ((content.Contains("All players are ready") || content.Contains("Countdown finished")) && sender == "BanchoBot")
             {
-                await SendMessageBothWays("!mp start 10");
+                if(currentMode == OperationMode.Automatic) await SendMessageBothWays("!mp start 10");
                 currentState = MatchState.Playing;
                 if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             }
         }
         else if (currentState == MatchState.Playing)
         {
-            if (content.Contains("The match has finished"))
+            if ((content.Contains("The match has finished") && currentMode == OperationMode.Automatic) || 
+                (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted && content == "go") )
             {
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
