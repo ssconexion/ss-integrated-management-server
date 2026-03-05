@@ -227,7 +227,22 @@ public class DiscordManager
             {
                 if (client.GetChannel(channelId) is IMessageChannel channel)
                 {
-                    await channel.SendMessageAsync($"{messageContent}");
+                    bool shouldPin = false;
+                    
+                    if (messageContent.StartsWith("🗣️", StringComparison.OrdinalIgnoreCase))
+                    {
+                        shouldPin = true;
+                        messageContent = messageContent.Substring(5).Trim();
+                    }
+
+                    string replaced = messageContent.Replace("_", @"\_");
+
+                    var sentMessage = await channel.SendMessageAsync(replaced);
+                    
+                    if (shouldPin)
+                    {
+                        await sentMessage.PinAsync();
+                    }
                 }
             }
         });

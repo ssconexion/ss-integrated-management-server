@@ -271,6 +271,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await client!.JoinChannelAsync(lobbyChannelName);
                 await InitializeLobbySettings();
                 joined = true;
+                msgCallback(matchId, $"🗣️ {matchId} mp link: https://osu.ppy.sh/mp/{mpLinkId}"); // surely no player will type an emoji on a lobby right
                 return;
             case "BanchoBot" when chatResponseTcs != null && SearchKeywords(content):
                 chatResponseTcs.TrySetResult(content);
