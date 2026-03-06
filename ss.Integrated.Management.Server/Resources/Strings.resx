@@ -19,7 +19,7 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="BackToAuto" xml:space="preserve">
-        <value>Going back to auto mode. Starting soon...</value>
+        <value>Going back to state machine. Starting soon...</value>
     </data>
     <data name="Panic" xml:space="preserve">
         <value>&lt;@&amp;{0}&gt;, {1} has requested human intervention. Auto mode has been disabled, resume it with !panic_over</value>
@@ -34,7 +34,7 @@
         <value>Properties not initialized. Set both first_ban and first_pick</value>
     </data>
     <data name="EngagingAuto" xml:space="preserve">
-        <value>Engaging autoreferee mode for Elimination Stage, Lobby {0}</value>
+        <value>Engaging state machine for Elimination Stage, Lobby {0}</value>
     </data>
     <data name="SuccessfulFirstPick" xml:space="preserve">
         <value>Set first_pick successfully</value>
@@ -94,13 +94,13 @@
         <value>Timeout requested by the referee of the match. Time will be added after the timer runs out</value>
     </data>
     <data name="AutoAlreadyEngaged" xml:space="preserve">
-        <value>Auto already engaged. Disable it with '&gt;stop'.</value>
+        <value>State machine already engaged. Disable it with '&gt;stop'.</value>
     </data>
     <data name="AutoAlreadyStopped" xml:space="preserve">
-        <value>Auto is already not engaged.</value>
+        <value>State machine is already not engaged.</value>
     </data>
     <data name="StoppingAuto" xml:space="preserve">
-        <value>Stopping auto mode...</value>
+        <value>Stopping state machine...</value>
     </data>
     <data name="None" xml:space="preserve">
         <value>None</value>

@@ -1,4 +1,6 @@
-﻿using Discord;
+﻿using System.Diagnostics;
+using System.Text.Json;
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,7 @@ namespace ss.Internal.Management.Server.Discord.Modules;
 public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
 {
     public DiscordManager Manager { get; set; }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("startref", "Inicia un nuevo match y crea su thread")]
     public async Task StartRefAsync(string matchId, string referee, Models.MatchType matchType)
@@ -33,7 +35,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync($"El Referee **{referee}** no existe.", ephemeral: true);
         }
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("endref", "Finaliza el match y archiva el thread")]
     public async Task EndRefAsync(string matchId)
@@ -52,7 +54,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync("No se encontró un worker con esa ID");
         }
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("linkirc", "Configura tus credenciales de IRC para hacer uso del bot")]
     public async Task AddRefCredentialsAsync(string nombre, int osuId, string ircPass)
@@ -73,7 +75,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
 
         await Manager.AddRefereeToDbAsync(model);
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("assignref", "Asigna un referee a una match concreta")]
     public async Task AssignRefToMatch(string matchId, string refName)
@@ -111,7 +113,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
         await db.SaveChangesAsync();
         await FollowupAsync($"El referee **{referee.DisplayName}** ha sido asignado correctamente a la partida `{matchId}`.");
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("matchups", "Muestra la lista de matches activos con paginación")]
     public async Task ListMatchesAsync()
@@ -164,7 +166,66 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
         await db.SaveChangesAsync();
         await FollowupAsync($"MP link {mpLinkId} añadido a match {match.Id}");
     }
-    
+
+    [SlashCommand("match-results-embed", "Embed auxiliar por si falla el lector")]
+    private async Task AuxEmbedCreation(string matchId)
+    {
+        await DeferAsync(ephemeral: false);
+        
+        await using var db = new ModelsContext();
+
+        EmbedBuilder embed;
+
+        var match = await db.MatchRooms.Include(matchRoom => matchRoom.TeamRed).Include(matchRoom => matchRoom.TeamBlue).Include(matchRoom => matchRoom.Referee)
+            .FirstOrDefaultAsync(m => m.Id == matchId);
+
+        if (match != null)
+        {
+            embed = new EmbedBuilder()
+                .WithTitle($"{match.Id}: {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName}")
+                .WithUrl($"https://osu.ppy.sh/mp/{match.MpLinkId}")
+                .AddField("Marcador", $"🔴 **{match.TeamRedScore}** - **{match.TeamBlueScore}** 🔵", false)
+                .AddField("Estado Actual", $"`MatchFinished`", false);
+
+            Debug.Assert(match.BannedMaps != null, "match.BannedMaps != null");
+            string bans = match.BannedMaps.Any()
+                ? string.Join("\n", match.BannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}"))
+                : "*Ninguno todavía*";
+
+            Debug.Assert(match.PickedMaps != null, "match.PickedMaps != null");
+            string picks = match.PickedMaps.Any()
+                ? string.Join("\n", match.PickedMaps.Select(m =>
+                {
+                    string picker = m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵";
+
+                    string winnerIndicator = "";
+
+                    if (m.Winner == Models.TeamColor.TeamRed)
+                        winnerIndicator = " ➔ 🔴 Wins!";
+                    else if (m.Winner == Models.TeamColor.TeamBlue)
+                        winnerIndicator = " ➔ 🔵 Wins!";
+
+                    else if (m.TeamColor == Models.TeamColor.None)
+                        picker = "🟣";
+
+                    return $"{picker} **{m.Slot}**{winnerIndicator}";
+                }))
+                : "*Ninguno todavía*";
+
+            embed.AddField("Bans", bans, true);
+            embed.AddField("Picks", picks, true);
+
+            embed.WithFooter($"Árbitro: {match.Referee.DisplayName}");
+            embed.WithCurrentTimestamp();
+        }
+        else
+        {
+            embed = new EmbedBuilder().WithTitle("Cargando partido...");
+        }
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("creatematchup", "Crea una match verificando disponibilidad")]
     public async Task CreateMatchCheck(string matchId, string teamRed, string teamBlue, string fridayDate, int roundId)
@@ -410,7 +471,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
             });
         }
     }
-    
+
     public Embed CreateMatchEmbed(List<Models.MatchRoom> allMatches, int page, out MessageComponent components)
     {
         int pageSize = 5;

@@ -19,7 +19,7 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="BackToAuto" xml:space="preserve">
-        <value>Volviendo al modo auto. Empezando en breve...</value>
+        <value>Volviendo a la máquina de estados. Empezando en breve...</value>
     </data>
     <data name="BanCall" xml:space="preserve">
         <value>Por favor, {0}, indica en el chat tu BAN (ej.: NM1, HD2)</value>
@@ -34,7 +34,7 @@
         <value>El equipo azul gana el mapa! ({0} vs. {1})</value>
     </data>
     <data name="EngagingAuto" xml:space="preserve">
-        <value>Activando el modo autoreferee para fase eliminatoria, Lobby {0}</value>
+        <value>Activando la máquina de estados para fase eliminatoria, Lobby {0}</value>
     </data>
     <data name="MatchWin" xml:space="preserve">
         <value>GGWP! {0} gana el partido!</value>
@@ -88,10 +88,10 @@
         <value>Error durante la ejecución del AutoRef: `{0}`</value>
     </data>
     <data name="AutoAlreadyEngaged" xml:space="preserve">
-        <value>El modo auto ya está en ejecución. Páralo con '&gt;stop'</value>
+        <value>La máquina de estados ya está en ejecución. Páralo con '&gt;stop'</value>
     </data>
     <data name="AutoAlreadyStopped" xml:space="preserve">
-        <value>El modo auto ya estaba parado.</value>
+        <value>La máquina de estados ya estaba parada.</value>
     </data>
     <data name="AvailableMaps" xml:space="preserve">
         <value>Disponibles: {0}</value>
@@ -109,7 +109,7 @@
         <value>El modo auto está en ejecución, desactívalo para poner mapas de forma manual.</value>
     </data>
     <data name="StoppingAuto" xml:space="preserve">
-        <value>Parando el modo auto...</value>
+        <value>Parando la máquina de estados...</value>
     </data>
     <data name="RefTimeout" xml:space="preserve">
         <value>Timeout pedido por el referee del partido. El tiempo será añadido una vez el timer actual se acabe</value>

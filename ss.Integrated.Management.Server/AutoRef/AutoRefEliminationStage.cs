@@ -509,6 +509,9 @@ public partial class AutoRefEliminationStage : IAutoRef
                     stoppedPreviously = false;
                 }
 
+                await SendMessageBothWays("!mp clearhost");
+                await Task.Delay(250);
+                
                 // HACK: We feed dummy data ("a", "a") to the State Machine to force an initial evaluation.
                 // This kickstarts the logic loop without waiting for a real IRC message. It works, don't ask.
                 await TryStateChange("a", "a");
