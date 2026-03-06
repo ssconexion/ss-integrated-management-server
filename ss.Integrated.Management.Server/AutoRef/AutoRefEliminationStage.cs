@@ -289,7 +289,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         // 2. Gameplay Events (Score processing & Match finish)
         if (senderNick == "BanchoBot")
         {
-            if (content.Contains("finished playing") && currentMode == OperationMode.Automatic)
+            if (content.Contains("finished playing") && currentMode == OperationMode.Automatic && currentState != MatchState.Idle)
             {
                 // Regex for Nick and Score
                 var match = Regex.Match(content, @"^(.*) finished playing \(Score: (\d+),");
@@ -302,7 +302,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
             }
 
-            if (content.Contains("The match has finished!") && currentMode == OperationMode.Automatic)
+            if (content.Contains("The match has finished!") && currentMode == OperationMode.Automatic && currentState != MatchState.Idle)
             {
                 await ProcessFinalScores();
             }
