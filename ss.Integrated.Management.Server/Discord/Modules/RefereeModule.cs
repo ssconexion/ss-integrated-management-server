@@ -167,6 +167,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
         await FollowupAsync($"MP link {mpLinkId} añadido a match {match.Id}");
     }
 
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("match-results-embed", "Embed auxiliar por si falla el lector")]
     private async Task AuxEmbedCreation(string matchId)
     {
