@@ -380,6 +380,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
                     var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
                     if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
+                    await Task.Delay(250);
+                    await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     break;
                 
                 case OperationMode.Assisted:
@@ -396,6 +398,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                     await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
                     var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
                     if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
+                    await Task.Delay(250);
+                    await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     break;
                 
                 case OperationMode.Assisted:
@@ -405,9 +409,6 @@ public partial class AutoRefEliminationStage : IAutoRef
         }
 
         currentMapScores.Clear();
-
-        await SendMessageBothWays(
-            $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
     }
 
     private async Task SendMatchStatus()
