@@ -206,7 +206,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
                     else if (m.Winner == Models.TeamColor.TeamBlue)
                         winnerIndicator = " ➔ 🔵 Wins!";
 
-                    else if (m.TeamColor == Models.TeamColor.None)
+                    if (m.TeamColor == Models.TeamColor.None)
                         picker = "🟣";
 
                     return $"{picker} **{m.Slot}**{winnerIndicator}";

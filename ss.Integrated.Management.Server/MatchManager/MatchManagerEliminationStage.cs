@@ -738,8 +738,6 @@ public partial class MatchManagerEliminationStage : IMatchManager
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");
-        await Task.Delay(250);
-        await SendMessageBothWays("!mp timer 90");
         
         await ChangeState(MatchState.WaitingForStart);
     }
@@ -777,8 +775,6 @@ public partial class MatchManagerEliminationStage : IMatchManager
         await SendMessageBothWays(info);
         await Task.Delay(250);
         await SendMatchStatus();
-        await Task.Delay(250);
-        await SendMessageBothWays("!mp timer 90");
     }
 
     /// <summary>
