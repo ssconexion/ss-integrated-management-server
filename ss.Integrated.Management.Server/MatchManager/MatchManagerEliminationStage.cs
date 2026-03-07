@@ -660,7 +660,16 @@ public partial class MatchManagerEliminationStage : IMatchManager
             case "firstpick":
                 if (args.Length > 1)
                 {
-                    firstPick = args[1] == "red" ? Models.TeamColor.TeamRed : Models.TeamColor.TeamBlue;
+                    if (args[1] == "red")
+                        firstPick = Models.TeamColor.TeamRed;
+                    else if (args[2] == "blue")
+                        firstPick = Models.TeamColor.TeamBlue;
+                    else
+                    {
+                        await SendMessageBothWays(Strings.NotEnoughArgs);
+                        break;
+                    }
+                    
                     await SendMessageBothWays(Strings.SuccessfulFirstPick);
                 }
                 else
@@ -673,7 +682,16 @@ public partial class MatchManagerEliminationStage : IMatchManager
             case "firstban":
                 if (args.Length > 1)
                 {
-                    firstBan = args[1] == "red" ? Models.TeamColor.TeamRed : Models.TeamColor.TeamBlue;
+                    if (args[1] == "red")
+                        firstBan = Models.TeamColor.TeamRed;
+                    else if (args[2] == "blue")
+                        firstBan = Models.TeamColor.TeamBlue;
+                    else
+                    {
+                        await SendMessageBothWays(Strings.NotEnoughArgs);
+                        break;
+                    }
+                    
                     await SendMessageBothWays(Strings.SuccessfulFirstBan);
                 }
                 else
