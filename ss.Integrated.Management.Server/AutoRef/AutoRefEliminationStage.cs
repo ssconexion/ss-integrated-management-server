@@ -91,6 +91,10 @@ public partial class AutoRefEliminationStage : IAutoRef
 
     /// <inheritdoc />
     public event Func<string, Task>? OnStateUpdated;
+    
+    private Stack<Models.MatchRoom> matchHistory = new();
+    private Stack<MatchState> stateHistory = new();
+    private Stack<Models.TeamColor> lastPickHistory = new();
 
     private int[] matchScore = [0, 0];
     public int[] MatchScore => matchScore;
@@ -173,8 +177,8 @@ public partial class AutoRefEliminationStage : IAutoRef
             currentMatch = await db.MatchRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
             currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
 
-            currentMatch.TeamRed = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamRedId) ?? throw new Exception("Team red not found in the DB");
-            currentMatch.TeamBlue = await db.Users.FirstAsync(u => u.Id == currentMatch.TeamBlueId) ?? throw new Exception("Team blue not found in the DB");
+            currentMatch.TeamRed = await db.Users.Include(u => u.OsuData).FirstAsync(u => u.Id == currentMatch.TeamRedId) ?? throw new Exception("Team red not found in the DB");
+            currentMatch.TeamBlue = await db.Users.Include(u => u.OsuData).FirstAsync(u => u.Id == currentMatch.TeamBlueId) ?? throw new Exception("Team blue not found in the DB");
 
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
         }
@@ -289,7 +293,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         // 2. Gameplay Events (Score processing & Match finish)
         if (senderNick == "BanchoBot")
         {
-            if (content.Contains("finished playing") && currentMode == OperationMode.Automatic && currentState != MatchState.Idle)
+            if (content.Contains("finished playing") && currentState != MatchState.Idle)
             {
                 // Regex for Nick and Score
                 var match = Regex.Match(content, @"^(.*) finished playing \(Score: (\d+),");
@@ -302,7 +306,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
             }
 
-            if (content.Contains("The match has finished!") && currentMode == OperationMode.Automatic && currentState != MatchState.Idle)
+            if (content.Contains("The match has finished!") && currentState != MatchState.Idle)
             {
                 await ProcessFinalScores();
             }
@@ -315,12 +319,12 @@ public partial class AutoRefEliminationStage : IAutoRef
         if (content.Contains(">panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
         {
             await SendMessageBothWays(Strings.BackToAuto);
-            currentState = MatchState.WaitingForStart;
+            await ChangeState(MatchState.WaitingForStart);
             await SendMessageBothWays("!mp timer 10");
         }
         else if (content.Contains("!panic"))
         {
-            currentState = MatchState.MatchOnHold;
+            await ChangeState(MatchState.MatchOnHold);
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
@@ -369,17 +373,35 @@ public partial class AutoRefEliminationStage : IAutoRef
 
         if (redTotal > blueTotal)
         {
-            matchScore[0]++;
-            await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
-            var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
-            if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
+            switch (currentMode)
+            {
+                case OperationMode.Automatic:
+                    matchScore[0]++;
+                    await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
+                    var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+                    if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
+                    break;
+                
+                case OperationMode.Assisted:
+                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.RedWins, redTotal, blueTotal)}**");
+                    break;
+            }
         }
         else
         {
-            matchScore[1]++;
-            await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
-            var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
-            if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
+            switch (currentMode)
+            {
+                case OperationMode.Automatic:
+                    matchScore[1]++;
+                    await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
+                    var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+                    if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
+                    break;
+                
+                case OperationMode.Assisted:
+                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.BlueWins, redTotal, blueTotal)}**");
+                    break;
+            }
         }
 
         currentMapScores.Clear();
@@ -417,9 +439,9 @@ public partial class AutoRefEliminationStage : IAutoRef
         switch (args[0].ToLower())
         {
             case "invite":
-                await SendMessageBothWays($"!mp invite {currentMatch!.TeamRed.DisplayName.Replace(' ', '_')}");
+                await SendMessageBothWays($"!mp invite #{currentMatch!.TeamRed.OsuData.Id}");
                 await Task.Delay(250);
-                await SendMessageBothWays($"!mp invite {currentMatch!.TeamBlue.DisplayName.Replace(' ', '_')}");
+                await SendMessageBothWays($"!mp invite #{currentMatch!.TeamBlue.OsuData.Id}");
                 break;
             
             case "finish":
@@ -441,13 +463,52 @@ public partial class AutoRefEliminationStage : IAutoRef
                 currentState = previousState;
                 break;
             
+            case "setscore":
+                if (args.Length < 3)
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+
+                if (int.TryParse(args[1], out int scoreRed) && int.TryParse(args[2], out int scoreBlue))
+                {
+                    matchScore[0] = scoreRed;
+                    matchScore[1] = scoreBlue;
+                    await SendMessageBothWays($"Set match score to {scoreRed} - {scoreBlue}");
+                }
+                else
+                {
+                    await SendMessageBothWays(Strings.NotEnoughArgs);
+                }
+                
+                break;
+            
+            case "undo":
+                if (matchHistory.Count == 0)
+                {
+                    await SendMessageBothWays("Nothing to revert.");
+                    break;
+                }
+                
+                var lastMatchState = matchHistory.Pop();
+                
+                currentState = stateHistory.Pop();
+                lastPick = lastPickHistory.Pop();
+                matchScore[0] = lastMatchState.TeamRedScore!.Value;
+                matchScore[1] = lastMatchState.TeamBlueScore!.Value;
+                pickedMaps = lastMatchState.PickedMaps!;
+                bannedMaps = lastMatchState.BannedMaps!;
+                
+                await SendMessageBothWays("!mp aborttimer");
+                await SendMessageBothWays("Reverted to last known state.");
+                if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                break;
+            
             case "timeout":
-                if (args.Length < 1)
+                if (args.Length < 3)
                 {
                     await SendMessageBothWays(Strings.RefTimeout);
                     await Task.Delay(250);
-                    previousState = currentState;
-                    currentState = MatchState.OnTimeout;
+                    await ChangeState(MatchState.OnTimeout);
                 }
                 else
                 {
@@ -500,12 +561,12 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (!stoppedPreviously)
                 {
                     await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
-                    currentState = MatchState.BanPhaseStart;
+                    await ChangeState(MatchState.BanPhaseStart);
                 }
                 else
                 {
                     await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
-                    currentState = previousState;
+                    await ChangeState(previousState);
                     stoppedPreviously = false;
                 }
 
@@ -514,6 +575,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 
                 // HACK: We feed dummy data ("a", "a") to the State Machine to force an initial evaluation.
                 // This kickstarts the logic loop without waiting for a real IRC message. It works, don't ask.
+                // We do this like, a lot, even though it is probably not good practice. But what do I know right?
                 await TryStateChange("a", "a");
                 break;
 
@@ -524,8 +586,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                     break;
                 }
                 await SendMessageBothWays(Strings.StoppingAuto);
-                previousState = currentState;
-                currentState = MatchState.Idle;
+                await ChangeState(MatchState.Idle);
                 stoppedPreviously = true;
                 break;
             
@@ -557,7 +618,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 } else if (args[1] == "assisted")
                 {
                     currentMode = OperationMode.Assisted;
-                    await SendMessageBothWays("Switched to assited mode");
+                    await SendMessageBothWays("Switched to assisted mode");
                 }
                 else
                 {
@@ -671,13 +732,42 @@ public partial class AutoRefEliminationStage : IAutoRef
             return;
         }
 
+        currentBeatmapSlot = slot.ToUpper();
+        
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");
         await Task.Delay(250);
         await SendMessageBothWays("!mp timer 90");
+        
+        await ChangeState(MatchState.WaitingForStart);
+    }
 
-        currentState = MatchState.WaitingForStart;
+    private Task SaveMatchHistoryToStack()
+    {
+        var currentMatchState = new Models.MatchRoom
+        {
+            Id = matchId,
+            TeamRedScore = matchScore[0],
+            TeamBlueScore = matchScore[1],
+            BannedMaps = bannedMaps.Select(m => new Models.RoundChoice { Slot = m.Slot, TeamColor = m.TeamColor, Winner = m.Winner }).ToList(),
+            PickedMaps = pickedMaps.Select(m => new Models.RoundChoice { Slot = m.Slot, TeamColor = m.TeamColor, Winner = m.Winner }).ToList(),
+            Round = currentMatch!.Round,
+            TeamRed = currentMatch.TeamRed,
+            TeamBlue = currentMatch.TeamBlue,
+            Referee = currentMatch.Referee,
+        };
+        
+        matchHistory.Push(currentMatchState);
+        stateHistory.Push(currentState);
+        lastPickHistory.Push(lastPick);
+        return Task.CompletedTask;
+    }
+    
+    private async Task ChangeState(MatchState newState)
+    {
+        previousState = currentState;
+        currentState = newState;
         if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
     }
 
@@ -708,15 +798,13 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && !redTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.RedTimeout);
-                previousState = currentState;
-                currentState = MatchState.OnTimeout;
+                await ChangeState(MatchState.OnTimeout);
                 redTimeoutRequest = true;
             }
             else if (sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && !blueTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.BlueTimeout);
-                previousState = currentState;
-                currentState = MatchState.OnTimeout;
+                await ChangeState(MatchState.OnTimeout);
                 blueTimeoutRequest = true;
             }
             
@@ -728,7 +816,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             await SendMessageBothWays("!mp timer 120");
             await Task.Delay(250);
             await SendMessageBothWays(Strings.TimeoutStart);
-            currentState = previousState;
+            await ChangeState(previousState);
             return;
         } 
 
@@ -744,7 +832,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await Task.Delay(250);
                 await SendMessageBothWays("!mp timer 60");
                 await Task.Delay(250);
-                currentState = MatchState.WaitingForPickRed;
+                await ChangeState(MatchState.WaitingForPickRed);
                 isStolenPick = true;
                 await SendMatchStatus();
                 return;
@@ -759,7 +847,7 @@ public partial class AutoRefEliminationStage : IAutoRef
                 await Task.Delay(250);
                 await SendMessageBothWays("!mp timer 60");
                 await Task.Delay(250);
-                currentState = MatchState.WaitingForPickBlue;
+                await ChangeState(MatchState.WaitingForPickBlue);
                 isStolenPick = true;
                 await SendMatchStatus();
                 return;
@@ -775,15 +863,13 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (firstBan == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
-                currentState = MatchState.WaitingForBanRed;
+                await ChangeState(MatchState.WaitingForBanRed);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
-                currentState = MatchState.WaitingForBanBlue;
+                await ChangeState(MatchState.WaitingForBanBlue);
             }
-
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
         }
         
         if (currentState == MatchState.SecondBanPhaseStart)
@@ -791,15 +877,13 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (firstBan == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
-                currentState = MatchState.WaitingForBanBlue;
+                await ChangeState(MatchState.WaitingForBanBlue);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
-                currentState = MatchState.WaitingForBanRed;
+                await ChangeState(MatchState.WaitingForBanRed);
             }
-
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
         }
 
         if (currentState == MatchState.WaitingForBanRed && 
@@ -808,6 +892,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (IsMapAvailable(content))
             {
+                await SaveMatchHistoryToStack();
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedBanned, content.ToUpper()));
                 await Task.Delay(250);
@@ -815,17 +900,15 @@ public partial class AutoRefEliminationStage : IAutoRef
 
                 if (repeat == 0)
                 {
-                    currentState = MatchState.PickPhaseStart;
                     repeat = 2;
+                    await ChangeState(MatchState.PickPhaseStart);
                     await TryStateChange("a", "a");
                 }
                 else
                 {
-                    currentState = MatchState.WaitingForBanBlue;
+                    await ChangeState(MatchState.WaitingForBanBlue);
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 }
-
-                if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             }
             
             return;
@@ -837,6 +920,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (IsMapAvailable(content))
             {
+                await SaveMatchHistoryToStack();
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BlueBanned, content.ToUpper()));
                 await Task.Delay(250);
@@ -844,18 +928,17 @@ public partial class AutoRefEliminationStage : IAutoRef
 
                 if (repeat == 0)
                 {
-                    currentState = MatchState.PickPhaseStart;
                     repeat = 2;
+                    await ChangeState(MatchState.PickPhaseStart);
                     await TryStateChange("a", "a");
                 }
                 else
                 {
-                    currentState = MatchState.WaitingForBanRed;
+                    await ChangeState(MatchState.WaitingForBanRed);
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 }
             }
             
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             return;
         }
 
@@ -868,15 +951,14 @@ public partial class AutoRefEliminationStage : IAutoRef
             if (firstPick == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
-                currentState = MatchState.WaitingForPickRed;
+                await ChangeState(MatchState.WaitingForPickRed);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
-                currentState = MatchState.WaitingForPickBlue;
+                await ChangeState(MatchState.WaitingForPickBlue);
             }
             
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             return;
         }
 
@@ -886,9 +968,9 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (IsMapAvailable(content))
             {
+                await SaveMatchHistoryToStack();
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedPicked, content.ToUpper()));
-                currentBeatmapSlot = content.ToUpper();
                 await PreparePick(content.ToUpper());
                 
                 if (isStolenPick)
@@ -902,7 +984,6 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
             }
             
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             return;
         }
 
@@ -912,9 +993,9 @@ public partial class AutoRefEliminationStage : IAutoRef
         {
             if (IsMapAvailable(content))
             {
+                await SaveMatchHistoryToStack();
                 pickedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BluePicked, content.ToUpper()));
-                currentBeatmapSlot = content.ToUpper();
                 await PreparePick(content.ToUpper());
                 
                 if (isStolenPick)
@@ -928,7 +1009,6 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
             }
             
-            if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
             return;
         }
 
@@ -939,8 +1019,7 @@ public partial class AutoRefEliminationStage : IAutoRef
             if ((content.Contains("All players are ready") || content.Contains("Countdown finished")) && sender == "BanchoBot")
             {
                 if(currentMode == OperationMode.Automatic) await SendMessageBothWays("!mp start 10");
-                currentState = MatchState.Playing;
-                if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                await ChangeState(MatchState.Playing);
             }
         }
         else if (currentState == MatchState.Playing)
@@ -951,10 +1030,9 @@ public partial class AutoRefEliminationStage : IAutoRef
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
                     // Logic for "Double Ban" rounds (Ban -> Pick 4 -> Ban -> Pick rest)
-                    currentState = MatchState.SecondBanPhaseStart;
+                    await ChangeState(MatchState.SecondBanPhaseStart);
                     await SendMessageBothWays(Strings.SecondBanRound);
                     await TryStateChange("a", "a");
-                    if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
                 }
                 else
                 {
@@ -962,26 +1040,23 @@ public partial class AutoRefEliminationStage : IAutoRef
                     {
                         await PreparePick("TB1");
                         pickedMaps.Add(new Models.RoundChoice { Slot = "TB1", TeamColor = Models.TeamColor.None });
-                        if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
                         return;
                     }
 
-                    bool redwin = matchScore[0] == (currentMatch.Round.BestOf - 1) / 2 + 1;
-                    bool bluewin = matchScore[1] == (currentMatch.Round.BestOf - 1) / 2 + 1;
+                    bool redWin = matchScore[0] == (currentMatch.Round.BestOf - 1) / 2 + 1;
+                    bool blueWin = matchScore[1] == (currentMatch.Round.BestOf - 1) / 2 + 1;
 
-                    if (redwin)
+                    if (redWin)
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
-                        currentState = MatchState.MatchFinished;
-                        if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                        await ChangeState(MatchState.MatchFinished);
                         return;
                     }
 
-                    if (bluewin)
+                    if (blueWin)
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
-                        currentState = MatchState.MatchFinished;
-                        if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                        await ChangeState(MatchState.MatchFinished);
                         return;
                     }
 
@@ -990,16 +1065,14 @@ public partial class AutoRefEliminationStage : IAutoRef
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                         await Task.Delay(250);
                         await SendMatchStatus();
-                        currentState = MatchState.WaitingForPickBlue;
-                        if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                        await ChangeState(MatchState.WaitingForPickBlue);
                     }
                     else
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
                         await Task.Delay(250);
                         await SendMatchStatus();
-                        currentState = MatchState.WaitingForPickRed;
-                        if(OnStateUpdated != null) await OnStateUpdated.Invoke(matchId);
+                        await ChangeState(MatchState.WaitingForPickRed);
                     }
                 }
             }

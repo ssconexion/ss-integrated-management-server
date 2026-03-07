@@ -863,5 +863,237 @@ namespace ss.Internal.Management.Server.Tests.AutoRef
             await SendMsg("RedTeam", "!timeout");
             Assert.Equal(AutoRefEliminationStage.MatchState.OnTimeout, autoRef.currentState);
         }
+        
+        [Fact]
+        public async Task UndoCommand_ShouldRevertLastPickAndState()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+            
+            await SendMsg(refName, ">firstpick red");
+            await SendMsg(refName, ">firstban red");
+            await SendMsg(refName, ">start auto");
+            
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanRed, autoRef.currentState);
+            Assert.Empty(autoRef.bannedMaps);
+            
+            await SendMsg("RedTeam", "NM1");
+            
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanBlue, autoRef.currentState);
+            Assert.Single(autoRef.bannedMaps);
+            Assert.Equal("NM1", autoRef.bannedMaps[0].Slot);
+            
+            await SendMsg(refName, ">undo");
+            
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanRed, autoRef.currentState);
+            Assert.Empty(autoRef.bannedMaps);
+        }
+
+        [Fact]
+        public async Task UndoCommand_ShouldNotCrashWhenHistoryIsEmpty()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+            
+            await SendMsg(refName, ">undo");
+            Assert.Equal(AutoRefEliminationStage.MatchState.Idle, autoRef.currentState);
+        }
+        
+        [Fact]
+        public async Task InviteCommand_ShouldNotCrash()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            })
+            {
+                client = mockBancho.Object,
+                joined = true,
+                lobbyChannelName = channel,
+                currentState = AutoRefEliminationStage.MatchState.Idle,
+                bannedMaps = [],
+                pickedMaps = [],
+            };
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+            
+            await SendMsg(refName, ">invite");
+            mockBancho.Verify(c => c.SendPrivateMessageAsync(channel, "!mp invite #1"), Times.Once, "error");
+            mockBancho.Verify(c => c.SendPrivateMessageAsync(channel, "!mp invite #2"), Times.Once, "error");
+        }
+        
+        [Fact]
+        public async Task MatchSimulation_SetScores_ShouldProgressToFinish()
+        {
+            var channel = "#mp_1";
+            var refName = "Furina";
+            var mockBancho = new Mock<IBanchoClient>();
+
+            var autoRef = new AutoRefEliminationStage("96", refName, (id, msg) =>
+            {
+            });
+
+            autoRef.client = mockBancho.Object;
+            autoRef.joined = true;
+            autoRef.lobbyChannelName = channel;
+            autoRef.currentState = AutoRefEliminationStage.MatchState.Idle;
+            autoRef.bannedMaps = new List<Models.RoundChoice>();
+            autoRef.pickedMaps = new List<Models.RoundChoice>();
+
+            var mappool = new List<Models.RoundBeatmap>();
+            string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+            for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
+
+            autoRef.currentMatch = new Models.MatchRoom
+            {
+                Id = "96",
+                Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
+            };
+
+            Func<string, string, Task> SendMsg = async (sender, content) =>
+            {
+                var msg = new Mock<IIrcMessage>();
+                msg.Setup(m => m.Prefix).Returns(sender);
+                msg.Setup(m => m.Parameters).Returns(new[] { channel, content });
+                await autoRef.HandleIrcMessage(msg.Object);
+            };
+
+            Func<string, string, string, Task> PlayMap = async (picker, map, winner) =>
+            {
+                await SendMsg(picker, map);
+                Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForStart, autoRef.currentState);
+
+                await SendMsg("BanchoBot", "All players are ready");
+                Assert.Equal(AutoRefEliminationStage.MatchState.Playing, autoRef.currentState);
+
+                string loser = winner == "RedTeam" ? "BlueTeam" : "RedTeam";
+                await SendMsg("BanchoBot", $"{winner} finished playing (Score: 1000000, PASSED)");
+                await SendMsg("BanchoBot", $"{loser} finished playing (Score: 500000, PASSED)");
+
+                await SendMsg("BanchoBot", "The match has finished!");
+            };
+
+
+            await SendMsg(refName, ">firstpick red");
+            await SendMsg(refName, ">firstban blue");
+            await SendMsg(refName, ">start");
+
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanBlue, autoRef.currentState);
+            await SendMsg("BlueTeam", "NM1"); // Blue ban 1
+
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForBanRed, autoRef.currentState);
+            await SendMsg("RedTeam", "HD1"); // Red ban 1
+
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickRed, autoRef.currentState);
+
+            await PlayMap("RedTeam", "NM2", "RedTeam"); // Pick 1: (Score: 1 - 0)
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickBlue, autoRef.currentState);
+
+            await PlayMap("BlueTeam", "HR1", "BlueTeam"); // Pick 2: (Score: 1 - 1)
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickRed, autoRef.currentState);
+
+            await PlayMap("RedTeam", "HD2", "RedTeam"); // Pick 3: (Score: 2 - 1)
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickBlue, autoRef.currentState);
+
+            await PlayMap("BlueTeam", "DT1", "RedTeam"); // Pick 4: (Score: 3 - 1)
+
+            Assert.Equal(AutoRefEliminationStage.MatchState.WaitingForPickRed, autoRef.currentState);
+            await SendMsg(refName, ">setscore 2 2"); // Pick 4: (Score: 2 - 2) yo que se, se le fue la conexión
+            Assert.Equal(2, autoRef.MatchScore[0]);
+            Assert.Equal(2, autoRef.MatchScore[1]);
+        }
     }
 }
