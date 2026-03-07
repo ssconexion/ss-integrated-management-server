@@ -1037,14 +1037,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                 }
                 else
                 {
-                    if (pickedMaps.Count == currentMatch.Round.BestOf - 1)
-                    {
-                        await PreparePick("TB1");
-                        pickedMaps.Add(new Models.RoundChoice { Slot = "TB1", TeamColor = Models.TeamColor.None });
-                        return;
-                    }
-
                     bool redWin = matchScore[0] == (currentMatch.Round.BestOf - 1) / 2 + 1;
+
                     bool blueWin = matchScore[1] == (currentMatch.Round.BestOf - 1) / 2 + 1;
 
                     if (redWin)
@@ -1058,6 +1052,13 @@ public partial class AutoRefEliminationStage : IAutoRef
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                         await ChangeState(MatchState.MatchFinished);
+                        return;
+                    }
+
+                    if (pickedMaps.Count == currentMatch.Round.BestOf - 1)
+                    {
+                        await PreparePick("TB1");
+                        pickedMaps.Add(new Models.RoundChoice { Slot = "TB1", TeamColor = Models.TeamColor.None });
                         return;
                     }
 
