@@ -520,8 +520,8 @@ public partial class AutoRefEliminationStage : IAutoRef
                     } 
                     else if (args[1] == "blue")
                     {
-                        currentMode = OperationMode.Assisted;
-                        await SendMessageBothWays("Switched to assisted mode");
+                        blueTimeoutRequest = true;
+                        await SendMessageBothWays("!mp timer 120");
                     }
                 }
                 break;
