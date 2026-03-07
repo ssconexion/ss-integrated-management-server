@@ -16,16 +16,16 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.joined = true;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.joined = true;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
 
-            autoRef.currentMatch = new Models.QualifierRoom
+            matchManager.currentMatch = new Models.QualifierRoom
             {
                 Id = matchId,
                 Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" }
@@ -40,18 +40,18 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             panicOverMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">panic_over" });
 
 
-            await autoRef.HandleIrcMessage(panicMsg.Object);
+            await matchManager.HandleIrcMessage(panicMsg.Object);
 
-            var stateAfterPanic = autoRef.currentState;
+            var stateAfterPanic = matchManager.currentState;
 
-            await autoRef.HandleIrcMessage(panicOverMsg.Object);
+            await matchManager.HandleIrcMessage(panicOverMsg.Object);
 
 
             Assert.Equal(MatchManagerQualifiersStage.MatchState.MatchOnHold, stateAfterPanic);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp aborttimer"), Times.Once);
 
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, autoRef.currentState);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp timer 10"), Times.Once);
         }
@@ -65,16 +65,16 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.joined = true;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.joined = true;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
 
-            autoRef.currentMatch = new Models.QualifierRoom
+            matchManager.currentMatch = new Models.QualifierRoom
             {
                 Id = matchId,
                 Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" },
@@ -96,16 +96,16 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             stopMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
 
 
-            await autoRef.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, autoRef.currentState);
+            await matchManager.HandleIrcMessage(startMsg.Object);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 1453229"), Times.Once);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods NM NF"), Times.Once);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp timer 120"), Times.Once);
 
 
-            await autoRef.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, autoRef.currentState);
+            await matchManager.HandleIrcMessage(stopMsg.Object);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, matchManager.currentState);
         }
 
         [Fact]
@@ -116,15 +116,15 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage("Q1", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("Q1", refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
 
-            autoRef.currentMatch = new Models.QualifierRoom
+            matchManager.currentMatch = new Models.QualifierRoom
             {
                 Referee = new Models.RefereeInfo { DisplayName = refereeName }
             };
@@ -134,8 +134,8 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             maliciousMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
 
 
-            await autoRef.HandleIrcMessage(maliciousMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, autoRef.currentState);
+            await matchManager.HandleIrcMessage(maliciousMsg.Object);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
         }
 
         [Fact]
@@ -147,16 +147,16 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.joined = true;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.joined = true;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
 
-            autoRef.currentMatch = new Models.QualifierRoom
+            matchManager.currentMatch = new Models.QualifierRoom
             {
                 Id = matchId,
                 Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" },
@@ -179,12 +179,12 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             setMap2.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap hd2" });
 
 
-            await autoRef.HandleIrcMessage(setMap1.Object);
+            await matchManager.HandleIrcMessage(setMap1.Object);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 1453229"), Times.Once);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods nm NF"), Times.Once);
 
 
-            await autoRef.HandleIrcMessage(setMap2.Object);
+            await matchManager.HandleIrcMessage(setMap2.Object);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 3392548"), Times.Once);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods hd NF"), Times.Once);
         }
@@ -196,22 +196,22 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
 
             var startMsg = new Mock<IIrcMessage>();
             startMsg.Setup(m => m.Prefix).Returns(refereeName);
             startMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">start" });
             
-            await autoRef.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, autoRef.currentState);
+            await matchManager.HandleIrcMessage(startMsg.Object);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.Is<string>(s => s.StartsWith("!mp map"))), Times.Never);
         }
 
@@ -222,22 +222,22 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
 
             var stopMsg = new Mock<IIrcMessage>();
             stopMsg.Setup(m => m.Prefix).Returns(refereeName);
             stopMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
             
-            await autoRef.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, autoRef.currentState);
+            await matchManager.HandleIrcMessage(stopMsg.Object);
+            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, matchManager.currentState);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.IsAny<string>()), Times.Once);
         }
 
@@ -248,21 +248,21 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var autoRef = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
             {
             });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.Playing;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Playing;
 
             var setMapMsg = new Mock<IIrcMessage>();
             setMapMsg.Setup(m => m.Prefix).Returns(refereeName);
             setMapMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap nm1" });
             
-            await autoRef.HandleIrcMessage(setMapMsg.Object);
+            await matchManager.HandleIrcMessage(setMapMsg.Object);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.Is<string>(s => s.StartsWith("!mp map"))), Times.Never);
         }
         
@@ -272,13 +272,13 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refereeName = "Furina";
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
-            var autoRef = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) => { });
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) => { });
 
-            autoRef.client = mockBanchoClient.Object;
-            autoRef.lobbyChannelName = channelName;
-            autoRef.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.client = mockBanchoClient.Object;
+            matchManager.lobbyChannelName = channelName;
+            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
     
-            autoRef.currentMatch = new Models.QualifierRoom
+            matchManager.currentMatch = new Models.QualifierRoom
             {
                 Referee = new Models.RefereeInfo { DisplayName = refereeName },
                 Round = new Models.Round
@@ -294,7 +294,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             setMapMsg.Setup(m => m.Prefix).Returns(refereeName);
             setMapMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap sida45" });
             
-            var exception = await Record.ExceptionAsync(() => autoRef.HandleIrcMessage(setMapMsg.Object));
+            var exception = await Record.ExceptionAsync(() => matchManager.HandleIrcMessage(setMapMsg.Object));
             Assert.Null(exception); 
         }
     }
