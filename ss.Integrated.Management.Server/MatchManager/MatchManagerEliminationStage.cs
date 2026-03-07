@@ -264,9 +264,13 @@ public partial class MatchManagerEliminationStage : IMatchManager
         string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
         string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
 
+        string target = msg.Parameters[0];
         string content = msg.Parameters[1];
 
-        if (joined) msgCallback(matchId, $"**[{senderNick}]** {content}");
+        if (joined)
+        {
+            if(target == lobbyChannelName) msgCallback(matchId, $"**[{senderNick}]** {content}");
+        }
 
         // 1. System Events (Lobby creation/closure)
         switch (senderNick)
@@ -662,7 +666,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 {
                     if (args[1] == "red")
                         firstPick = Models.TeamColor.TeamRed;
-                    else if (args[2] == "blue")
+                    else if (args[1] == "blue")
                         firstPick = Models.TeamColor.TeamBlue;
                     else
                     {
@@ -684,7 +688,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 {
                     if (args[1] == "red")
                         firstBan = Models.TeamColor.TeamRed;
-                    else if (args[2] == "blue")
+                    else if (args[1] == "blue")
                         firstBan = Models.TeamColor.TeamBlue;
                     else
                     {
