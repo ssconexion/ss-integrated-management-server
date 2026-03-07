@@ -1,9 +1,9 @@
-﻿namespace ss.Internal.Management.Server.AutoRef;
+﻿namespace ss.Internal.Management.Server.MatchManager;
 
 /// <summary>
 /// Defines the contract for an automated referee bot that manages a specific match lifecycle.
 /// </summary>
-public interface IAutoRef
+public interface IMatchManager
 {
     /// <summary>
     /// Triggers whenever there's a state change. Used for discord live match display

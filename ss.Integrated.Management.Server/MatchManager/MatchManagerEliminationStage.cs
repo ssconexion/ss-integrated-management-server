@@ -1,11 +1,11 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.Resources;
 
-namespace ss.Internal.Management.Server.AutoRef;
+namespace ss.Internal.Management.Server.MatchManager;
 
 /// <summary>
 /// Handles the automated refereeing logic for Elimination/Versus matches.
@@ -80,7 +80,7 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// }
 /// \enddot
 /// </remarks>
-public partial class AutoRefEliminationStage : IAutoRef
+public partial class MatchManagerEliminationStage : IMatchManager
 {
     internal Models.MatchRoom? currentMatch;
     private readonly string matchId;
@@ -162,7 +162,7 @@ public partial class AutoRefEliminationStage : IAutoRef
         Assisted
     }
 
-    public AutoRefEliminationStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
+    public MatchManagerEliminationStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
     {
         this.matchId = matchId;
         this.refDisplayName = refDisplayName;

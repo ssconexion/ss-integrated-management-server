@@ -1,9 +1,10 @@
 ﻿using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.Resources;
 
-namespace ss.Internal.Management.Server.AutoRef;
+namespace ss.Internal.Management.Server.MatchManager;
 
 /// <summary>
 /// Handles the automated refereeing logic for Qualifier Lobbies.
@@ -43,7 +44,7 @@ namespace ss.Internal.Management.Server.AutoRef;
 /// }
 /// \enddot
 /// </remarks>
-public partial class AutoRefQualifiersStage : IAutoRef
+public partial class MatchManagerQualifiersStage : IMatchManager
 {
     internal Models.QualifierRoom? currentMatch;
     private readonly string matchId;
@@ -83,7 +84,7 @@ public partial class AutoRefQualifiersStage : IAutoRef
         MatchOnHold,
     }
 
-    public AutoRefQualifiersStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
+    public MatchManagerQualifiersStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
     {
         this.matchId = matchId;
         this.refDisplayName = refDisplayName;

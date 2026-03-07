@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Reflection;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.MatchManager;
 using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.Discord;
@@ -25,7 +26,7 @@ public class DiscordManager
     // activeChannels => <match_id, thread_id>
     // activeMatches  => <match_id, autoref_instance>
     private readonly ConcurrentDictionary<string, ulong> activeChannels = new();
-    private readonly ConcurrentDictionary<string, IAutoRef?> activeMatches = new();
+    private readonly ConcurrentDictionary<string, IMatchManager?> activeMatches = new();
     private readonly ConcurrentDictionary<string, ulong> liveEmbedMessages = new();
 
     public DiscordManager(string token)
@@ -123,9 +124,9 @@ public class DiscordManager
 
         activeChannels.TryAdd(matchId, newThread.Id);
 
-        IAutoRef worker = type == Models.MatchType.QualifiersStage
-            ? new AutoRefQualifiersStage(matchId, referee, HandleMatchIRCMessage)
-            : new AutoRefEliminationStage(matchId, referee, HandleMatchIRCMessage);
+        IMatchManager worker = type == Models.MatchType.QualifiersStage
+            ? new MatchManagerQualifiersStage(matchId, referee, HandleMatchIRCMessage)
+            : new MatchManagerEliminationStage(matchId, referee, HandleMatchIRCMessage);
 
         activeMatches.TryAdd(matchId, worker);
 
@@ -176,23 +177,23 @@ public class DiscordManager
         return true;
     }
     
-    private Embed BuildLiveMatchEmbed(AutoRefEliminationStage autoRef)
+    private Embed BuildLiveMatchEmbed(MatchManagerEliminationStage matchManagerEliminationStage)
     {
-        var match = autoRef.currentMatch;
+        var match = matchManagerEliminationStage.currentMatch;
         if (match == null) return new EmbedBuilder().WithTitle("Cargando partido...").Build();
         
         var embed = new EmbedBuilder()
             .WithTitle($"{match.Id}: {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName}")
             .WithUrl($"https://osu.ppy.sh/mp/{match.MpLinkId}")
-            .AddField("Marcador", $"🔴 **{autoRef.MatchScore[0]}** - **{autoRef.MatchScore[1]}** 🔵", false)
-            .AddField("Estado Actual", $"`{autoRef.currentState}`", false);
+            .AddField("Marcador", $"🔴 **{matchManagerEliminationStage.MatchScore[0]}** - **{matchManagerEliminationStage.MatchScore[1]}** 🔵", false)
+            .AddField("Estado Actual", $"`{matchManagerEliminationStage.currentState}`", false);
         
-        string bans = autoRef.bannedMaps.Any() 
-            ? string.Join("\n", autoRef.bannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}")) 
+        string bans = matchManagerEliminationStage.bannedMaps.Any() 
+            ? string.Join("\n", matchManagerEliminationStage.bannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}")) 
             : "*Ninguno todavía*";
         
-        string picks = autoRef.pickedMaps.Any() 
-            ? string.Join("\n", autoRef.pickedMaps.Select(m => 
+        string picks = matchManagerEliminationStage.pickedMaps.Any() 
+            ? string.Join("\n", matchManagerEliminationStage.pickedMaps.Select(m => 
             {
                 string picker = m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵";
                 
@@ -222,7 +223,7 @@ public class DiscordManager
     {
         if (!activeMatches.TryGetValue(matchId, out var autoRefInterface)) return;
         
-        if (autoRefInterface is not AutoRefEliminationStage autoRef) return;
+        if (autoRefInterface is not MatchManagerEliminationStage autoRef) return;
         
         if (client.GetChannel(parentChannelId) is not IMessageChannel channel) return;
         

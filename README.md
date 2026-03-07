@@ -60,11 +60,11 @@ Extra docs and information can be found [here](https://docs.spanishshowdown.es/)
     
 - **Dynamic Match Management:** Since we dont have Google Sheets anymore, most of the bracket management is done through Discord and Adminer. The discord part is done here and is often enough, although we recommend to setup adminer to get full control.
 
-# But, how does the Automated Refereeing work?
+# But, how does the actual Match Manager work?
 
 ## 1. Quick Overview
 
-The **Spanish Showdown Automated Refereeing Tool** is a modular automation tool designed to manage osu! tournament matches autonomously (although you can just not use the automation and use it like a discord to bancho IRC client, it is up to the user.). It bridges the gap between **Discord** (for coordination and logging) and **Bancho (osu! IRC)** (for game lobby management).
+The **Spanish Showdown Match Manager** is a modular tool designed to manage osu! tournament matches (although you can just not use the automation and use it like a discord to bancho IRC client, it is up to the user. There are some macros that could be useful for non-automated refereeing). It bridges the gap between **Discord** (for coordination and logging) and **Bancho (osu! IRC)** (for game lobby management).
 
 The system utilizes `BanchoSharp` for IRC communication and `Discord.Net` for user interaction. It ensures matches are played according to strict timing and rulesets without requiring constant human intervention, while maintaining a manual override safety net in case it is needed.
 
@@ -157,7 +157,7 @@ The system accepts commands prefixed with `>` (e.g., `>start`) from the designat
 
 ## 4. What about the Elimination Stage automaton?
 
-The `AutoRefEliminationStage` handles **Head-to-Head (1v1 or Team vs Team)** matches. Unlike the linear flow of qualifiers, this module manages a dynamic, turn-based environment involving banning phases, picking phases, score validation, and win condition checks (Best Of X).
+It handles **Head-to-Head (1v1 or Team vs Team)** matches. Unlike the linear flow of qualifiers, this module manages a dynamic, turn-based environment involving banning phases, picking phases, score validation, and win condition checks (Best Of X).
 
 ### 4.1. Workflow & State Machine
 
