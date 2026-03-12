@@ -168,6 +168,37 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
+    [SlashCommand("forfeit-results-embed", "Embed auxiliar por si falla el lector")]
+    private async Task AuxEmbedForfeitCreation(string matchId, bool trueIfRedFF)
+    {
+        await DeferAsync(ephemeral: false);
+        
+        await using var db = new ModelsContext();
+
+        EmbedBuilder embed;
+
+        var match = await db.MatchRooms.Include(matchRoom => matchRoom.TeamRed).Include(matchRoom => matchRoom.TeamBlue).Include(matchRoom => matchRoom.Referee)
+            .FirstOrDefaultAsync(m => m.Id == matchId);
+
+        string ffstring = trueIfRedFF ? "🔵 El equipo azul gana por defecto" : "🔴 El equipo rojo gana por defecto";
+        
+        if (match != null)
+        {
+            embed = new EmbedBuilder()
+                .WithTitle($"{match.Id}: 🔴 {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName} 🔵")
+                .AddField("Marcador", ffstring, false);
+                
+            embed.WithCurrentTimestamp();
+        }
+        else
+        {
+            embed = new EmbedBuilder().WithTitle("Cargando partido...");
+        }
+
+        await FollowupAsync(embed: embed.Build());
+    }
+
+    [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("match-results-embed", "Embed auxiliar por si falla el lector")]
     private async Task AuxEmbedCreation(string matchId)
     {
