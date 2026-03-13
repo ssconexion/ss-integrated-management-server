@@ -70,9 +70,9 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
     private TaskCompletionSource<string>? chatResponseTcs;
 
-    private readonly Action<string, string> msgCallback;
+    private readonly Action<string, string, IMatchManager.MessageKind> msgCallback;
 
-    public MatchManagerQualifiersStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
+    public MatchManagerQualifiersStage(string matchId, string refDisplayName, Action<string, string, IMatchManager.MessageKind> msgCallback)
     {
         this.matchId = matchId;
         this.refDisplayName = refDisplayName;
@@ -167,7 +167,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
         Console.WriteLine($"{senderNick}: {content}");
 
-        if (joined) msgCallback(matchId, $"**[{senderNick}]** {content}");
+        if (joined) msgCallback(matchId, $"**[{senderNick}]** {content}", IMatchManager.MessageKind.PlayerMessage);
 
         // 1. System Events (Lobby creation/closure)
         switch (senderNick)
@@ -299,7 +299,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
     private async Task SendMessageBothWays(string content)
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, content);
-        msgCallback(matchId, $"**[AUTO | {currentMatch!.Referee.DisplayName}]** {content}");
+        msgCallback(matchId, $"**[AUTO | {currentMatch!.Referee.DisplayName}]** {content}", IMatchManager.MessageKind.PlayerMessage);
     }
 
     private bool SearchKeywords(string content)

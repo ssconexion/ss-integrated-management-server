@@ -16,7 +16,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -65,7 +65,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -116,7 +116,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage("Q1", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("Q1", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -147,7 +147,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -196,7 +196,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -222,7 +222,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -248,7 +248,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -272,7 +272,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refereeName = "Furina";
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg) => { });
+            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) => { });
 
             matchManager.client = mockBanchoClient.Object;
             matchManager.lobbyChannelName = channelName;

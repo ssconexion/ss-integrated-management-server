@@ -107,7 +107,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
     private int mpLinkId;
 
-    private int repeat = 2;
+    private int mapsLeftToBan = 2;
 
     // Using Models.TeamColor to avoid ambiguity in Doxygen
     private Models.TeamColor firstPick = Models.TeamColor.None;
@@ -122,22 +122,25 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
     internal IMatchManager.MatchState currentState;
     internal OperationMode currentMode;
-    private string currentBeatmapSlot;
+    private string? currentBeatmapSlot;
     
     private IMatchManager.MatchState previousState;
 
     private int refId;
 
     private bool stoppedPreviously;
+
+    /// <summary>
+    /// The delay used between messages when sending them to bancho
+    /// </summary>
+    public static readonly int IrcMessageDelay = 250;
     
     private string RedIrcName => currentMatch!.TeamRed.DisplayName.Replace(' ', '_');
     private string BlueIrcName => currentMatch!.TeamBlue.DisplayName.Replace(' ', '_');
 
     private TaskCompletionSource<string>? chatResponseTcs;
 
-    private readonly Action<string, string> msgCallback;
-
-    // Removed the internal TeamColor enum to force usage of Models.TeamColor
+    private readonly Action<string, string, IMatchManager.MessageKind> msgCallback;
 
     public enum OperationMode
     {
@@ -145,7 +148,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         Assisted
     }
 
-    public MatchManagerEliminationStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
+    public MatchManagerEliminationStage(string matchId, string refDisplayName, Action<string, string, IMatchManager.MessageKind> msgCallback)
     {
         this.matchId = matchId;
         this.refDisplayName = refDisplayName;
@@ -252,7 +255,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         if (joined)
         {
-            if(target == lobbyChannelName) msgCallback(matchId, $"**[{senderNick}]** {content}");
+            if(target == lobbyChannelName) msgCallback(matchId, $"**[{senderNick}]** {content}", IMatchManager.MessageKind.PlayerMessage);
         }
 
         // 1. System Events (Lobby creation/closure)
@@ -269,7 +272,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 await client!.JoinChannelAsync(lobbyChannelName);
                 await InitializeLobbySettings();
                 joined = true;
-                msgCallback(matchId, $"🗣️{matchId} mp link: https://osu.ppy.sh/mp/{mpLinkId}"); // surely no player will type an emoji on a lobby right
+                msgCallback(matchId, $"mp link: https://osu.ppy.sh/mp/{mpLinkId}", IMatchManager.MessageKind.PinOrderMessage);
                 return;
             case "BanchoBot" when chatResponseTcs != null && SearchKeywords(content):
                 chatResponseTcs.TrySetResult(content);
@@ -298,7 +301,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 await ProcessFinalScores();
             }
             
-            await Task.Delay(250);
+            await Task.Delay(IrcMessageDelay);
         }
 
         // 3. Emergency Protocols (!panic)
@@ -367,12 +370,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     await SendMessageBothWays(string.Format(Strings.RedWins, redTotal, blueTotal));
                     var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
                     if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
-                    await Task.Delay(250);
+                    await Task.Delay(IrcMessageDelay);
                     await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     break;
                 
                 case OperationMode.Assisted:
-                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.RedWins, redTotal, blueTotal)}**");
+                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.RedWins, redTotal, blueTotal)}**", IMatchManager.MessageKind.PlayerMessage);
                     break;
             }
         }
@@ -385,12 +388,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     await SendMessageBothWays(string.Format(Strings.BlueWins, blueTotal, redTotal));
                     var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
                     if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamBlue;
-                    await Task.Delay(250);
+                    await Task.Delay(IrcMessageDelay);
                     await SendMessageBothWays($"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     break;
                 
                 case OperationMode.Assisted:
-                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.BlueWins, redTotal, blueTotal)}**");
+                    msgCallback(matchId, $"**[RESULT] {string.Format(Strings.BlueWins, redTotal, blueTotal)}**", IMatchManager.MessageKind.PlayerMessage);
                     break;
             }
         }
@@ -410,9 +413,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
             .Select(m => m.Slot));
 
         await SendMessageBothWays($"Bans: {bannedmaps} | Picks: {pickedmaps}");
-        await Task.Delay(250);
+        await Task.Delay(IrcMessageDelay);
         await SendMessageBothWays(string.Format(Strings.AvailableMaps, availablemaps));
-        await Task.Delay(250);
+        await Task.Delay(IrcMessageDelay);
         await SendMessageBothWays(string.Format(Strings.TimeoutAvailable, !redTimeoutRequest, !blueTimeoutRequest));
     }
 
@@ -428,7 +431,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         {
             case "invite":
                 await SendMessageBothWays($"!mp invite #{currentMatch!.TeamRed.OsuData.Id}");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await SendMessageBothWays($"!mp invite #{currentMatch!.TeamBlue.OsuData.Id}");
                 break;
             
@@ -496,7 +499,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (args.Length < 3)
                 {
                     await SendMessageBothWays(Strings.RefTimeout);
-                    await Task.Delay(250);
+                    await Task.Delay(IrcMessageDelay);
                     await ChangeState(IMatchManager.MatchState.OnTimeout);
                 }
                 else
@@ -560,7 +563,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 }
 
                 await SendMessageBothWays("!mp clearhost");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await EvaluateCurrentState();
                 break;
 
@@ -587,7 +590,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     await SendMessageBothWays(Strings.NotEnoughArgs);
                 }
                 
-                await TryStateChange("🏃‍♀️‍➡️ Override", args[1]);
+                await TryStateChange(string.Empty, args[1], IMatchManager.MessageKind.SystemMessage);
                 break;
             
             case "operation":
@@ -632,7 +635,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                             $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     }
 
-                    await TryStateChange("🏃‍♀️‍➡️ Override", "go"); // playing -> whatever
+                    await TryStateChange(string.Empty, "EXIT PLAYING STATE", IMatchManager.MessageKind.SystemMessage); // playing -> whatever
                 }
                 else
                 {
@@ -687,25 +690,17 @@ public partial class MatchManagerEliminationStage : IMatchManager
         }
     }
 
-    private async Task SendMessageBothWays(string content)
+    private async Task SendMessageBothWays(string content, IMatchManager.MessageKind messageKind = IMatchManager.MessageKind.PlayerMessage)
     {
         await client!.SendPrivateMessageAsync(lobbyChannelName!, content);
-        msgCallback(matchId, $"**[AUTO | {currentMatch!.Referee.DisplayName}]** {content}");
+        msgCallback(matchId, $"**[AUTO | {currentMatch!.Referee.DisplayName}]** {content}", messageKind);
     }
-
-    private bool SearchKeywords(string content)
-    {
-        bool found = content switch
-        {
-            var s when s.Contains("All players are ready") => true,
-            var s when s.Contains("Changed beatmap") => true,
-            var s when s.Contains("Enabled") => true,
-            var s when s.Contains("Countdown finished") => true,
-            _ => false
-        };
-
-        return found;
-    }
+    
+    private static bool SearchKeywords(string content) =>
+        content.Contains("All players are ready") ||
+        content.Contains("Changed beatmap") ||
+        content.Contains("Enabled") ||
+        content.Contains("Countdown finished");
 
     /// <summary>
     /// Validates if a map slot (e.g., "NM1") is eligible to be picked or banned.
@@ -738,7 +733,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         currentBeatmapSlot = slot.ToUpper();
         
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
-        await Task.Delay(250);
+        await Task.Delay(IrcMessageDelay);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");
         
         await ChangeState(IMatchManager.MatchState.WaitingForStart);
@@ -773,7 +768,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
     private async Task SendStateInfo(string info)
     {
         await SendMessageBothWays(info);
-        await Task.Delay(250);
+        await Task.Delay(IrcMessageDelay);
         await SendMatchStatus();
     }
 
@@ -782,7 +777,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// <summary>
     /// The Brain of the operation. Evaluates the current state and incoming content to transition to the next state.
     /// </summary>
-    private async Task TryStateChange(string sender, string content) // transiciones de estado
+    private async Task TryStateChange(string sender, string content, IMatchManager.MessageKind messageKind = IMatchManager.MessageKind.PlayerMessage) // transiciones de estado
     {
         if (currentState == IMatchManager.MatchState.Idle) return;
 
@@ -813,7 +808,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         if (currentState == IMatchManager.MatchState.OnTimeout && sender == "BanchoBot" && content == "Countdown finished")
         {
             await SendMessageBothWays("!mp timer 120");
-            await Task.Delay(250);
+            await Task.Delay(IrcMessageDelay);
             await SendMessageBothWays(Strings.TimeoutStart);
             await ChangeState(previousState);
             return;
@@ -828,9 +823,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
                 await SendMessageBothWays($"The timer has ran out, the opponent will be picking now. {currentMatch!.TeamRed.DisplayName}, please state your pick in chat.");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await SendMessageBothWays("!mp timer 60");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await ChangeState(IMatchManager.MatchState.WaitingForPickRed);
                 isStolenPick = true;
                 await SendMatchStatus();
@@ -843,9 +838,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
                 await SendMessageBothWays($"The timer has ran out, the opponent will be picking now. {currentMatch!.TeamBlue.DisplayName}, please state your pick in chat.");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await SendMessageBothWays("!mp timer 60");
-                await Task.Delay(250);
+                await Task.Delay(IrcMessageDelay);
                 await ChangeState(IMatchManager.MatchState.WaitingForPickBlue);
                 isStolenPick = true;
                 await SendMatchStatus();
@@ -887,19 +882,19 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         if (currentState == IMatchManager.MatchState.WaitingForBanRed && 
             ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
-             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
+             (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
                 await SaveMatchHistoryToStack();
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamRed });
                 await SendMessageBothWays(string.Format(Strings.RedBanned, content.ToUpper()));
-                await Task.Delay(250);
-                repeat--;
+                await Task.Delay(IrcMessageDelay);
+                mapsLeftToBan--;
 
-                if (repeat == 0)
+                if (mapsLeftToBan == 0)
                 {
-                    repeat = 2;
+                    mapsLeftToBan = 2;
                     await ChangeState(IMatchManager.MatchState.PickPhaseStart);
                     await EvaluateCurrentState();
                 }
@@ -915,19 +910,19 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         if (currentState == IMatchManager.MatchState.WaitingForBanBlue && 
             ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
-             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
+             (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
                 await SaveMatchHistoryToStack();
                 bannedMaps.Add(new Models.RoundChoice { Slot = content.ToUpper(), TeamColor = Models.TeamColor.TeamBlue });
                 await SendMessageBothWays(string.Format(Strings.BlueBanned, content.ToUpper()));
-                await Task.Delay(250);
-                repeat--;
+                await Task.Delay(IrcMessageDelay);
+                mapsLeftToBan--;
 
-                if (repeat == 0)
+                if (mapsLeftToBan == 0)
                 {
-                    repeat = 2;
+                    mapsLeftToBan = 2;
                     await ChangeState(IMatchManager.MatchState.PickPhaseStart);
                     await EvaluateCurrentState();
                 }
@@ -963,7 +958,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         if (currentState == IMatchManager.MatchState.WaitingForPickRed && 
             ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
-             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
+             (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
@@ -988,7 +983,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         if (currentState == IMatchManager.MatchState.WaitingForPickBlue && 
             ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
-             (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
+             (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
             {
@@ -1024,7 +1019,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         else if (currentState == IMatchManager.MatchState.Playing)
         {
             if ((content.Contains("The match has finished") && currentMode == OperationMode.Automatic) || 
-                (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted && content == "go") )
+                (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted && content == "go") )
             {
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
@@ -1063,14 +1058,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     if (lastPick == Models.TeamColor.TeamRed)
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
-                        await Task.Delay(250);
+                        await Task.Delay(IrcMessageDelay);
                         await SendMatchStatus();
                         await ChangeState(IMatchManager.MatchState.WaitingForPickBlue);
                     }
                     else
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
-                        await Task.Delay(250);
+                        await Task.Delay(IrcMessageDelay);
                         await SendMatchStatus();
                         await ChangeState(IMatchManager.MatchState.WaitingForPickRed);
                     }

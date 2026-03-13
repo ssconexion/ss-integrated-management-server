@@ -16,7 +16,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -65,7 +65,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -123,7 +123,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("Q1", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("Q1", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -154,7 +154,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage(matchId, refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -202,7 +202,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -228,7 +228,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -254,7 +254,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -279,7 +279,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var channelName = "#mp_12345";
             var mockBanchoClient = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("C4", refereeName, (id, msg, messageKind) =>
             {
             });
 
@@ -314,7 +314,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             });
 
@@ -410,7 +410,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             });
 
@@ -500,7 +500,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             });
 
@@ -610,7 +610,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             });
 
@@ -686,7 +686,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -753,7 +753,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -815,7 +815,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -870,7 +870,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -929,7 +929,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -973,7 +973,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             })
             {
@@ -1018,7 +1018,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             var refName = "Furina";
             var mockBancho = new Mock<IBanchoClient>();
 
-            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg) =>
+            var matchManager = new MatchManagerEliminationStage("96", refName, (id, msg, messageKind) =>
             {
             });
 

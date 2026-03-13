@@ -29,6 +29,17 @@ public interface IMatchManager
         OnTimeout,
         MatchOnHold,
     };
+
+    
+    /// <summary>
+    /// Tracks what kind of message is being thrown around the systems.
+    /// </summary>
+    public enum MessageKind
+    {
+        PlayerMessage,
+        PinOrderMessage,
+        SystemMessage,
+    }
     
     /// <summary>
     /// Initializes the connection to Bancho and joins the match lobby.

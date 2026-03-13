@@ -288,7 +288,7 @@ public class DiscordManager
         }
     }
 
-    private void HandleMatchIRCMessage(string matchId, string messageContent)
+    private void HandleMatchIRCMessage(string matchId, string messageContent, IMatchManager.MessageKind messageType)
     {
         Task.Run(async () =>
         {
