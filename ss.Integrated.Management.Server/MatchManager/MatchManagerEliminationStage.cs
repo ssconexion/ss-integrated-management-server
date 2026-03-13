@@ -1008,6 +1008,8 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         #endregion
 
+        #region CommonPhaseRegion
+        
         if (currentState == IMatchManager.MatchState.WaitingForStart)
         {
             if ((content.Contains("All players are ready") || content.Contains("Countdown finished")) && sender == "BanchoBot")
@@ -1072,5 +1074,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 }
             }
         }
+        
+        #endregion
     }
 }
