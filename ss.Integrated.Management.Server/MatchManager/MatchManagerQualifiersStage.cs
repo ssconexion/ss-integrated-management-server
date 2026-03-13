@@ -61,8 +61,8 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
     private int currentMapIndex;
     
-    internal MatchState currentState;
-    internal MatchState previousState;
+    internal IMatchManager.MatchState currentState;
+    internal IMatchManager.MatchState previousState;
 
     private int mpLinkId;
 
@@ -71,18 +71,6 @@ public partial class MatchManagerQualifiersStage : IMatchManager
     private TaskCompletionSource<string>? chatResponseTcs;
 
     private readonly Action<string, string> msgCallback;
-
-    /// <summary>
-    /// Represents the finite states of the match flow.
-    /// </summary>
-    public enum MatchState
-    {
-        Idle,
-        WaitingForStart,
-        Playing,
-        MatchFinished,
-        MatchOnHold,
-    }
 
     public MatchManagerQualifiersStage(string matchId, string refDisplayName, Action<string, string> msgCallback)
     {
@@ -206,12 +194,12 @@ public partial class MatchManagerQualifiersStage : IMatchManager
         if (content.Contains(">panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
         {
             await SendMessageBothWays(Strings.BackToAuto);
-            currentState = MatchState.WaitingForStart;
+            currentState = IMatchManager.MatchState.WaitingForStart;
             await SendMessageBothWays("!mp timer 10");
         }
         else if (content.Contains("!panic"))
         {
-            currentState = MatchState.MatchOnHold;
+            currentState = IMatchManager.MatchState.MatchOnHold;
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
@@ -264,16 +252,16 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                 }
                 break;
             case "setmap":
-                if (currentState != MatchState.Idle)
+                if (currentState != IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.SetMapFail);
                     break;
                 }
                 await PreparePick(args[1]);
-                currentState = MatchState.Idle;
+                currentState = IMatchManager.MatchState.Idle;
                 break;
             case "start":
-                if (currentState != MatchState.Idle)
+                if (currentState != IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.AutoAlreadyEngaged);
                     break;
@@ -282,7 +270,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                 if (!stoppedPreviously)
                 {
                     await SendMessageBothWays(string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
-                    currentState = MatchState.Idle;
+                    currentState = IMatchManager.MatchState.Idle;
                 }
                 else
                 {
@@ -294,14 +282,14 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                 _ = StartQualifiersFlow();
                 break;
             case "stop":
-                if (currentState == MatchState.Idle)
+                if (currentState == IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.AutoAlreadyStopped);
                     break;
                 }
                 await SendMessageBothWays(Strings.StoppingAuto);
                 previousState = currentState;
-                currentState = MatchState.Idle;
+                currentState = IMatchManager.MatchState.Idle;
                 stoppedPreviously = true;
                 break;
                 
@@ -335,24 +323,24 @@ public partial class MatchManagerQualifiersStage : IMatchManager
     {
         switch (currentState)
         {
-            case MatchState.Idle:
+            case IMatchManager.MatchState.Idle:
                 return;
-            case MatchState.WaitingForStart:
+            case IMatchManager.MatchState.WaitingForStart:
             {
                 if (banchoMsg.Contains("All players are ready") || banchoMsg.Contains("Countdown finished"))
                 {
                     await SendMessageBothWays("!mp start 10");
-                    currentState = MatchState.Playing;
+                    currentState = IMatchManager.MatchState.Playing;
                 }
 
                 break;
             }
-            case MatchState.Playing:
+            case IMatchManager.MatchState.Playing:
             {
                 if (banchoMsg.Contains("The match has finished"))
                 {
                     currentMapIndex++;
-                    currentState = MatchState.Idle;
+                    currentState = IMatchManager.MatchState.Idle;
 
                     // ASYNC VOID PATTERN (Intentional):
                     // We fire-and-forget this task to create a non-blocking 10s cooldown
@@ -392,7 +380,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
     private async Task StartQualifiersFlow()
     {
         currentMapIndex = 0;
-        currentState = MatchState.Idle;
+        currentState = IMatchManager.MatchState.Idle;
         await PrepareNextQualifierMap();
     }
 
@@ -405,7 +393,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
         if (currentMapIndex >= currentMatch!.Round.MapPool.Count)
         {
             await SendMessageBothWays(Strings.QualifiersOver);
-            currentState = MatchState.MatchFinished;
+            currentState = IMatchManager.MatchState.MatchFinished;
             return;
         }
 
@@ -415,6 +403,6 @@ public partial class MatchManagerQualifiersStage : IMatchManager
         await SendMessageBothWays($"!mp mods {beatmap.Slot[..2]} NF");
         await SendMessageBothWays("!mp timer 120");
 
-        currentState = MatchState.WaitingForStart;
+        currentState = IMatchManager.MatchState.WaitingForStart;
     }
 }

@@ -11,6 +11,26 @@ public interface IMatchManager
     public event Func<string, Task>? OnStateUpdated;
     
     /// <summary>
+    /// Represents the finite states of the match flow.
+    /// </summary>
+    public enum MatchState
+    {
+        Idle,
+        BanPhaseStart,
+        WaitingForBanRed,
+        WaitingForBanBlue,
+        PickPhaseStart,
+        SecondBanPhaseStart,
+        WaitingForPickRed,
+        WaitingForPickBlue,
+        WaitingForStart,
+        Playing,
+        MatchFinished,
+        OnTimeout,
+        MatchOnHold,
+    };
+    
+    /// <summary>
     /// Initializes the connection to Bancho and joins the match lobby.
     /// </summary>
     Task StartAsync();

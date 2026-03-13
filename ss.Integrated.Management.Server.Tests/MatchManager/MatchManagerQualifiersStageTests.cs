@@ -23,7 +23,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.client = mockBanchoClient.Object;
             matchManager.joined = true;
             matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
 
             matchManager.currentMatch = new Models.QualifierRoom
             {
@@ -47,11 +47,11 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await matchManager.HandleIrcMessage(panicOverMsg.Object);
 
 
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.MatchOnHold, stateAfterPanic);
+            Assert.Equal(IMatchManager.MatchState.MatchOnHold, stateAfterPanic);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp aborttimer"), Times.Once);
 
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp timer 10"), Times.Once);
         }
@@ -72,7 +72,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.client = mockBanchoClient.Object;
             matchManager.joined = true;
             matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.currentState = IMatchManager.MatchState.Idle;
 
             matchManager.currentMatch = new Models.QualifierRoom
             {
@@ -97,7 +97,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
 
             await matchManager.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
 
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 1453229"), Times.Once);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods NM NF"), Times.Once);
@@ -105,7 +105,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
 
             await matchManager.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.Idle, matchManager.currentState);
         }
 
         [Fact]
@@ -122,7 +122,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             matchManager.client = mockBanchoClient.Object;
             matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
 
             matchManager.currentMatch = new Models.QualifierRoom
             {
@@ -135,7 +135,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
 
             await matchManager.HandleIrcMessage(maliciousMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
         }
 
         [Fact]
@@ -154,7 +154,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.client = mockBanchoClient.Object;
             matchManager.joined = true;
             matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.currentState = IMatchManager.MatchState.Idle;
 
             matchManager.currentMatch = new Models.QualifierRoom
             {
@@ -204,14 +204,14 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.lobbyChannelName = channelName;
             matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.WaitingForStart;
+            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
 
             var startMsg = new Mock<IIrcMessage>();
             startMsg.Setup(m => m.Prefix).Returns(refereeName);
             startMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">start" });
             
             await matchManager.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.WaitingForStart, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.Is<string>(s => s.StartsWith("!mp map"))), Times.Never);
         }
 
@@ -230,14 +230,14 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.lobbyChannelName = channelName;
             matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.currentState = IMatchManager.MatchState.Idle;
 
             var stopMsg = new Mock<IIrcMessage>();
             stopMsg.Setup(m => m.Prefix).Returns(refereeName);
             stopMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
             
             await matchManager.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(MatchManagerQualifiersStage.MatchState.Idle, matchManager.currentState);
+            Assert.Equal(IMatchManager.MatchState.Idle, matchManager.currentState);
             mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.IsAny<string>()), Times.Once);
         }
 
@@ -256,7 +256,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.lobbyChannelName = channelName;
             matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
             
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Playing;
+            matchManager.currentState = IMatchManager.MatchState.Playing;
 
             var setMapMsg = new Mock<IIrcMessage>();
             setMapMsg.Setup(m => m.Prefix).Returns(refereeName);
@@ -276,7 +276,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             matchManager.client = mockBanchoClient.Object;
             matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = MatchManagerQualifiersStage.MatchState.Idle;
+            matchManager.currentState = IMatchManager.MatchState.Idle;
     
             matchManager.currentMatch = new Models.QualifierRoom
             {

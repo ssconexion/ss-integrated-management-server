@@ -92,7 +92,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// <inheritdoc />
     public event Func<string, Task>? OnStateUpdated;
     
-    private record MatchSnapshot(Models.MatchRoom Room, MatchState State, Models.TeamColor LastPick);
+    private record MatchSnapshot(Models.MatchRoom Room, IMatchManager.MatchState State, Models.TeamColor LastPick);
 
     private readonly Stack<MatchSnapshot> matchHistory = new();
 
@@ -120,11 +120,11 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
     private Models.TeamColor lastPick = Models.TeamColor.None;
 
-    internal MatchState currentState;
+    internal IMatchManager.MatchState currentState;
     internal OperationMode currentMode;
     private string currentBeatmapSlot;
     
-    private MatchState previousState;
+    private IMatchManager.MatchState previousState;
 
     private int refId;
 
@@ -138,26 +138,6 @@ public partial class MatchManagerEliminationStage : IMatchManager
     private readonly Action<string, string> msgCallback;
 
     // Removed the internal TeamColor enum to force usage of Models.TeamColor
-
-    /// <summary>
-    /// Represents the finite states of the match flow.
-    /// </summary>
-    public enum MatchState
-    {
-        Idle,
-        BanPhaseStart,
-        WaitingForBanRed,
-        WaitingForBanBlue,
-        PickPhaseStart,
-        SecondBanPhaseStart,
-        WaitingForPickRed,
-        WaitingForPickBlue,
-        WaitingForStart,
-        Playing,
-        MatchFinished,
-        OnTimeout,
-        MatchOnHold,
-    };
 
     public enum OperationMode
     {
@@ -300,7 +280,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         // 2. Gameplay Events (Score processing & Match finish)
         if (senderNick == "BanchoBot")
         {
-            if (content.Contains("finished playing") && currentState != MatchState.Idle)
+            if (content.Contains("finished playing") && currentState != IMatchManager.MatchState.Idle)
             {
                 // Regex for Nick and Score
                 var match = Regex.Match(content, @"^(.*) finished playing \(Score: (\d+),");
@@ -313,7 +293,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 }
             }
 
-            if (content.Contains("The match has finished!") && currentState != MatchState.Idle)
+            if (content.Contains("The match has finished!") && currentState != IMatchManager.MatchState.Idle)
             {
                 await ProcessFinalScores();
             }
@@ -326,12 +306,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
         if (content.Contains(">panic_over") && senderNick == currentMatch!.Referee.DisplayName.Replace(' ', '_'))
         {
             await SendMessageBothWays(Strings.BackToAuto);
-            await ChangeState(MatchState.WaitingForStart);
+            await ChangeState(IMatchManager.MatchState.WaitingForStart);
             await SendMessageBothWays("!mp timer 10");
         }
         else if (content.Contains("!panic"))
         {
-            await ChangeState(MatchState.MatchOnHold);
+            await ChangeState(IMatchManager.MatchState.MatchOnHold);
             await SendMessageBothWays("!mp aborttimer");
 
             await SendMessageBothWays(
@@ -461,7 +441,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 break;
             
             case "setmap":
-                if (currentState != MatchState.Idle)
+                if (currentState != IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.SetMapFail);
                     break;
@@ -517,7 +497,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 {
                     await SendMessageBothWays(Strings.RefTimeout);
                     await Task.Delay(250);
-                    await ChangeState(MatchState.OnTimeout);
+                    await ChangeState(IMatchManager.MatchState.OnTimeout);
                 }
                 else
                 {
@@ -541,7 +521,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     return;
                 }
 
-                if (currentState != MatchState.Idle)
+                if (currentState != IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.AutoAlreadyEngaged);
                     break;
@@ -570,7 +550,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (!stoppedPreviously)
                 {
                     await SendMessageBothWays(string.Format(Strings.EngagingAuto, currentMatch!.Id));
-                    await ChangeState(MatchState.BanPhaseStart);
+                    await ChangeState(IMatchManager.MatchState.BanPhaseStart);
                 }
                 else
                 {
@@ -585,13 +565,13 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 break;
 
             case "stop":
-                if (currentState == MatchState.Idle)
+                if (currentState == IMatchManager.MatchState.Idle)
                 {
                     await SendMessageBothWays(Strings.AutoAlreadyStopped);
                     break;
                 }
                 await SendMessageBothWays(Strings.StoppingAuto);
-                await ChangeState(MatchState.Idle);
+                await ChangeState(IMatchManager.MatchState.Idle);
                 stoppedPreviously = true;
                 break;
             
@@ -761,7 +741,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         await Task.Delay(250);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");
         
-        await ChangeState(MatchState.WaitingForStart);
+        await ChangeState(IMatchManager.MatchState.WaitingForStart);
     }
 
     private Task SaveMatchHistoryToStack()
@@ -783,7 +763,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         return Task.CompletedTask;
     }
     
-    private async Task ChangeState(MatchState newState)
+    private async Task ChangeState(IMatchManager.MatchState newState)
     {
         previousState = currentState;
         currentState = newState;
@@ -804,33 +784,33 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// </summary>
     private async Task TryStateChange(string sender, string content) // transiciones de estado
     {
-        if (currentState == MatchState.Idle) return;
+        if (currentState == IMatchManager.MatchState.Idle) return;
 
         #region TimeoutRegion
 
-        if ((currentState == MatchState.WaitingForStart ||
-             currentState == MatchState.WaitingForBanBlue ||
-             currentState == MatchState.WaitingForBanRed ||
-             currentState == MatchState.WaitingForPickBlue ||
-             currentState == MatchState.WaitingForPickRed) && content == "!timeout" && currentMode == OperationMode.Automatic)
+        if ((currentState == IMatchManager.MatchState.WaitingForStart ||
+             currentState == IMatchManager.MatchState.WaitingForBanBlue ||
+             currentState == IMatchManager.MatchState.WaitingForBanRed ||
+             currentState == IMatchManager.MatchState.WaitingForPickBlue ||
+             currentState == IMatchManager.MatchState.WaitingForPickRed) && content == "!timeout" && currentMode == OperationMode.Automatic)
         {
             if (sender == RedIrcName && !redTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.RedTimeout);
-                await ChangeState(MatchState.OnTimeout);
+                await ChangeState(IMatchManager.MatchState.OnTimeout);
                 redTimeoutRequest = true;
             }
             else if (sender == BlueIrcName && !blueTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.BlueTimeout);
-                await ChangeState(MatchState.OnTimeout);
+                await ChangeState(IMatchManager.MatchState.OnTimeout);
                 blueTimeoutRequest = true;
             }
             
             return;
         }
 
-        if (currentState == MatchState.OnTimeout && sender == "BanchoBot" && content == "Countdown finished")
+        if (currentState == IMatchManager.MatchState.OnTimeout && sender == "BanchoBot" && content == "Countdown finished")
         {
             await SendMessageBothWays("!mp timer 120");
             await Task.Delay(250);
@@ -843,7 +823,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         #region CountdownForPickFinished
 
-        if (currentState == MatchState.WaitingForPickBlue && currentMode == OperationMode.Automatic)
+        if (currentState == IMatchManager.MatchState.WaitingForPickBlue && currentMode == OperationMode.Automatic)
         {
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
@@ -851,14 +831,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 await Task.Delay(250);
                 await SendMessageBothWays("!mp timer 60");
                 await Task.Delay(250);
-                await ChangeState(MatchState.WaitingForPickRed);
+                await ChangeState(IMatchManager.MatchState.WaitingForPickRed);
                 isStolenPick = true;
                 await SendMatchStatus();
                 return;
             }
         }
         
-        if (currentState == MatchState.WaitingForPickRed && currentMode == OperationMode.Automatic)
+        if (currentState == IMatchManager.MatchState.WaitingForPickRed && currentMode == OperationMode.Automatic)
         {
             if (content.Contains("Countdown finished") && sender == "BanchoBot")
             {
@@ -866,7 +846,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 await Task.Delay(250);
                 await SendMessageBothWays("!mp timer 60");
                 await Task.Delay(250);
-                await ChangeState(MatchState.WaitingForPickBlue);
+                await ChangeState(IMatchManager.MatchState.WaitingForPickBlue);
                 isStolenPick = true;
                 await SendMatchStatus();
                 return;
@@ -877,35 +857,35 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         #region BanningPhaseRegion
 
-        if (currentState == MatchState.BanPhaseStart)
+        if (currentState == IMatchManager.MatchState.BanPhaseStart)
         {
             if (firstBan == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
-                await ChangeState(MatchState.WaitingForBanRed);
+                await ChangeState(IMatchManager.MatchState.WaitingForBanRed);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
-                await ChangeState(MatchState.WaitingForBanBlue);
+                await ChangeState(IMatchManager.MatchState.WaitingForBanBlue);
             }
         }
         
-        if (currentState == MatchState.SecondBanPhaseStart)
+        if (currentState == IMatchManager.MatchState.SecondBanPhaseStart)
         {
             if (firstBan == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
-                await ChangeState(MatchState.WaitingForBanBlue);
+                await ChangeState(IMatchManager.MatchState.WaitingForBanBlue);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
-                await ChangeState(MatchState.WaitingForBanRed);
+                await ChangeState(IMatchManager.MatchState.WaitingForBanRed);
             }
         }
 
-        if (currentState == MatchState.WaitingForBanRed && 
+        if (currentState == IMatchManager.MatchState.WaitingForBanRed && 
             ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
@@ -920,12 +900,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (repeat == 0)
                 {
                     repeat = 2;
-                    await ChangeState(MatchState.PickPhaseStart);
+                    await ChangeState(IMatchManager.MatchState.PickPhaseStart);
                     await EvaluateCurrentState();
                 }
                 else
                 {
-                    await ChangeState(MatchState.WaitingForBanBlue);
+                    await ChangeState(IMatchManager.MatchState.WaitingForBanBlue);
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamBlue.DisplayName));
                 }
             }
@@ -933,7 +913,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
             return;
         }
 
-        if (currentState == MatchState.WaitingForBanBlue && 
+        if (currentState == IMatchManager.MatchState.WaitingForBanBlue && 
             ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
@@ -948,12 +928,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (repeat == 0)
                 {
                     repeat = 2;
-                    await ChangeState(MatchState.PickPhaseStart);
+                    await ChangeState(IMatchManager.MatchState.PickPhaseStart);
                     await EvaluateCurrentState();
                 }
                 else
                 {
-                    await ChangeState(MatchState.WaitingForBanRed);
+                    await ChangeState(IMatchManager.MatchState.WaitingForBanRed);
                     await SendMessageBothWays(string.Format(Strings.BanCall, currentMatch!.TeamRed.DisplayName));
                 }
             }
@@ -965,23 +945,23 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         #region PickPhaseRegion
 
-        if (currentState == MatchState.PickPhaseStart)
+        if (currentState == IMatchManager.MatchState.PickPhaseStart)
         {
             if (firstPick == Models.TeamColor.TeamRed)
             {
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
-                await ChangeState(MatchState.WaitingForPickRed);
+                await ChangeState(IMatchManager.MatchState.WaitingForPickRed);
             }
             else
             {
                 await SendStateInfo(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
-                await ChangeState(MatchState.WaitingForPickBlue);
+                await ChangeState(IMatchManager.MatchState.WaitingForPickBlue);
             }
             
             return;
         }
 
-        if (currentState == MatchState.WaitingForPickRed && 
+        if (currentState == IMatchManager.MatchState.WaitingForPickRed && 
             ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
@@ -1006,7 +986,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
             return;
         }
 
-        if (currentState == MatchState.WaitingForPickBlue && 
+        if (currentState == IMatchManager.MatchState.WaitingForPickBlue && 
             ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
@@ -1033,15 +1013,15 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         #endregion
 
-        if (currentState == MatchState.WaitingForStart)
+        if (currentState == IMatchManager.MatchState.WaitingForStart)
         {
             if ((content.Contains("All players are ready") || content.Contains("Countdown finished")) && sender == "BanchoBot")
             {
                 if(currentMode == OperationMode.Automatic) await SendMessageBothWays("!mp start 10");
-                await ChangeState(MatchState.Playing);
+                await ChangeState(IMatchManager.MatchState.Playing);
             }
         }
-        else if (currentState == MatchState.Playing)
+        else if (currentState == IMatchManager.MatchState.Playing)
         {
             if ((content.Contains("The match has finished") && currentMode == OperationMode.Automatic) || 
                 (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted && content == "go") )
@@ -1049,7 +1029,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
                     // Logic for "Double Ban" rounds (Ban -> Pick 4 -> Ban -> Pick rest)
-                    await ChangeState(MatchState.SecondBanPhaseStart);
+                    await ChangeState(IMatchManager.MatchState.SecondBanPhaseStart);
                     await SendMessageBothWays(Strings.SecondBanRound);
                     await EvaluateCurrentState();
                 }
@@ -1062,14 +1042,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     if (redWin)
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
-                        await ChangeState(MatchState.MatchFinished);
+                        await ChangeState(IMatchManager.MatchState.MatchFinished);
                         return;
                     }
 
                     if (blueWin)
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
-                        await ChangeState(MatchState.MatchFinished);
+                        await ChangeState(IMatchManager.MatchState.MatchFinished);
                         return;
                     }
 
@@ -1085,14 +1065,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamBlue.DisplayName));
                         await Task.Delay(250);
                         await SendMatchStatus();
-                        await ChangeState(MatchState.WaitingForPickBlue);
+                        await ChangeState(IMatchManager.MatchState.WaitingForPickBlue);
                     }
                     else
                     {
                         await SendMessageBothWays(string.Format(Strings.PickCall, currentMatch!.TeamRed.DisplayName));
                         await Task.Delay(250);
                         await SendMatchStatus();
-                        await ChangeState(MatchState.WaitingForPickRed);
+                        await ChangeState(IMatchManager.MatchState.WaitingForPickRed);
                     }
                 }
             }
