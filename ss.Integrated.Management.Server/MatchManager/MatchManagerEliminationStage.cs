@@ -92,9 +92,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// <inheritdoc />
     public event Func<string, Task>? OnStateUpdated;
     
-    private Stack<Models.MatchRoom> matchHistory = new();
-    private Stack<MatchState> stateHistory = new();
-    private Stack<Models.TeamColor> lastPickHistory = new();
+    private record MatchSnapshot(Models.MatchRoom Room, MatchState State, Models.TeamColor LastPick);
+
+    private readonly Stack<MatchSnapshot> matchHistory = new();
 
     private int[] matchScore = [0, 0];
     public int[] MatchScore => matchScore;
@@ -129,6 +129,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
     private int refId;
 
     private bool stoppedPreviously;
+    
+    private string RedIrcName => currentMatch!.TeamRed.DisplayName.Replace(' ', '_');
+    private string BlueIrcName => currentMatch!.TeamBlue.DisplayName.Replace(' ', '_');
 
     private TaskCompletionSource<string>? chatResponseTcs;
 
@@ -472,6 +475,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 if (args.Length < 3)
                 {
                     await SendMessageBothWays(Strings.NotEnoughArgs);
+                    break;
                 }
 
                 if (int.TryParse(args[1], out int scoreRed) && int.TryParse(args[2], out int scoreBlue))
@@ -496,12 +500,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 
                 var lastMatchState = matchHistory.Pop();
                 
-                currentState = stateHistory.Pop();
-                lastPick = lastPickHistory.Pop();
-                matchScore[0] = lastMatchState.TeamRedScore!.Value;
-                matchScore[1] = lastMatchState.TeamBlueScore!.Value;
-                pickedMaps = lastMatchState.PickedMaps!;
-                bannedMaps = lastMatchState.BannedMaps!;
+                currentState = lastMatchState.State;
+                lastPick = lastMatchState.LastPick;
+                matchScore[0] = lastMatchState.Room.TeamRedScore!.Value;
+                matchScore[1] = lastMatchState.Room.TeamBlueScore!.Value;
+                pickedMaps = lastMatchState.Room.PickedMaps!;
+                bannedMaps = lastMatchState.Room.BannedMaps!;
                 
                 await SendMessageBothWays("!mp aborttimer");
                 await SendMessageBothWays("Reverted to last known state.");
@@ -577,11 +581,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
                 await SendMessageBothWays("!mp clearhost");
                 await Task.Delay(250);
-                
-                // HACK: We feed dummy data ("a", "a") to the State Machine to force an initial evaluation.
-                // This kickstarts the logic loop without waiting for a real IRC message. It works, don't ask.
-                // We do this like, a lot, even though it is probably not good practice. But what do I know right?
-                await TryStateChange("a", "a");
+                await EvaluateCurrentState();
                 break;
 
             case "stop":
@@ -633,7 +633,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 break;
             
             case "win":
-                if (args.Length > 1 || currentMode == OperationMode.Assisted)
+                if (args.Length > 1 && currentMode == OperationMode.Assisted)
                 {
                     if (args[1] == "red")
                     {
@@ -778,10 +778,8 @@ public partial class MatchManagerEliminationStage : IMatchManager
             TeamBlue = currentMatch.TeamBlue,
             Referee = currentMatch.Referee,
         };
-        
-        matchHistory.Push(currentMatchState);
-        stateHistory.Push(currentState);
-        lastPickHistory.Push(lastPick);
+
+        matchHistory.Push(new MatchSnapshot(currentMatchState, currentState, lastPick));
         return Task.CompletedTask;
     }
     
@@ -799,6 +797,8 @@ public partial class MatchManagerEliminationStage : IMatchManager
         await SendMatchStatus();
     }
 
+    private Task EvaluateCurrentState() => TryStateChange(string.Empty, string.Empty);
+
     /// <summary>
     /// The Brain of the operation. Evaluates the current state and incoming content to transition to the next state.
     /// </summary>
@@ -814,13 +814,13 @@ public partial class MatchManagerEliminationStage : IMatchManager
              currentState == MatchState.WaitingForPickBlue ||
              currentState == MatchState.WaitingForPickRed) && content == "!timeout" && currentMode == OperationMode.Automatic)
         {
-            if (sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && !redTimeoutRequest)
+            if (sender == RedIrcName && !redTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.RedTimeout);
                 await ChangeState(MatchState.OnTimeout);
                 redTimeoutRequest = true;
             }
-            else if (sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && !blueTimeoutRequest)
+            else if (sender == BlueIrcName && !blueTimeoutRequest)
             {
                 await SendMessageBothWays(Strings.BlueTimeout);
                 await ChangeState(MatchState.OnTimeout);
@@ -906,7 +906,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         }
 
         if (currentState == MatchState.WaitingForBanRed && 
-            ((sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+            ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
@@ -921,7 +921,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 {
                     repeat = 2;
                     await ChangeState(MatchState.PickPhaseStart);
-                    await TryStateChange("a", "a");
+                    await EvaluateCurrentState();
                 }
                 else
                 {
@@ -934,7 +934,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         }
 
         if (currentState == MatchState.WaitingForBanBlue && 
-            ((sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+            ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
@@ -949,7 +949,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 {
                     repeat = 2;
                     await ChangeState(MatchState.PickPhaseStart);
-                    await TryStateChange("a", "a");
+                    await EvaluateCurrentState();
                 }
                 else
                 {
@@ -982,7 +982,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         }
 
         if (currentState == MatchState.WaitingForPickRed && 
-            ((sender == currentMatch!.TeamRed.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+            ((sender == RedIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
@@ -1007,7 +1007,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         }
 
         if (currentState == MatchState.WaitingForPickBlue && 
-            ((sender == currentMatch!.TeamBlue.DisplayName.Replace(' ', '_') && currentMode == OperationMode.Automatic) || 
+            ((sender == BlueIrcName && currentMode == OperationMode.Automatic) || 
              (sender == "🏃‍♀️‍➡️ Override" && currentMode == OperationMode.Assisted) ))
         {
             if (IsMapAvailable(content))
@@ -1051,12 +1051,12 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     // Logic for "Double Ban" rounds (Ban -> Pick 4 -> Ban -> Pick rest)
                     await ChangeState(MatchState.SecondBanPhaseStart);
                     await SendMessageBothWays(Strings.SecondBanRound);
-                    await TryStateChange("a", "a");
+                    await EvaluateCurrentState();
                 }
                 else
                 {
+                    
                     bool redWin = matchScore[0] == (currentMatch.Round.BestOf - 1) / 2 + 1;
-
                     bool blueWin = matchScore[1] == (currentMatch.Round.BestOf - 1) / 2 + 1;
 
                     if (redWin)
