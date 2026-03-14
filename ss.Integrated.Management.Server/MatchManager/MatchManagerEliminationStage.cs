@@ -621,8 +621,8 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     if (args[1] == "red")
                     {
                         matchScore[0]++;
-                        var winnedMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
-                        if (winnedMap != null) winnedMap.Winner = Models.TeamColor.TeamRed;
+                        var wonMap = pickedMaps.Find(c => c.Slot == currentBeatmapSlot);
+                        if (wonMap != null) wonMap.Winner = Models.TeamColor.TeamRed;
                         await SendMessageBothWays(
                             $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     }
