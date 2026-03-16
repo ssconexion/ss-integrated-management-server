@@ -18,6 +18,7 @@ public class BracketModule : InteractionModuleBase<SocketInteractionContext>
     }
     
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("generate-bracket-round", "Genera un set de matchups empezando en Ro32. Se debería usar de manera progresiva por si las moscas")]
     private async Task GenerateBracketMatches(TournamentStage stage, int stageRoundId)
     {
         await DeferAsync(ephemeral: false);

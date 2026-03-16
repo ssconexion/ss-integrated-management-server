@@ -327,11 +327,14 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var mappool = new List<Models.RoundBeatmap>();
             string[] slots = { "NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3", "TB1" };
+
             for (int i = 0; i < slots.Length; i++) mappool.Add(new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slots[i] });
 
             matchManager.currentMatch = new Models.MatchRoom
             {
                 Id = "96",
+                TeamRedId = 1,
+                TeamBlueId = 2,
                 Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
                 TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
                 TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
@@ -428,9 +431,11 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.currentMatch = new Models.MatchRoom
             {
                 Id = "96",
+                TeamRedId = 1,
+                TeamBlueId = 2,
                 Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
-                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
-                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },
+                TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 }, Id = 1 },
+                TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 }, Id = 2 },
                 Round = new Models.Round { BestOf = 9, BanRounds = 1, MapPool = mappool }
             };
 
@@ -518,6 +523,8 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             matchManager.currentMatch = new Models.MatchRoom
             {
                 Id = "96",
+                TeamRedId = 1,
+                TeamBlueId = 2,
                 Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
                 TeamRed = new Models.User { OsuData = new() { Username = "RedTeam", Id = 1 } },
                 TeamBlue = new Models.User { OsuData = new() { Username = "BlueTeam", Id = 2 } },

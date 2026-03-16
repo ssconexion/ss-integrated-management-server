@@ -1122,7 +1122,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
                         await ChangeState(IMatchManager.MatchState.MatchFinished);
-                        await AdvancePlayers(currentMatch.TeamRedId!.Value, currentMatch.TeamBlueId!.Value);
+                        try
+                        {
+                            await AdvancePlayers(currentMatch.TeamRedId!.Value, currentMatch.TeamBlueId!.Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error when advancing players in {matchId}: {ex.Message}");
+                        }
                         return;
                     }
 
@@ -1130,7 +1137,14 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                         await ChangeState(IMatchManager.MatchState.MatchFinished);
-                        await AdvancePlayers(currentMatch.TeamBlueId!.Value, currentMatch.TeamRedId!.Value);
+                        try
+                        {
+                            await AdvancePlayers(currentMatch.TeamBlueId!.Value, currentMatch.TeamRedId!.Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error when advancing players in {matchId}: {ex.Message}");
+                        }
                         return;
                     }
 
