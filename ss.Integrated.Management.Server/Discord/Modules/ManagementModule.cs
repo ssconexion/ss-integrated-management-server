@@ -80,7 +80,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
 
         if (matchRoom != null)
         {
-            roundId = matchRoom.RoundId;
+            roundId = matchRoom.RoundId!.Value;
             isPlayoffs = true;
         }
         else if (qualsRoom != null) roundId = qualsRoom.RoundId;

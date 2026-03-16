@@ -132,13 +132,13 @@ public class Models
         public string Id { get; set; }
 
         [Column("round_id")]
-        public int RoundId { get; set; }
+        public int? RoundId { get; set; }
 
         [Column("team_red_id")]
-        public int TeamRedId { get; set; }
+        public int? TeamRedId { get; set; }
 
         [Column("team_blue_id")]
-        public int TeamBlueId { get; set; }
+        public int? TeamBlueId { get; set; }
         
         [Column("team_red_points")]
         public int? TeamRedScore { get; set; }
@@ -151,6 +151,12 @@ public class Models
         /// </summary>
         [Column("referee_id")]
         public int? RefereeId { get; set; }
+        
+        [Column("winner_to_match_id")]
+        public string? WinnerToMatchId { get; set; }
+        
+        [Column("loser_to_match_id")]
+        public string? LoserToMatchId { get; set; }
 
         /// <summary>
         /// The scheduled start time in UTC.

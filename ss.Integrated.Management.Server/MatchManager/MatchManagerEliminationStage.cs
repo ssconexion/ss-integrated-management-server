@@ -758,6 +758,88 @@ public partial class MatchManagerEliminationStage : IMatchManager
         return Task.CompletedTask;
     }
     
+    /// <summary>
+    /// After a match has concluded, it will send the players to their next matchups. It will also determine
+    /// what is the TeamColor that each player should be via the DetermineSlot method.
+    /// </summary>
+    /// <param name="winnerId">The internal ID of the player that won the match</param>
+    /// <param name="loserId">The internal ID of the player that lost the match</param>
+    public async Task AdvancePlayers(int winnerId, int loserId)
+    {
+        await using var db = new ModelsContext();
+        
+        if (!string.IsNullOrEmpty(currentMatch!.WinnerToMatchId))
+        {
+            int targetId = int.Parse(currentMatch.WinnerToMatchId);
+            var nextMatch = await db.MatchRooms.FindAsync(currentMatch.WinnerToMatchId);
+        
+            bool isRed = DetermineSlot(int.Parse(currentMatch.Id), targetId, isWinner: true);
+        
+            if (isRed) nextMatch!.TeamRedId = winnerId;
+            else nextMatch!.TeamBlueId = winnerId;
+        }
+        
+        if (!string.IsNullOrEmpty(currentMatch.LoserToMatchId))
+        {
+            int targetId = int.Parse(currentMatch.LoserToMatchId);
+            var loserMatch = await db.MatchRooms.FindAsync(currentMatch.LoserToMatchId);
+        
+            bool isRed = DetermineSlot(int.Parse(currentMatch.Id), targetId, isWinner: false);
+        
+            if (isRed) loserMatch!.TeamRedId = loserId;
+            else loserMatch!.TeamBlueId = loserId;
+        }
+
+        await db.SaveChangesAsync();
+    }
+    
+    
+    private bool DetermineSlot(int sourceId, int targetId, bool isWinner)
+    {
+        if (!isWinner)
+        {
+            // first round of losers (after Ro32)
+            // not even -> red, even -> blue
+            if (targetId >= 17 && targetId <= 24)
+            {
+                return sourceId % 2 != 0; 
+            }
+            
+            // if falling down to LB after Ro32 -> always red
+            return true; 
+        }
+
+        // grand finals: winner finals -> red, losers grand finals -> blue
+        if (targetId == 62)
+        {
+            return sourceId == 60; 
+        }
+
+        // matches where a survivor finds someone coming from winners
+        // in these cases, the survivor is always blue and whoever is falling down is red.
+        if ((targetId >= 33 && targetId <= 40) || 
+            (targetId >= 49 && targetId <= 52) || 
+            (targetId >= 57 && targetId <= 58))
+        {
+            return false;
+        }
+        
+        bool isTargetWinnersBracket = 
+            (targetId >= 25 && targetId <= 32) || 
+            (targetId >= 45 && targetId <= 48) || 
+            (targetId >= 55 && targetId <= 56) || 
+            targetId == 60;
+
+        // if it's winners bracket, an even match id means that the player should be
+        // the blue team, with the contrary applying to losers bracket
+        if (isTargetWinnersBracket)
+        {
+            return sourceId % 2 != 0; 
+        }
+
+        return sourceId % 2 == 0;
+    }
+    
     private async Task ChangeState(IMatchManager.MatchState newState)
     {
         previousState = currentState;
@@ -1040,6 +1122,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamRed.DisplayName));
                         await ChangeState(IMatchManager.MatchState.MatchFinished);
+                        await AdvancePlayers(currentMatch.TeamRedId!.Value, currentMatch.TeamBlueId!.Value);
                         return;
                     }
 
@@ -1047,6 +1130,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                     {
                         await SendMessageBothWays(string.Format(Strings.MatchWin, currentMatch!.TeamBlue.DisplayName));
                         await ChangeState(IMatchManager.MatchState.MatchFinished);
+                        await AdvancePlayers(currentMatch.TeamBlueId!.Value, currentMatch.TeamRedId!.Value);
                         return;
                     }
 

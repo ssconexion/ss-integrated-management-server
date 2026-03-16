@@ -31,7 +31,7 @@ public class ScoreImporterModule
         
         if (matchRoom != null)
         {
-            roundId = matchRoom.RoundId;
+            roundId = matchRoom.RoundId!.Value;
         }
         else if(qualsRoom != null)
         {
