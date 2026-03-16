@@ -510,19 +510,6 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
 
             await db.SaveChangesAsync();
 
-            foreach (var r in resultadosOrdenados)
-            {
-                if (r.IsLimbo)
-                {
-                    csvBuilder.AppendLine($"{r.MatchId},N/A,Sin Asignar (Incompatibles),N/A,{r.RedName},{r.BlueName}");
-                }
-                else
-                {
-                    string dayName = AvailabilityHelper.DayToName(r.DayIndex);
-                    csvBuilder.AppendLine($"{r.MatchId},{r.Week},{dayName},{r.Hour}:00,{r.RedName},{r.BlueName}");
-                }
-            }
-
             string extraInfo = matchesInLimbo > 0
                 ? $"\n**Atención:** Hay **{matchesInLimbo} partido(s)** sin asignar en el limbo debido a incompatibilidades horarias."
                 : "\nTodos los partidos se han programado con éxito!";
