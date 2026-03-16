@@ -548,6 +548,50 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
     }
 
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
+    [SlashCommand("fill-room", "rellena una sala yo estoy cansado ya joder")]
+    public async Task FillRoom(string matchId, string teamRedName, string teamBlueName)
+    {
+        await DeferAsync(ephemeral: false);
+        
+        try
+        {
+            await using var db = new ModelsContext();
+            
+            var match = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
+            if (match == null)
+            {
+                await FollowupAsync($"**Error:** No se encontró ningún partido con la ID `{matchId}`.");
+                return;
+            }
+            
+            var teamRed = await db.Users.FirstOrDefaultAsync(u => u.OsuData.Username.ToLower() == teamRedName.ToLower());
+            if (teamRed == null)
+            {
+                await FollowupAsync($"**Error:** No se encontró al jugador/equipo Rojo llamado `{teamRedName}`.");
+                return;
+            }
+            
+            var teamBlue = await db.Users.FirstOrDefaultAsync(u => u.OsuData.Username.ToLower() == teamBlueName.ToLower());
+            if (teamBlue == null)
+            {
+                await FollowupAsync($"**Error:** No se encontró al jugador/equipo Azul llamado `{teamBlueName}`.");
+                return;
+            }
+            
+            match.TeamRedId = teamRed.Id;
+            match.TeamBlueId = teamBlue.Id;
+
+            await db.SaveChangesAsync();
+
+            await FollowupAsync($"✅ **Partido {matchId} actualizado con éxito:**\n🔴 `{teamRed.OsuData.Username}` vs 🔵 `{teamBlue.OsuData.Username}`");
+        }
+        catch (Exception ex)
+        {
+            await FollowupAsync($"**Ocurrió un error al rellenar el partido:** {ex.Message}");
+        }
+    }
+
+    [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
     [SlashCommand("import-schedules", "Importa un archivo CSV modificado y actualiza los horarios en la BD")]
     public async Task ImportSchedulesAsync(int roundId, string fechaInicioViernes, IAttachment csvFile)
     {
