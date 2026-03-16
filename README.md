@@ -4,7 +4,7 @@
 
 ## 📖 Overview
 
-The **SS-IMS** is designed by **SSConexión** to make things easier for the _Spanish Showdown_ tournament series. All the docs are available in the [wiki page in this repo](https://github.com/ssconexion/ss-integrated-management-server/wiki), so check it out for instructions and documentation on pretty much everything
+The **SS-IMS** is designed by **SSConexión** to make things easier for the _Spanish Showdown_ tournament series. All the docs are available in the [wiki page in this repo](https://github.com/ssconexion/ss-integrated-management-server/wiki/%F0%9F%8F%A0Landing-Page), so check it out for instructions and documentation on pretty much everything
 
 ## 🏃‍♀️‍➡️ Open Source stuff
 
