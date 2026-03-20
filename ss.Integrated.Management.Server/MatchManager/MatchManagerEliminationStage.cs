@@ -635,7 +635,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                             $"{currentMatch!.TeamRed.DisplayName} {matchScore[0]} - {matchScore[1]} {currentMatch!.TeamBlue.DisplayName} | Best of {currentMatch!.Round.BestOf}");
                     }
 
-                    await TryStateChange(string.Empty, "EXIT PLAYING STATE", IMatchManager.MessageKind.SystemMessage); // playing -> whatever
+                    await TryStateChange(string.Empty, string.Empty, IMatchManager.MessageKind.SystemMessage); // playing -> whatever
                 }
                 else
                 {
@@ -1103,7 +1103,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         else if (currentState == IMatchManager.MatchState.Playing)
         {
             if ((content.Contains("The match has finished") && currentMode == OperationMode.Automatic) || 
-                (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted && content == "go") )
+                (messageKind == IMatchManager.MessageKind.SystemMessage && currentMode == OperationMode.Assisted) )
             {
                 if (currentMatch!.Round.BanRounds == 2 && pickedMaps.Count == 4)
                 {
