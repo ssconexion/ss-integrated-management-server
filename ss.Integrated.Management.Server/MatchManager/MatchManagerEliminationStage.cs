@@ -279,7 +279,9 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 chatResponseTcs = null;
                 break;
         }
-
+        
+        if (joined && target != lobbyChannelName) return;
+        
         // 2. Gameplay Events (Score processing & Match finish)
         if (senderNick == "BanchoBot")
         {
