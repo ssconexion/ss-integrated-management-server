@@ -59,7 +59,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
     /// <inheritdoc />
     public event Func<string, DiscordModels.MpSettingsResult, Task>? OnSettingsReceived;
-
+    
     internal bool joined;
     private bool stoppedPreviously;
 
