@@ -260,15 +260,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
         }
         
-        if (content == "!mp settings")
-        {
-            _ = Task.Run(async () =>
-            {
-                var result = await AwaitMpSettingsResponseAsync(TimeSpan.FromSeconds(10));
-                if (result != null)
-                    await (OnSettingsReceived?.Invoke(matchId, result) ?? Task.CompletedTask);
-            });
-        }
+        if (content == "!mp settings") StartSettingsCapture();
     }
 
     /// <summary>
@@ -370,32 +362,28 @@ public partial class MatchManagerEliminationStage : IMatchManager
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
         }
     }
-
-    /// <summary>
-    /// Waits for a given ammount of time while listening to the chat in order to parse an entire !mp settings
-    /// command to show it nicely on discord.
-    /// </summary>
-    /// <param name="timeout">Time given to capture the entire !mp settings command.
-    /// If it timeouts, it will stop waiting an dispose itself.</param>
-    /// <returns>A model with all the data parsed after the entire thing has been sent</returns>
-    public async Task<DiscordModels.MpSettingsResult?> AwaitMpSettingsResponseAsync(TimeSpan timeout)
+    
+    private void StartSettingsCapture()
     {
-        if (settingsHelper != null) return null;
+        if (settingsHelper != null) return;
         
         settingsHelper = new MpSettingsHelper();
-
-        using var cts = new CancellationTokenSource(timeout);
-        cts.Token.Register(() => settingsHelper?.Cancel());
-
-        try
+        
+        _ = Task.Run(async () =>
         {
-            return await settingsHelper.Task;
-        }
-        catch (TaskCanceledException)
-        {
-            settingsHelper = null;
-            return null;
-        }
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            cts.Token.Register(() => settingsHelper?.Cancel());
+
+            try
+            {
+                var result = await settingsHelper.Task;
+                if (result != null) await (OnSettingsReceived?.Invoke(matchId, result) ?? Task.CompletedTask);
+            }
+            catch (TaskCanceledException)
+            {
+                settingsHelper = null;
+            }
+        });
     }
 
     /// <inheritdoc />
