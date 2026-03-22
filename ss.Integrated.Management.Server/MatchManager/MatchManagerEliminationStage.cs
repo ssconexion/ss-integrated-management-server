@@ -261,7 +261,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
         // 1. System Events (Lobby creation/closure)
         switch (senderNick)
         {
-            case "BanchoBot" when content.Contains("Created the tournament match"):
+            case "BanchoBot" when !joined && content.Contains("Created the tournament match"):
                 var parts = content.Split('/');
                 var idPart = parts.Last().Split(' ')[0];
                 lobbyChannelName = $"#mp_{idPart}";
