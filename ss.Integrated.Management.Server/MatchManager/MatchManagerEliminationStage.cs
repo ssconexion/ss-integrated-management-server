@@ -259,8 +259,6 @@ public partial class MatchManagerEliminationStage : IMatchManager
         {
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
         }
-        
-        if (content == "!mp settings") StartSettingsCapture();
     }
 
     /// <summary>
@@ -389,6 +387,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// <inheritdoc />
     public async Task SendMessageFromDiscord(string content)
     {
+        if (content == "!mp settings") StartSettingsCapture();
         await client!.SendPrivateMessageAsync(lobbyChannelName!, content);
     }
 
