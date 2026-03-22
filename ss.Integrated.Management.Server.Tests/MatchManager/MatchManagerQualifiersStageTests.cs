@@ -1,301 +1,170 @@
 using BanchoSharp.Interfaces;
 using Moq;
+using ss.Integrated.Management.Server.Tests.MatchManager;
 using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.MatchManager;
 
 namespace ss.Integrated.Management.Server.Tests.MatchManager
 {
+    /// <summary>
+    /// Builds a fully wired MatchManagerEliminationStage for use in tests,
+    /// removing the boilerplate that was previously duplicated across every test.
+    /// </summary>
+    internal sealed class MatchManagerQualifiersStageHarness
+    {
+        public MatchManagerQualifiersStage Manager { get; }
+        public Mock<IBanchoClient> BanchoClient { get; } = new();
+        public string Channel { get; } = "#mp_1";
+        public string RefName { get; }
+
+        private static readonly string[] DefaultSlots =
+            ["NM1", "NM2", "NM3", "NM4", "NM5", "HD1", "HD2", "HD3", "HR1", "HR2", "HR3", "DT1", "DT2", "DT3"];
+
+        public MatchManagerQualifiersStageHarness(
+            string refName = "Furina",
+            string matchId = "96",
+            int bestOf = 9,
+            int banRounds = 1,
+            string[]? slots = null)
+        {
+            RefName = refName;
+
+            var mappool = (slots ?? DefaultSlots)
+                .Select((slot, i) => new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slot })
+                .ToList();
+
+            Manager = new MatchManagerQualifiersStage(matchId, refName, (_, _, _) =>
+            {
+            })
+            {
+                client = BanchoClient.Object,
+                joined = true,
+                lobbyChannelName = Channel,
+                currentState = IMatchManager.MatchState.Idle,
+                currentMatch = new Models.QualifierRoom
+                {
+                    Id = matchId,
+                    Referee = new Models.RefereeInfo { DisplayName = refName, IRC = "pass" },
+                    Round = new Models.Round { BestOf = bestOf, BanRounds = banRounds, MapPool = mappool }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Sends an IRC message as <paramref name="sender"/>.
+        /// </summary>
+        public async Task Send(string sender, string content)
+        {
+            var msg = new Mock<IIrcMessage>();
+            msg.Setup(m => m.Prefix).Returns(sender);
+            msg.Setup(m => m.Parameters).Returns(new[] { Channel, content });
+            await Manager.HandleIrcMessage(msg.Object);
+        }
+
+        /// <summary>
+        /// Shorthand for sending a referee command.
+        /// </summary>
+        public Task Ref(string command) => Send(RefName, command);
+        
+        }
+    }
+
     public class MatchManagerQualifiersStageTests
     {
         [Fact]
         public async Task PanicProtocol_ShouldPauseAndResumeAutomation()
         {
-            var refereeName = "Furina";
-            var matchId = "C4";
-            var channelName = "#mp_12345";
+            var h = new MatchManagerQualifiersStageHarness();
 
-            var mockBanchoClient = new Mock<IBanchoClient>();
+            await h.Send("RandomPlayer", "!panic la tengo enana");
+            Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
+            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp aborttimer"), Times.Once);
 
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
-            {
-            });
-
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.joined = true;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
-
-            matchManager.currentMatch = new Models.QualifierRoom
-            {
-                Id = matchId,
-                Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" }
-            };
-
-            var panicMsg = new Mock<IIrcMessage>();
-            panicMsg.Setup(m => m.Prefix).Returns("RandomPlayer");
-            panicMsg.Setup(m => m.Parameters).Returns(new[] { channelName, "!panic la tengo enana" });
-
-            var panicOverMsg = new Mock<IIrcMessage>();
-            panicOverMsg.Setup(m => m.Prefix).Returns(refereeName);
-            panicOverMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">panic_over" });
-
-
-            await matchManager.HandleIrcMessage(panicMsg.Object);
-
-            var stateAfterPanic = matchManager.currentState;
-
-            await matchManager.HandleIrcMessage(panicOverMsg.Object);
-
-
-            Assert.Equal(IMatchManager.MatchState.MatchOnHold, stateAfterPanic);
-
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp aborttimer"), Times.Once);
-
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
-
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp timer 10"), Times.Once);
+            await h.Ref(">panic_over");
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
+            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp timer 10"), Times.Once);
         }
 
         [Fact]
         public async Task AdminCommands_StartAndStop()
         {
-            var refereeName = "Furina";
-            var matchId = "C4";
-            var channelName = "#mp_12345";
+            var h = new MatchManagerQualifiersStageHarness();
 
-            var mockBanchoClient = new Mock<IBanchoClient>();
+            await h.Ref(">start");
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
 
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
-            {
-            });
-
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.joined = true;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = IMatchManager.MatchState.Idle;
-
-            matchManager.currentMatch = new Models.QualifierRoom
-            {
-                Id = matchId,
-                Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" },
-                Round = new Models.Round
-                {
-                    MapPool = new List<Models.RoundBeatmap>
-                    {
-                        new Models.RoundBeatmap { BeatmapID = 1453229, Slot = "NM1" }
-                    }
-                }
-            };
-
-            var startMsg = new Mock<IIrcMessage>();
-            startMsg.Setup(m => m.Prefix).Returns(refereeName);
-            startMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">start" });
-
-            var stopMsg = new Mock<IIrcMessage>();
-            stopMsg.Setup(m => m.Prefix).Returns(refereeName);
-            stopMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
-
-
-            await matchManager.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
-
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 1453229"), Times.Once);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods NM NF"), Times.Once);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp timer 120"), Times.Once);
-
-
-            await matchManager.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(IMatchManager.MatchState.Idle, matchManager.currentState);
+            await h.Ref(">stop");
+            Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
         }
 
         [Fact]
-        public async Task AdminCommands_FromUnauthorizedUser_ShouldBeIgnore()
+        public async Task PanicProtocol_NonReferee_CannotResolvePanic()
         {
-            var refereeName = "Furina";
-            var channelName = "#mp_12345";
+            var h = new MatchManagerQualifiersStageHarness();
+            h.Manager.currentState = IMatchManager.MatchState.MatchOnHold;
 
-            var mockBanchoClient = new Mock<IBanchoClient>();
-
-            var matchManager = new MatchManagerQualifiersStage("Q1", refereeName, (id, msg, messageKind) =>
-            {
-            });
-
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
-
-            matchManager.currentMatch = new Models.QualifierRoom
-            {
-                Referee = new Models.RefereeInfo { DisplayName = refereeName }
-            };
-
-            var maliciousMsg = new Mock<IIrcMessage>();
-            maliciousMsg.Setup(m => m.Prefix).Returns("Fieera");
-            maliciousMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
-
-
-            await matchManager.HandleIrcMessage(maliciousMsg.Object);
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
+            await h.Send("SomeRando", ">panic_over");
+            
+            Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
         }
 
         [Fact]
-        public async Task AdminCommands_SetMap_ShouldSetMaps()
+        public async Task AdminCommands_SetMap_ShouldSetMap()
         {
-            var refereeName = "Furina";
-            var matchId = "C4";
-            var channelName = "#mp_12345";
+            var h = new MatchManagerQualifiersStageHarness();
+            h.Manager.currentState = IMatchManager.MatchState.Idle;
 
-            var mockBanchoClient = new Mock<IBanchoClient>();
-
-            var matchManager = new MatchManagerQualifiersStage(matchId, refereeName, (id, msg, messageKind) =>
-            {
-            });
-
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.joined = true;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = IMatchManager.MatchState.Idle;
-
-            matchManager.currentMatch = new Models.QualifierRoom
-            {
-                Id = matchId,
-                Referee = new Models.RefereeInfo { DisplayName = refereeName, IRC = "pass" },
-                Round = new Models.Round
-                {
-                    MapPool = new List<Models.RoundBeatmap>
-                    {
-                        new Models.RoundBeatmap { BeatmapID = 1453229, Slot = "NM1" },
-                        new Models.RoundBeatmap { BeatmapID = 3392548, Slot = "HD2" }
-                    }
-                }
-            };
-
-            var setMap1 = new Mock<IIrcMessage>();
-            setMap1.Setup(m => m.Prefix).Returns(refereeName);
-            setMap1.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap nm1" });
-
-            var setMap2 = new Mock<IIrcMessage>();
-            setMap2.Setup(m => m.Prefix).Returns(refereeName);
-            setMap2.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap hd2" });
-
-
-            await matchManager.HandleIrcMessage(setMap1.Object);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 1453229"), Times.Once);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods nm NF"), Times.Once);
-
-
-            await matchManager.HandleIrcMessage(setMap2.Object);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp map 3392548"), Times.Once);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, "!mp mods hd NF"), Times.Once);
+            await h.Ref(">setmap NM1");
+            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp map 1000"), Times.Once);
+            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp mods NM NF"), Times.Once);
         }
 
         [Fact]
-        public async Task EdgeCase_Start_WhenAlreadyRunning_ShouldBeIgnored()
+        public async Task AdminCommands_Start_WhenAlreadyRunning_ShouldBeIgnored()
         {
-            var refereeName = "Furina";
-            var channelName = "#mp_12345";
-            var mockBanchoClient = new Mock<IBanchoClient>();
+            var h = new MatchManagerQualifiersStageHarness();
+            h.Manager.currentState = IMatchManager.MatchState.WaitingForStart;
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
-            {
-            });
+            await h.Ref(">start");
 
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
-            
-            matchManager.currentState = IMatchManager.MatchState.WaitingForStart;
-
-            var startMsg = new Mock<IIrcMessage>();
-            startMsg.Setup(m => m.Prefix).Returns(refereeName);
-            startMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">start" });
-            
-            await matchManager.HandleIrcMessage(startMsg.Object);
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, matchManager.currentState);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.Is<string>(s => s.StartsWith("!mp map"))), Times.Never);
+            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
         }
 
         [Fact]
-        public async Task EdgeCase_Stop_WhenAlreadyIdle_ShouldBeIgnored()
+        public async Task AdminCommands_Stop_WhenAlreadyIdle_ShouldBeIgnored()
         {
-            var refereeName = "Furina";
-            var channelName = "#mp_12345";
-            var mockBanchoClient = new Mock<IBanchoClient>();
+            var h = new MatchManagerQualifiersStageHarness();
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
-            {
-            });
-
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
-            
-            matchManager.currentState = IMatchManager.MatchState.Idle;
-
-            var stopMsg = new Mock<IIrcMessage>();
-            stopMsg.Setup(m => m.Prefix).Returns(refereeName);
-            stopMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">stop" });
-            
-            await matchManager.HandleIrcMessage(stopMsg.Object);
-            Assert.Equal(IMatchManager.MatchState.Idle, matchManager.currentState);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.IsAny<string>()), Times.Once);
+            await h.Ref(">stop");
+            Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
+            h.BanchoClient.Verify(
+                c => c.SendPrivateMessageAsync(h.Channel, It.IsAny<string>()),
+                Times.Once);
         }
 
         [Fact]
-        public async Task EdgeCase_SetMap_WhenNotIdle_ShouldFailAndNotChangeMap()
+        public async Task AdminCommands_SetMap_WhenNotIdle_ShouldFail()
         {
-            var refereeName = "Furina";
-            var channelName = "#mp_12345";
-            var mockBanchoClient = new Mock<IBanchoClient>();
+            var h = new MatchManagerQualifiersStageHarness();
+            h.Manager.currentState = IMatchManager.MatchState.Playing;
 
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) =>
-            {
-            });
+            await h.Ref(">setmap NM1");
 
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentMatch = new Models.QualifierRoom { Referee = new Models.RefereeInfo { DisplayName = refereeName } };
-            
-            matchManager.currentState = IMatchManager.MatchState.Playing;
-
-            var setMapMsg = new Mock<IIrcMessage>();
-            setMapMsg.Setup(m => m.Prefix).Returns(refereeName);
-            setMapMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap nm1" });
-            
-            await matchManager.HandleIrcMessage(setMapMsg.Object);
-            mockBanchoClient.Verify(c => c.SendPrivateMessageAsync(channelName, It.Is<string>(s => s.StartsWith("!mp map"))), Times.Never);
+            h.BanchoClient.Verify(
+                c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
+                Times.Never);
         }
         
         [Fact]
-        public async Task EdgeCase_SetMap_WithInvalidSlot_ShouldNotCrash()
+        public async Task AdminCommands_SetMap_WithInvalidSlot_ShouldNotCrash()
         {
-            var refereeName = "Furina";
-            var channelName = "#mp_12345";
-            var mockBanchoClient = new Mock<IBanchoClient>();
-            var matchManager = new MatchManagerQualifiersStage("C4", refereeName, (id, msg, messageKind) => { });
+            var h = new MatchManagerEliminationStageHarness();
+            h.Manager.currentState = IMatchManager.MatchState.Idle;
 
-            matchManager.client = mockBanchoClient.Object;
-            matchManager.lobbyChannelName = channelName;
-            matchManager.currentState = IMatchManager.MatchState.Idle;
-    
-            matchManager.currentMatch = new Models.QualifierRoom
-            {
-                Referee = new Models.RefereeInfo { DisplayName = refereeName },
-                Round = new Models.Round
-                {
-                    MapPool = new List<Models.RoundBeatmap>
-                    {
-                        new Models.RoundBeatmap { BeatmapID = 1453229, Slot = "NM1" }
-                    }
-                }
-            };
-    
-            var setMapMsg = new Mock<IIrcMessage>();
-            setMapMsg.Setup(m => m.Prefix).Returns(refereeName);
-            setMapMsg.Setup(m => m.Parameters).Returns(new[] { channelName, ">setmap sida45" });
-            
-            var exception = await Record.ExceptionAsync(() => matchManager.HandleIrcMessage(setMapMsg.Object));
-            Assert.Null(exception); 
+            var ex = await Record.ExceptionAsync(() => h.Ref(">setmap turradisima99"));
+            Assert.Null(ex);
+            h.BanchoClient.Verify(
+                c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
+                Times.Never);
         }
     }
-}
