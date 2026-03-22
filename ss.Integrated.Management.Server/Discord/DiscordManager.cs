@@ -296,13 +296,7 @@ public class DiscordManager
             {
                 if (client.GetChannel(channelId) is IMessageChannel channel)
                 {
-                    bool shouldPin = false;
-                    
-                    if (messageContent.StartsWith("🗣️", StringComparison.OrdinalIgnoreCase))
-                    {
-                        shouldPin = true;
-                        messageContent = messageContent.Substring(6).Trim();
-                    }
+                    bool shouldPin = messageType == IMatchManager.MessageKind.PinOrderMessage;
 
                     string replaced = messageContent.Replace("_", @"\_");
 

@@ -702,6 +702,7 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
         var match = await db.MatchRooms
             .Include(room => room.TeamBlue)
             .Include(room => room.TeamRed)
+            .Include(matchRoom => matchRoom.Round)
             .FirstOrDefaultAsync(room => room.Id == matchId);
 
         if (match == null)
@@ -720,7 +721,7 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
         var embed = new EmbedBuilder()
             .WithTitle($"Match {match.Id}")
             .WithColor(Color.Blue)
-            .WithDescription($"`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora de comienzo: <t:{unixTime}:f>");
+            .WithDescription($"Ronda: {match.Round.DisplayName}\n`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora de comienzo: <t:{unixTime}:f>");
 
         await FollowupAsync(embed: embed.Build());
     }
