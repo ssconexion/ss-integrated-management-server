@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.Discord.Helpers;
 using ss.Internal.Management.Server.MatchManager;
 using ss.Internal.Management.Server.Resources;
 
@@ -152,6 +153,7 @@ public class DiscordManager
         {
             _ = worker.StartAsync();
             worker.OnStateUpdated += UpdateLiveEmbedAsync;
+            worker.OnSettingsReceived += SendSettingsEmbedAsync;
         }
         catch (Exception ex)
         {
@@ -268,6 +270,38 @@ public class DiscordManager
         }
     }
 
+    private async Task SendSettingsEmbedAsync(string matchId, DiscordModels.MpSettingsResult settings)
+    {
+        if (!activeChannels.TryGetValue(matchId, out ulong channelId)) return;
+        if (client.GetChannel(channelId) is not IMessageChannel channel) return;
+
+        var embed = BuildMpSettingsEmbed(settings);
+        await channel.SendMessageAsync(embed: embed);
+    }
+    
+    private static Embed BuildMpSettingsEmbed(DiscordModels.MpSettingsResult settings)
+    {
+        var redSlots  = settings.Slots.Where(s => s.Team == "Red");
+        var blueSlots = settings.Slots.Where(s => s.Team == "Blue");
+
+        string FormatSlots(IEnumerable<DiscordModels.SlotInfo> slots) =>
+            slots.Any()
+                ? string.Join("\n", slots.Select(s =>
+                    $"{(s.IsReady ? "✅" : "❌")} [{s.Username}]({s.ProfileUrl}) *{s.Mods}*"))
+                : "*Empty*";
+
+        return new EmbedBuilder()
+            .WithTitle(settings.RoomName)
+            .WithUrl(settings.HistoryUrl)
+            .AddField("Beatmap", $"[{settings.BeatmapName}]({settings.BeatmapUrl})", false)
+            .AddField("Mode", $"{settings.TeamMode} — {settings.WinCondition}", true)
+            .AddField("Mods", settings.ActiveMods,                               true)
+            .AddField("🔴 Red",  FormatSlots(redSlots),  true)
+            .AddField("🔵 Blue", FormatSlots(blueSlots), true)
+            .WithCurrentTimestamp()
+            .Build();
+    }
+    
     /// <summary>
     /// Registers a new referee in the database with their IRC credentials.
     /// </summary>

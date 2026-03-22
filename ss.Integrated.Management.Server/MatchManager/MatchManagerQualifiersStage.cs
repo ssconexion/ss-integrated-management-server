@@ -2,6 +2,7 @@
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.Discord.Helpers;
 using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.MatchManager;
@@ -55,7 +56,10 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
     /// <inheritdoc />
     public event Func<string, Task>? OnStateUpdated;
-    
+
+    /// <inheritdoc />
+    public event Func<string, DiscordModels.MpSettingsResult, Task>? OnSettingsReceived;
+
     internal bool joined;
     private bool stoppedPreviously;
 

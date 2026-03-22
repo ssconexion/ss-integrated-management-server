@@ -3,6 +3,7 @@ using BanchoSharp;
 using BanchoSharp.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using ss.Internal.Management.Server.AutoRef;
+using ss.Internal.Management.Server.Discord.Helpers;
 using ss.Internal.Management.Server.Resources;
 
 namespace ss.Internal.Management.Server.MatchManager;
@@ -128,6 +129,8 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
     private int refId;
 
+    private MpSettingsHelper? settingsHelper;
+    
     private bool stoppedPreviously;
 
     /// <summary>
@@ -142,12 +145,31 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
     private readonly Action<string, string, IMatchManager.MessageKind> msgCallback;
 
+    /// <inheritdoc />
+    public event Func<string, DiscordModels.MpSettingsResult, Task>? OnSettingsReceived;
+
+    /// <summary>
+    /// The type of operation that the automaton will be following
+    /// </summary>
     public enum OperationMode
     {
+        /// <summary>
+        /// Fully autonomous operation, without human intervention
+        /// </summary>
         Automatic,
-        Assisted
+        
+        /// <summary>
+        /// Human intervention required at all times. Not automated
+        /// </summary>
+        Assisted,
     }
 
+    /// <summary>
+    /// Main constructor for this manager. Exposes all the methods needed for external control (i think).
+    /// </summary>
+    /// <param name="matchId">The internal match ID stored in the database</param>
+    /// <param name="refDisplayName">The referee's display name in osu!</param>
+    /// <param name="msgCallback">The object used to bridge the gap between discord and bancho.</param>
     public MatchManagerEliminationStage(string matchId, string refDisplayName, Action<string, string, IMatchManager.MessageKind> msgCallback)
     {
         this.matchId = matchId;
@@ -212,7 +234,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
 
         client.OnPrivateMessageSent += message =>
         {
-            _ = PeruTrim(message);
+            _ = HandleDiscordSentMessages(message);
         };
 
         client.OnAuthenticated += () =>
@@ -226,10 +248,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
     /// <summary>
     /// Sanitizes and parses outgoing private messages to intercept command usage.
     /// </summary>
-    /// <remarks>
-    /// "PeruTrim" -> Legacy name. Handles raw IRC string manipulation to extract clean content.
-    /// </remarks>
-    private async Task PeruTrim(IIrcMessage msg)
+    private async Task HandleDiscordSentMessages(IIrcMessage msg)
     {
         string prefix = msg.Prefix.StartsWith(":") ? msg.Prefix[1..] : msg.Prefix;
         string senderNick = prefix.Contains('!') ? prefix.Split('!')[0] : prefix;
@@ -239,6 +258,16 @@ public partial class MatchManagerEliminationStage : IMatchManager
         if (content.StartsWith('>'))
         {
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
+        }
+        
+        if (content == "!mp settings")
+        {
+            _ = Task.Run(async () =>
+            {
+                var result = await AwaitMpSettingsResponseAsync(TimeSpan.FromSeconds(10));
+                if (result != null)
+                    await (OnSettingsReceived?.Invoke(matchId, result) ?? Task.CompletedTask);
+            });
         }
     }
 
@@ -253,6 +282,15 @@ public partial class MatchManagerEliminationStage : IMatchManager
         string target = msg.Parameters[0];
         string content = msg.Parameters[1];
 
+        if (senderNick == "BanchoBot" && settingsHelper != null)
+        {
+            var (done, consumed) = settingsHelper.Feed(content);
+    
+            if (done) settingsHelper = null;
+            
+            if (consumed) return;
+        }
+        
         if (joined)
         {
             if(target == lobbyChannelName) msgCallback(matchId, $"**[{senderNick}]** {content}", IMatchManager.MessageKind.PlayerMessage);
@@ -330,6 +368,33 @@ public partial class MatchManagerEliminationStage : IMatchManager
         if (content.StartsWith('>'))
         {
             await ExecuteAdminCommand(senderNick, content[1..].Split(' '));
+        }
+    }
+
+    /// <summary>
+    /// Waits for a given ammount of time while listening to the chat in order to parse an entire !mp settings
+    /// command to show it nicely on discord.
+    /// </summary>
+    /// <param name="timeout">Time given to capture the entire !mp settings command.
+    /// If it timeouts, it will stop waiting an dispose itself.</param>
+    /// <returns>A model with all the data parsed after the entire thing has been sent</returns>
+    public async Task<DiscordModels.MpSettingsResult?> AwaitMpSettingsResponseAsync(TimeSpan timeout)
+    {
+        if (settingsHelper != null) return null;
+        
+        settingsHelper = new MpSettingsHelper();
+
+        using var cts = new CancellationTokenSource(timeout);
+        cts.Token.Register(() => settingsHelper?.Cancel());
+
+        try
+        {
+            return await settingsHelper.Task;
+        }
+        catch (TaskCanceledException)
+        {
+            settingsHelper = null;
+            return null;
         }
     }
 

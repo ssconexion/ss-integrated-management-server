@@ -23,4 +23,24 @@ public class DiscordModels
         public string BlueName { get; set; }
         public int RoundId { get; set; }
     }
+    
+    public record MpSettingsResult(
+        string RoomName,
+        string HistoryUrl,
+        string BeatmapUrl,
+        string BeatmapName,
+        string TeamMode,
+        string WinCondition,
+        string ActiveMods,
+        IReadOnlyList<SlotInfo> Slots
+    );
+
+    public record SlotInfo(
+        int SlotNumber,
+        bool IsReady,
+        string ProfileUrl,
+        string Username,
+        string Team,
+        string Mods
+    );
 }
