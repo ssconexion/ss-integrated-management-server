@@ -4,6 +4,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using ss.Internal.Management.Server.AutoRef;
 using ss.Internal.Management.Server.MatchManager;
 using ss.Internal.Management.Server.Resources;
@@ -23,12 +24,19 @@ public class DiscordManager
     private readonly ulong parentChannelId = Convert.ToUInt64(Environment.GetEnvironmentVariable("DISCORD_MATCHES_CHANNEL_ID"));
     private readonly string token;
     
+    private record QueuedMessage(string Content, IMatchManager.MessageKind Kind);
+    
     // activeChannels => <match_id, thread_id>
     // activeMatches  => <match_id, autoref_instance>
     private readonly ConcurrentDictionary<string, ulong> activeChannels = new();
     private readonly ConcurrentDictionary<string, IMatchManager?> activeMatches = new();
     private readonly ConcurrentDictionary<string, ulong> liveEmbedMessages = new();
-
+    private readonly ConcurrentDictionary<string, System.Threading.Channels.Channel<QueuedMessage>> messageQueues = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> queueCancellationTokens = new();
+    
+    private static readonly Regex BanchoNoise = 
+        new(@"\[BanchoBot\].*Match starts in \d+ seconds?", RegexOptions.Compiled);
+    
     public DiscordManager(string token)
     {
         this.token = token;
@@ -123,6 +131,14 @@ public class DiscordManager
         );
 
         activeChannels.TryAdd(matchId, newThread.Id);
+        
+        var queue = System.Threading.Channels.Channel.CreateUnbounded<QueuedMessage>(new System.Threading.Channels.UnboundedChannelOptions { SingleReader = true });
+        var cts = new CancellationTokenSource();
+        
+        messageQueues.TryAdd(matchId, queue);
+        queueCancellationTokens.TryAdd(matchId, cts);
+        
+        _ = Task.Run(() => RunMessageQueueAsync(matchId, cts.Token), cts.Token);
 
         IMatchManager worker = type == Models.MatchType.QualifiersStage
             ? new MatchManagerQualifiersStage(matchId, referee, HandleMatchIRCMessage)
@@ -154,6 +170,15 @@ public class DiscordManager
         if (activeMatches.TryRemove(matchId, out var worker))
         {
             await worker.StopAsync();
+            
+            if (queueCancellationTokens.TryRemove(matchId, out var cts))
+            {
+                await Task.Delay(5000);
+                await cts.CancelAsync();
+                cts.Dispose();
+            }
+
+            messageQueues.TryRemove(matchId, out _);
         }
         else
         {
@@ -290,25 +315,39 @@ public class DiscordManager
 
     private void HandleMatchIRCMessage(string matchId, string messageContent, IMatchManager.MessageKind messageType)
     {
-        Task.Run(async () =>
+        if (BanchoNoise.IsMatch(messageContent)) return;
+
+        if (messageQueues.TryGetValue(matchId, out var queue))
         {
-            if (activeChannels.TryGetValue(matchId, out ulong channelId))
+            queue.Writer.TryWrite(new QueuedMessage(messageContent, messageType));
+        }
+    }
+    
+    private async Task RunMessageQueueAsync(string matchId, CancellationToken ct)
+    {
+        if (!messageQueues.TryGetValue(matchId, out var queue)) return;
+
+        await foreach (var message in queue.Reader.ReadAllAsync(ct))
+        {
+            try
             {
-                if (client.GetChannel(channelId) is IMessageChannel channel)
-                {
-                    bool shouldPin = messageType == IMatchManager.MessageKind.PinOrderMessage;
+                if (!activeChannels.TryGetValue(matchId, out ulong channelId)) continue;
+                if (client.GetChannel(channelId) is not IMessageChannel channel) continue;
 
-                    string replaced = messageContent.Replace("_", @"\_");
+                string escaped = message.Content.Replace("_", @"\_");
+                var sent = await channel.SendMessageAsync(escaped);
 
-                    var sentMessage = await channel.SendMessageAsync(replaced);
-                    
-                    if (shouldPin)
-                    {
-                        await sentMessage.PinAsync();
-                    }
-                }
+                if (message.Kind == IMatchManager.MessageKind.PinOrderMessage)
+                    await sent.PinAsync();
             }
-        });
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Queue:{matchId}] Send failed: {ex.Message}");
+            }
+
+            // Delay applied between messages sent to discord.
+            await Task.Delay(500, ct).ConfigureAwait(false);
+        }
     }
 
     private Task LogAsync(LogMessage msg)
