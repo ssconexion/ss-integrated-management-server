@@ -284,22 +284,32 @@ public class DiscordManager
         var redSlots  = settings.Slots.Where(s => s.Team == "Red");
         var blueSlots = settings.Slots.Where(s => s.Team == "Blue");
 
+        static string OrNone(string value) =>
+            string.IsNullOrWhiteSpace(value) ? "*None*" : value;
+
         string FormatSlots(IEnumerable<DiscordModels.SlotInfo> slots) =>
             slots.Any()
                 ? string.Join("\n", slots.Select(s =>
                     $"{(s.IsReady ? "✅" : "❌")} [{s.Username}]({s.ProfileUrl}) *{s.Mods}*"))
                 : "*Empty*";
 
-        return new EmbedBuilder()
-            .WithTitle(settings.RoomName)
-            .WithUrl(settings.HistoryUrl)
-            .AddField("Beatmap", $"[{settings.BeatmapName}]({settings.BeatmapUrl})", false)
-            .AddField("Mode", $"{settings.TeamMode} — {settings.WinCondition}", true)
-            .AddField("Mods", settings.ActiveMods,                               true)
-            .AddField("🔴 Red",  FormatSlots(redSlots),  true)
+        var embed = new EmbedBuilder()
+            .WithTitle(OrNone(settings.RoomName))
+            .AddField("Mode", $"{OrNone(settings.TeamMode)} — {OrNone(settings.WinCondition)}", true)
+            .AddField("Mods", OrNone(settings.ActiveMods), true)
+            .AddField("🔴 Red",  FormatSlots(redSlots),  false)
             .AddField("🔵 Blue", FormatSlots(blueSlots), true)
-            .WithCurrentTimestamp()
-            .Build();
+            .WithCurrentTimestamp();
+        
+        if (!string.IsNullOrWhiteSpace(settings.HistoryUrl))
+            embed.WithUrl(settings.HistoryUrl);
+
+        if (!string.IsNullOrWhiteSpace(settings.BeatmapName))
+            embed.AddField("Beatmap", string.IsNullOrWhiteSpace(settings.BeatmapUrl)
+                ? settings.BeatmapName
+                : $"[{settings.BeatmapName}]({settings.BeatmapUrl})", false);
+
+        return embed.Build();
     }
     
     /// <summary>

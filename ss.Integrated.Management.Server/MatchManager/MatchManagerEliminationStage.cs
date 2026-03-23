@@ -365,21 +365,25 @@ public partial class MatchManagerEliminationStage : IMatchManager
     {
         if (settingsHelper != null) return;
         
-        settingsHelper = new MpSettingsHelper();
-        
+        var helper = new MpSettingsHelper();
+        settingsHelper = helper;
+
         _ = Task.Run(async () =>
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            cts.Token.Register(() => settingsHelper?.Cancel());
+            cts.Token.Register(() => helper.Cancel());
 
             try
             {
-                var result = await settingsHelper.Task;
-                if (result != null) await (OnSettingsReceived?.Invoke(matchId, result) ?? Task.CompletedTask);
+                var result = await helper.Task;
+                if (result != null)
+                    await (OnSettingsReceived?.Invoke(matchId, result) ?? Task.CompletedTask);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex)
             {
-                settingsHelper = null;
+                Console.WriteLine($"[Settings:{matchId}] Capture failed: {ex.Message}");
+                if (settingsHelper == helper)
+                    settingsHelper = null;
             }
         });
     }
