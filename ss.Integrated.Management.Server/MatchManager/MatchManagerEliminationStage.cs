@@ -554,7 +554,7 @@ public partial class MatchManagerEliminationStage : IMatchManager
                 break;
             
             case "timeout":
-                if (args.Length < 3)
+                if (args.Length == 1)
                 {
                     await SendMessageBothWays(Strings.RefTimeout);
                     await Task.Delay(IrcMessageDelay);
