@@ -2,23 +2,31 @@
 
 namespace ss.Internal.Management.Server.Discord.Helpers;
 
+/// <summary>
+/// Helper class to parse IRC date and return usable data for whatever is needed
+/// </summary>
 public class MpSettingsHelper
 {
-    private static readonly Regex RoomNameRx  = new(@"Room name: (.+?), History: (https://\S+)", RegexOptions.Compiled);
-    private static readonly Regex BeatmapRx   = new(@"Beatmap: (https://\S+) (.+)",              RegexOptions.Compiled);
-    private static readonly Regex TeamModeRx  = new(@"Team mode: (\w+), Win condition: (\w+)",   RegexOptions.Compiled);
-    private static readonly Regex ModsRx      = new(@"Active mods: (.+)",                         RegexOptions.Compiled);
-    private static readonly Regex PlayersRx   = new(@"Players: (\d+)",                            RegexOptions.Compiled);
-    private static readonly Regex SlotRx      = new(@"Slot (\d+)\s+(\w+)\s+(https://\S+)\s+(.+?)\s+\[(?:Host\s*/\s*)?Team (\w+)\s*/\s*([^\]]+)\]", RegexOptions.Compiled);
+    private static readonly Regex RoomNameRx = new(@"Room name: (.+?), History: (https://\S+)", RegexOptions.Compiled);
+    private static readonly Regex BeatmapRx = new(@"Beatmap: (https://\S+) (.+)", RegexOptions.Compiled);
+    private static readonly Regex TeamModeRx = new(@"Team mode: (\w+), Win condition: (\w+)", RegexOptions.Compiled);
+    private static readonly Regex ModsRx = new(@"Active mods: (.+)", RegexOptions.Compiled);
+    private static readonly Regex PlayersRx = new(@"Players: (\d+)", RegexOptions.Compiled);
+    private static readonly Regex SlotRx = new(@"Slot (\d+)\s+(\w+)\s+(https://\S+)\s+(.+?)\s+\[(?:Host\s*/\s*)?Team (\w+)\s*/\s*([^\]]+)\]",RegexOptions.Compiled);
 
     private readonly TaskCompletionSource<DiscordModels.MpSettingsResult> tcs = new();
     private readonly List<string> rawLines = [];
 
     private int expectedSlots = -1;
     private int collectedSlots = 0;
-
+    
     public Task<DiscordModels.MpSettingsResult> Task => tcs.Task;
     
+    /// <summary>
+    /// Main regex parsing logic for the mp settings embed data 
+    /// </summary>
+    /// <param name="line">The raw IRC content string</param>
+    /// <returns>A duple that exposes the internal state of the parser</returns>
     public (bool Complete, bool Consumed) Feed(string line)
     {
         bool consumed = RoomNameRx.IsMatch(line)  ||
@@ -39,20 +47,21 @@ public class MpSettingsHelper
         if (SlotRx.IsMatch(line))
             collectedSlots++;
 
-        bool complete = expectedSlots == 0 ||
-                        (expectedSlots > 0 && collectedSlots >= expectedSlots);
+        bool complete = expectedSlots == 0 || (expectedSlots > 0 && collectedSlots >= expectedSlots);
 
         if (complete) tcs.TrySetResult(Parse());
 
         return (complete, true);
     }
 
+    /// <summary>
+    /// Cancels the !mp settings parsing task if needed
+    /// </summary>
     public void Cancel() => tcs.TrySetCanceled();
 
     private DiscordModels.MpSettingsResult Parse()
     {
-        string roomName = "", historyUrl = "", beatmapUrl = "", beatmapName = "",
-               teamMode = "", winCondition = "", mods = "";
+        string roomName = "", historyUrl = "", beatmapUrl = "", beatmapName = "", teamMode = "", winCondition = "", mods = "";
         var slots = new List<DiscordModels.SlotInfo>();
 
         foreach (var line in rawLines)
@@ -91,7 +100,6 @@ public class MpSettingsHelper
             }
         }
 
-        return new DiscordModels.MpSettingsResult(roomName, historyUrl, beatmapUrl, beatmapName,
-                                    teamMode, winCondition, mods, slots);
+        return new DiscordModels.MpSettingsResult(roomName, historyUrl, beatmapUrl, beatmapName, teamMode, winCondition, mods, slots);
     }
 }
