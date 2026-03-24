@@ -9,7 +9,7 @@ public class MpSettingsHelper
     private static readonly Regex TeamModeRx  = new(@"Team mode: (\w+), Win condition: (\w+)",   RegexOptions.Compiled);
     private static readonly Regex ModsRx      = new(@"Active mods: (.+)",                         RegexOptions.Compiled);
     private static readonly Regex PlayersRx   = new(@"Players: (\d+)",                            RegexOptions.Compiled);
-    private static readonly Regex SlotRx      = new(@"Slot (\d+)\s+(\w+)\s+(https://\S+)\s+(\S+)\s+\[Team (\w+) / ([^\]]+)\]", RegexOptions.Compiled);
+    private static readonly Regex SlotRx      = new(@"Slot (\d+)\s+(\w+)\s+(https://\S+)\s+(.+?)\s+\[(?:Host\s*/\s*)?Team (\w+)\s*/\s*([^\]]+)\]", RegexOptions.Compiled);
 
     private readonly TaskCompletionSource<DiscordModels.MpSettingsResult> tcs = new();
     private readonly List<string> rawLines = [];
