@@ -19,7 +19,7 @@ public static class OsuMatchImporter
         HttpClient.DefaultRequestHeaders.Accept.Clear();
         HttpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
-    
+
     public static async Task<List<OsuApiGame>?> FetchAllGamesAsync(long matchId)
     {
         long currentEventId = 0;
@@ -31,7 +31,7 @@ public static class OsuMatchImporter
         {
             triesLeft--;
             string url = $"https://osu.ppy.sh/community/matches/{matchId}?limit=100&after={currentEventId}";
-            
+
             var response = await HttpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode) return null;
 
@@ -46,14 +46,13 @@ public static class OsuMatchImporter
             var gamesInPage = matchQuery.Events
                 .Where(e => e.Detail.Type == "other" && e.Game != null)
                 .Select(e => e.Game);
-                
-            allGames.AddRange(gamesInPage!);
 
+            allGames.AddRange(gamesInPage!);
         } while (triesLeft > 0 && currentEventId != latestEventId);
 
         return allGames;
     }
-    
+
     public static string CalculateGrade(OsuApiScore score)
     {
         int hitTotal = score.Statistics.Great + score.Statistics.Ok + score.Statistics.Meh + score.Statistics.Miss;
@@ -71,32 +70,36 @@ public static class OsuMatchImporter
         if ((ratioGreat > 0.80 && score.Statistics.Miss == 0) || ratioGreat > 0.90) return "A";
         if ((ratioGreat > 0.70 && score.Statistics.Miss == 0) || ratioGreat > 0.80) return "B";
         if (ratioGreat > 0.60) return "C";
-        
+
         return "D";
     }
-    
+
     public class OsuMatchResponse
     {
         [JsonPropertyName("events")] public List<OsuApiEvent> Events { get; set; } = new();
         [JsonPropertyName("latest_event_id")] public long LatestEventId { get; set; }
     }
+
     public class OsuApiEvent
     {
         [JsonPropertyName("id")] public long Id { get; set; }
         [JsonPropertyName("detail")] public OsuApiDetail Detail { get; set; }
-        [JsonPropertyName("game")] public OsuApiGame? Game { get; set; } 
+        [JsonPropertyName("game")] public OsuApiGame? Game { get; set; }
     }
+
     public class OsuApiDetail
     {
         [JsonPropertyName("type")] public string Type { get; set; }
     }
+
     public class OsuApiGame
     {
         [JsonPropertyName("id")] public long Id { get; set; }
-        
+
         [JsonPropertyName("beatmap_id")] public int BeatmapId { get; set; }
         [JsonPropertyName("scores")] public List<OsuApiScore> Scores { get; set; } = new();
     }
+
     public class OsuApiScore
     {
         [JsonPropertyName("user_id")] public int UserId { get; set; }
@@ -106,6 +109,7 @@ public static class OsuMatchImporter
         [JsonPropertyName("statistics")] public OsuApiStatistics Statistics { get; set; }
         [JsonPropertyName("mods")] public List<OsuApiMod> Mods { get; set; } = new();
     }
+
     public class OsuApiStatistics
     {
         [JsonPropertyName("great")] public int Great { get; set; }
@@ -113,5 +117,9 @@ public static class OsuMatchImporter
         [JsonPropertyName("meh")] public int Meh { get; set; }
         [JsonPropertyName("miss")] public int Miss { get; set; }
     }
-    public class OsuApiMod { [JsonPropertyName("acronym")] public string Acronym { get; set; } }
+
+    public class OsuApiMod
+    {
+        [JsonPropertyName("acronym")] public string Acronym { get; set; }
+    }
 }

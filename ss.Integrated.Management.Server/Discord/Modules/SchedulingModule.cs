@@ -539,32 +539,35 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
     public async Task FillRoom(string matchId, string teamRedName, string teamBlueName)
     {
         await DeferAsync(ephemeral: false);
-        
+
         try
         {
             await using var db = new ModelsContext();
-            
+
             var match = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchId);
+
             if (match == null)
             {
                 await FollowupAsync($"**Error:** No se encontró ningún partido con la ID `{matchId}`.");
                 return;
             }
-            
+
             var teamRed = await db.Users.FirstOrDefaultAsync(u => u.OsuData.Username.ToLower() == teamRedName.ToLower());
+
             if (teamRed == null)
             {
                 await FollowupAsync($"**Error:** No se encontró al jugador/equipo Rojo llamado `{teamRedName}`.");
                 return;
             }
-            
+
             var teamBlue = await db.Users.FirstOrDefaultAsync(u => u.OsuData.Username.ToLower() == teamBlueName.ToLower());
+
             if (teamBlue == null)
             {
                 await FollowupAsync($"**Error:** No se encontró al jugador/equipo Azul llamado `{teamBlueName}`.");
                 return;
             }
-            
+
             match.TeamRedId = teamRed.Id;
             match.TeamBlueId = teamBlue.Id;
 
@@ -721,7 +724,8 @@ public class SchedulingModule : InteractionModuleBase<SocketInteractionContext>
         var embed = new EmbedBuilder()
             .WithTitle($"Match {match.Id}")
             .WithColor(Color.Blue)
-            .WithDescription($"Ronda: {match.Round.DisplayName}\n`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora de comienzo: <t:{unixTime}:f>");
+            .WithDescription(
+                $"Ronda: {match.Round.DisplayName}\n`{match.TeamRed.DisplayName}` vs `{match.TeamBlue.DisplayName}`\nHora de comienzo: <t:{unixTime}:f>");
 
         await FollowupAsync(embed: embed.Build());
     }

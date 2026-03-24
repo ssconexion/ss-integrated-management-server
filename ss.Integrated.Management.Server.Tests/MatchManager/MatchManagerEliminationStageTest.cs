@@ -27,11 +27,14 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             string[]? slots = null)
         {
             RefName = refName;
+
             var mappool = (slots ?? DefaultSlots)
                 .Select((slot, i) => new Models.RoundBeatmap { BeatmapID = 1000 + i, Slot = slot })
                 .ToList();
 
-            Manager = new MatchManagerEliminationStage(matchId, refName, (_, _, _) => { })
+            Manager = new MatchManagerEliminationStage(matchId, refName, (_, _, _) =>
+            {
+            })
             {
                 client = BanchoClient.Object,
                 joined = true,
@@ -128,7 +131,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             h.Manager.currentState = IMatchManager.MatchState.MatchOnHold;
 
             await h.Send("SomeRando", ">panic_over");
-            
+
             Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
         }
 
@@ -151,13 +154,13 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
         {
             var h = new MatchManagerEliminationStageHarness();
             await h.RunStandardBanPhase();
-            
+
             await h.Send("RedTeam", "NM2");
             Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
 
             await h.Ref(">stop");
             Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
-            
+
             await h.Ref(">start auto");
             Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
         }
@@ -205,6 +208,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             var ex = await Record.ExceptionAsync(() => h.Ref(">setmap turradisima99"));
             Assert.Null(ex);
+
             h.BanchoClient.Verify(
                 c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
                 Times.Never);
@@ -228,6 +232,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             await h.Ref(">stop");
             Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
+
             h.BanchoClient.Verify(
                 c => c.SendPrivateMessageAsync(h.Channel, It.IsAny<string>()),
                 Times.Once);
@@ -295,7 +300,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
             await h.Send("BlueTeam", "NM1");
             await h.Send("RedTeam", "NM1");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForBanRed, h.Manager.currentState);
             Assert.Single(h.Manager.bannedMaps);
         }
@@ -310,7 +315,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
             await h.Send("BlueTeam", "TB1");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
             Assert.Empty(h.Manager.bannedMaps);
         }
@@ -324,7 +329,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.Ref(">start auto");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
-            
+
             await h.Send("RedTeam", "NM2");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
@@ -336,12 +341,12 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
         {
             var h = new MatchManagerEliminationStageHarness();
             await h.RunStandardBanPhase();
-            
+
             await h.PlayMap("RedTeam", "NM2", "RedTeam");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForPickBlue, h.Manager.currentState);
             await h.Send("BlueTeam", "NM2");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForPickBlue, h.Manager.currentState);
             Assert.Single(h.Manager.pickedMaps);
         }
@@ -365,7 +370,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.RunStandardBanPhase();
 
             await h.Send("RedTeam", "TB1");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
             Assert.Empty(h.Manager.pickedMaps);
         }
@@ -377,7 +382,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.RunStandardBanPhase();
 
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
-            
+
             await h.Send("BlueTeam", "NM2");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
@@ -431,7 +436,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
 
             await h.Send("BanchoBot", "Countdown finished");
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
-            
+
             await h.Send("RedTeam", "!timeout");
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
         }
@@ -445,10 +450,10 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.Send("RedTeam", "!timeout");
             Assert.Equal(IMatchManager.MatchState.OnTimeout, h.Manager.currentState);
             await h.Send("BanchoBot", "Countdown finished");
-            
+
             await h.Send("RedTeam", "NM2");
             Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
-            
+
             await h.Send("BlueTeam", "!timeout");
             Assert.Equal(IMatchManager.MatchState.OnTimeout, h.Manager.currentState);
         }
@@ -472,16 +477,16 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
         {
             var h = new MatchManagerEliminationStageHarness();
             await h.RunStandardBanPhase();
-            
+
             await h.PlayMap("RedTeam", "NM2", "RedTeam");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForPickBlue, h.Manager.currentState);
             await h.Send("BanchoBot", "Countdown finished");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
 
             await h.PlayMap("RedTeam", "NM3", "RedTeam");
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForPickRed, h.Manager.currentState);
         }
 
@@ -494,11 +499,11 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.Ref(">start assisted");
 
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
-            
+
             await h.Send("BlueTeam", "NM1");
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
             Assert.Empty(h.Manager.bannedMaps);
-            
+
             await h.Ref(">next NM1");
             Assert.Equal(IMatchManager.MatchState.WaitingForBanRed, h.Manager.currentState);
             Assert.Contains(h.Manager.bannedMaps, m => m.Slot == "NM1");
@@ -519,7 +524,7 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.PlayMap("RedTeam", "NM2", "RedTeam");
 
             await h.Ref(">win red");
-            
+
             Assert.NotEqual(IMatchManager.MatchState.Playing, h.Manager.currentState);
             Assert.Equal(1, h.Manager.MatchScore[0]);
             Assert.Equal(0, h.Manager.MatchScore[1]);
@@ -542,20 +547,20 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.Send("RedTeam", "!timeout");
             Assert.Equal(IMatchManager.MatchState.OnTimeout, h.Manager.currentState);
         }
-        
+
         [Fact]
         public async Task FullMatch_SingleBanFlow_ShouldProgressToFinish()
         {
             var h = new MatchManagerEliminationStageHarness(bestOf: 9, banRounds: 1);
             await h.RunStandardBanPhase();
 
-            await h.PlayMap("RedTeam", "NM2", "RedTeam");   // 1 - 0
+            await h.PlayMap("RedTeam", "NM2", "RedTeam"); // 1 - 0
             await h.PlayMap("BlueTeam", "HR1", "BlueTeam"); // 1 - 1
-            await h.PlayMap("RedTeam", "HD2", "RedTeam");   // 2 - 1
-            await h.PlayMap("BlueTeam", "DT1", "RedTeam");  // 3 - 1
-            await h.PlayMap("RedTeam", "DT2", "BlueTeam");  // 3 - 2
-            await h.PlayMap("BlueTeam", "NM4", "RedTeam");  // 4 - 2
-            await h.PlayMap("RedTeam", "HD3", "RedTeam");   // 5 - 2
+            await h.PlayMap("RedTeam", "HD2", "RedTeam"); // 2 - 1
+            await h.PlayMap("BlueTeam", "DT1", "RedTeam"); // 3 - 1
+            await h.PlayMap("RedTeam", "DT2", "BlueTeam"); // 3 - 2
+            await h.PlayMap("BlueTeam", "NM4", "RedTeam"); // 4 - 2
+            await h.PlayMap("RedTeam", "HD3", "RedTeam"); // 5 - 2
 
             Assert.Equal(IMatchManager.MatchState.MatchFinished, h.Manager.currentState);
             Assert.Equal(5, h.Manager.MatchScore[0]);
@@ -569,23 +574,23 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
             await h.Ref(">firstpick red");
             await h.Ref(">firstban blue");
             await h.Ref(">start auto");
-            
+
             await h.Send("BlueTeam", "NM1");
             await h.Send("RedTeam", "HD1");
-            
-            await h.PlayMap("RedTeam", "NM2", "RedTeam");   // 1 - 0
+
+            await h.PlayMap("RedTeam", "NM2", "RedTeam"); // 1 - 0
             await h.PlayMap("BlueTeam", "HR1", "BlueTeam"); // 1 - 1
-            await h.PlayMap("RedTeam", "HD2", "RedTeam");   // 2 - 1
-            await h.PlayMap("BlueTeam", "DT1", "RedTeam");  // 3 - 1
-            
+            await h.PlayMap("RedTeam", "HD2", "RedTeam"); // 2 - 1
+            await h.PlayMap("BlueTeam", "DT1", "RedTeam"); // 3 - 1
+
             Assert.Equal(IMatchManager.MatchState.WaitingForBanRed, h.Manager.currentState);
             await h.Send("RedTeam", "NM3");
             Assert.Equal(IMatchManager.MatchState.WaitingForBanBlue, h.Manager.currentState);
             await h.Send("BlueTeam", "HR2");
-            
-            await h.PlayMap("RedTeam", "DT2", "BlueTeam");  // 3 - 2
-            await h.PlayMap("BlueTeam", "NM4", "RedTeam");  // 4 - 2
-            await h.PlayMap("RedTeam", "HD3", "RedTeam");   // 5 - 2
+
+            await h.PlayMap("RedTeam", "DT2", "BlueTeam"); // 3 - 2
+            await h.PlayMap("BlueTeam", "NM4", "RedTeam"); // 4 - 2
+            await h.PlayMap("RedTeam", "HD3", "RedTeam"); // 5 - 2
 
             Assert.Equal(IMatchManager.MatchState.MatchFinished, h.Manager.currentState);
         }
@@ -595,17 +600,18 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
         {
             var h = new MatchManagerEliminationStageHarness(bestOf: 9, banRounds: 1);
             await h.RunStandardBanPhase();
-            
-            await h.PlayMap("RedTeam", "NM2", "RedTeam");   // 1 - 0
+
+            await h.PlayMap("RedTeam", "NM2", "RedTeam"); // 1 - 0
             await h.PlayMap("BlueTeam", "HR1", "BlueTeam"); // 1 - 1
-            await h.PlayMap("RedTeam", "HD2", "RedTeam");   // 2 - 1
-            await h.PlayMap("BlueTeam", "DT1", "RedTeam");  // 3 - 1
-            await h.PlayMap("RedTeam", "DT2", "BlueTeam");  // 3 - 2
-            await h.PlayMap("BlueTeam", "NM4", "RedTeam");  // 4 - 2
-            await h.PlayMap("RedTeam", "NM3", "BlueTeam");  // 4 - 3
+            await h.PlayMap("RedTeam", "HD2", "RedTeam"); // 2 - 1
+            await h.PlayMap("BlueTeam", "DT1", "RedTeam"); // 3 - 1
+            await h.PlayMap("RedTeam", "DT2", "BlueTeam"); // 3 - 2
+            await h.PlayMap("BlueTeam", "NM4", "RedTeam"); // 4 - 2
+            await h.PlayMap("RedTeam", "NM3", "BlueTeam"); // 4 - 3
             await h.PlayMap("BlueTeam", "NM5", "BlueTeam"); // 4 - 4
-            
+
             Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
+
             h.BanchoClient.Verify(
                 c => c.SendPrivateMessageAsync(h.Channel, "!mp map 1014"),
                 Times.Once);

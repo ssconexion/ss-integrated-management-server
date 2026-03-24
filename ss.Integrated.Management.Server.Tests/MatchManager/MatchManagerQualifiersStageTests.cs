@@ -65,106 +65,108 @@ namespace ss.Integrated.Management.Server.Tests.MatchManager
         /// Shorthand for sending a referee command.
         /// </summary>
         public Task Ref(string command) => Send(RefName, command);
-        
-        }
-    }
 
-    public class MatchManagerQualifiersStageTests
+    }
+}
+
+public class MatchManagerQualifiersStageTests
+{
+    [Fact]
+    public async Task PanicProtocol_ShouldPauseAndResumeAutomation()
     {
-        [Fact]
-        public async Task PanicProtocol_ShouldPauseAndResumeAutomation()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
+        var h = new MatchManagerQualifiersStageHarness();
 
-            await h.Send("RandomPlayer", "!panic la tengo enana");
-            Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
-            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp aborttimer"), Times.Once);
+        await h.Send("RandomPlayer", "!panic la tengo enana");
+        Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
+        h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp aborttimer"), Times.Once);
 
-            await h.Ref(">panic_over");
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
-            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp timer 10"), Times.Once);
-        }
-
-        [Fact]
-        public async Task AdminCommands_StartAndStop()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-
-            await h.Ref(">start");
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
-
-            await h.Ref(">stop");
-            Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
-        }
-
-        [Fact]
-        public async Task PanicProtocol_NonReferee_CannotResolvePanic()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-            h.Manager.currentState = IMatchManager.MatchState.MatchOnHold;
-
-            await h.Send("SomeRando", ">panic_over");
-            
-            Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
-        }
-
-        [Fact]
-        public async Task AdminCommands_SetMap_ShouldSetMap()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-            h.Manager.currentState = IMatchManager.MatchState.Idle;
-
-            await h.Ref(">setmap NM1");
-            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp map 1000"), Times.Once);
-            h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp mods NM NF"), Times.Once);
-        }
-
-        [Fact]
-        public async Task AdminCommands_Start_WhenAlreadyRunning_ShouldBeIgnored()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-            h.Manager.currentState = IMatchManager.MatchState.WaitingForStart;
-
-            await h.Ref(">start");
-
-            Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
-        }
-
-        [Fact]
-        public async Task AdminCommands_Stop_WhenAlreadyIdle_ShouldBeIgnored()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-
-            await h.Ref(">stop");
-            Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
-            h.BanchoClient.Verify(
-                c => c.SendPrivateMessageAsync(h.Channel, It.IsAny<string>()),
-                Times.Once);
-        }
-
-        [Fact]
-        public async Task AdminCommands_SetMap_WhenNotIdle_ShouldFail()
-        {
-            var h = new MatchManagerQualifiersStageHarness();
-            h.Manager.currentState = IMatchManager.MatchState.Playing;
-
-            await h.Ref(">setmap NM1");
-
-            h.BanchoClient.Verify(
-                c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
-                Times.Never);
-        }
-        
-        [Fact]
-        public async Task AdminCommands_SetMap_WithInvalidSlot_ShouldNotCrash()
-        {
-            var h = new MatchManagerEliminationStageHarness();
-            h.Manager.currentState = IMatchManager.MatchState.Idle;
-
-            var ex = await Record.ExceptionAsync(() => h.Ref(">setmap turradisima99"));
-            Assert.Null(ex);
-            h.BanchoClient.Verify(
-                c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
-                Times.Never);
-        }
+        await h.Ref(">panic_over");
+        Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
+        h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp timer 10"), Times.Once);
     }
+
+    [Fact]
+    public async Task AdminCommands_StartAndStop()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+
+        await h.Ref(">start");
+        Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
+
+        await h.Ref(">stop");
+        Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
+    }
+
+    [Fact]
+    public async Task PanicProtocol_NonReferee_CannotResolvePanic()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+        h.Manager.currentState = IMatchManager.MatchState.MatchOnHold;
+
+        await h.Send("SomeRando", ">panic_over");
+
+        Assert.Equal(IMatchManager.MatchState.MatchOnHold, h.Manager.currentState);
+    }
+
+    [Fact]
+    public async Task AdminCommands_SetMap_ShouldSetMap()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+        h.Manager.currentState = IMatchManager.MatchState.Idle;
+
+        await h.Ref(">setmap NM1");
+        h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp map 1000"), Times.Once);
+        h.BanchoClient.Verify(c => c.SendPrivateMessageAsync(h.Channel, "!mp mods NM NF"), Times.Once);
+    }
+
+    [Fact]
+    public async Task AdminCommands_Start_WhenAlreadyRunning_ShouldBeIgnored()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+        h.Manager.currentState = IMatchManager.MatchState.WaitingForStart;
+
+        await h.Ref(">start");
+
+        Assert.Equal(IMatchManager.MatchState.WaitingForStart, h.Manager.currentState);
+    }
+
+    [Fact]
+    public async Task AdminCommands_Stop_WhenAlreadyIdle_ShouldBeIgnored()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+
+        await h.Ref(">stop");
+        Assert.Equal(IMatchManager.MatchState.Idle, h.Manager.currentState);
+
+        h.BanchoClient.Verify(
+            c => c.SendPrivateMessageAsync(h.Channel, It.IsAny<string>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AdminCommands_SetMap_WhenNotIdle_ShouldFail()
+    {
+        var h = new MatchManagerQualifiersStageHarness();
+        h.Manager.currentState = IMatchManager.MatchState.Playing;
+
+        await h.Ref(">setmap NM1");
+
+        h.BanchoClient.Verify(
+            c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AdminCommands_SetMap_WithInvalidSlot_ShouldNotCrash()
+    {
+        var h = new MatchManagerEliminationStageHarness();
+        h.Manager.currentState = IMatchManager.MatchState.Idle;
+
+        var ex = await Record.ExceptionAsync(() => h.Ref(">setmap turradisima99"));
+        Assert.Null(ex);
+
+        h.BanchoClient.Verify(
+            c => c.SendPrivateMessageAsync(h.Channel, It.Is<string>(s => s.StartsWith("!mp map"))),
+            Times.Never);
+    }
+}

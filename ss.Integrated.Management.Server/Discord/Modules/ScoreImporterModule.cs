@@ -24,16 +24,15 @@ public class ScoreImporterModule
     /// <returns>True if scores were successfully saved; otherwise, false.</returns>
     public async Task<bool> ProcessScoresAsync(string csvContent, string matchIdStr)
     {
-        
         var matchRoom = await db.MatchRooms.FirstOrDefaultAsync(m => m.Id == matchIdStr);
         var qualsRoom = await db.QualifierRooms.FirstOrDefaultAsync(q => q.Id == matchIdStr);
         int roundId;
-        
+
         if (matchRoom != null)
         {
             roundId = matchRoom.RoundId!.Value;
         }
-        else if(qualsRoom != null)
+        else if (qualsRoom != null)
         {
             roundId = qualsRoom.RoundId;
         }

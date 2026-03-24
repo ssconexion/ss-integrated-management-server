@@ -26,17 +26,16 @@ public class ModelsContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
         modelBuilder.Entity<Models.MatchRoom>(e =>
         {
             e.ToTable("match_rooms", t => t.ExcludeFromMigrations());
-            
+
             e.OwnsMany(r => r.BannedMaps, b => b.ToJson("banned_maps"));
             e.OwnsMany(r => r.PickedMaps, b => b.ToJson("picked_maps"));
         });
-        
+
         modelBuilder.Entity<Models.QualifierRoom>().ToTable("qualifier_rooms", t => t.ExcludeFromMigrations());
-        
+
         modelBuilder.Entity<Models.Player>().ToTable("players", t => t.ExcludeFromMigrations());
 
         modelBuilder.Entity<Models.User>(e =>
@@ -52,11 +51,11 @@ public class ModelsContext : DbContext
 
             e.OwnsMany(r => r.MapPool, b => b.ToJson("map_pool"));
         });
-        
+
         modelBuilder.Entity<Models.RefereeInfo>().ToTable("referees", t => t.ExcludeFromMigrations());
-        
+
         modelBuilder.Entity<Models.OsuUser>().ToTable("osu_users", t => t.ExcludeFromMigrations());
-        
+
         modelBuilder.Entity<Models.ScoreResults>().ToTable("scores", t => t.ExcludeFromMigrations());
     }
 }

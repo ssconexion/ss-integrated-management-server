@@ -24,9 +24,9 @@ public class DiscordManager
     private readonly ulong guildId = Convert.ToUInt64(Environment.GetEnvironmentVariable("DISCORD_GUILD_ID"));
     private readonly ulong parentChannelId = Convert.ToUInt64(Environment.GetEnvironmentVariable("DISCORD_MATCHES_CHANNEL_ID"));
     private readonly string token;
-    
+
     private record QueuedMessage(string Content, IMatchManager.MessageKind Kind);
-    
+
     // activeChannels => <match_id, thread_id>
     // activeMatches  => <match_id, autoref_instance>
     private readonly ConcurrentDictionary<string, ulong> activeChannels = new();
@@ -34,10 +34,10 @@ public class DiscordManager
     private readonly ConcurrentDictionary<string, ulong> liveEmbedMessages = new();
     private readonly ConcurrentDictionary<string, System.Threading.Channels.Channel<QueuedMessage>> messageQueues = new();
     private readonly ConcurrentDictionary<string, CancellationTokenSource> queueCancellationTokens = new();
-    
-    private static readonly Regex BanchoNoise = 
+
+    private static readonly Regex BanchoNoise =
         new(@"\[BanchoBot\].*Match starts in \d+ seconds?", RegexOptions.Compiled);
-    
+
     public DiscordManager(string token)
     {
         this.token = token;
@@ -132,13 +132,13 @@ public class DiscordManager
         );
 
         activeChannels.TryAdd(matchId, newThread.Id);
-        
+
         var queue = System.Threading.Channels.Channel.CreateUnbounded<QueuedMessage>(new System.Threading.Channels.UnboundedChannelOptions { SingleReader = true });
         var cts = new CancellationTokenSource();
-        
+
         messageQueues.TryAdd(matchId, queue);
         queueCancellationTokens.TryAdd(matchId, cts);
-        
+
         _ = Task.Run(() => RunMessageQueueAsync(matchId, cts.Token), cts.Token);
 
         IMatchManager worker = type == Models.MatchType.QualifiersStage
@@ -172,7 +172,7 @@ public class DiscordManager
         if (activeMatches.TryRemove(matchId, out var worker))
         {
             await worker.StopAsync();
-            
+
             if (queueCancellationTokens.TryRemove(matchId, out var cts))
             {
                 await Task.Delay(5000);
@@ -203,28 +203,29 @@ public class DiscordManager
 
         return true;
     }
-    
+
     private Embed BuildLiveMatchEmbed(MatchManagerEliminationStage matchManagerEliminationStage)
     {
         var match = matchManagerEliminationStage.currentMatch;
         if (match == null) return new EmbedBuilder().WithTitle("Cargando partido...").Build();
-        
+
         var embed = new EmbedBuilder()
             .WithTitle($"{match.Id}: {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName}")
             .WithUrl($"https://osu.ppy.sh/mp/{match.MpLinkId}")
             .AddField("Marcador", $"🔴 **{matchManagerEliminationStage.MatchScore[0]}** - **{matchManagerEliminationStage.MatchScore[1]}** 🔵", false)
             .AddField("Estado Actual", $"`{matchManagerEliminationStage.currentState}`", false);
-        
-        string bans = matchManagerEliminationStage.bannedMaps.Any() 
-            ? string.Join("\n", matchManagerEliminationStage.bannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}")) 
+
+        string bans = matchManagerEliminationStage.bannedMaps.Any()
+            ? string.Join("\n", matchManagerEliminationStage.bannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}"))
             : "*Ninguno todavía*";
-        
-        string picks = matchManagerEliminationStage.pickedMaps.Any() 
-            ? string.Join("\n", matchManagerEliminationStage.pickedMaps.Select(m => 
+
+        string picks = matchManagerEliminationStage.pickedMaps.Any()
+            ? string.Join("\n", matchManagerEliminationStage.pickedMaps.Select(m =>
             {
                 string picker = m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵";
-                
+
                 string winnerIndicator = "";
+
                 if (m.Winner == Models.TeamColor.TeamRed)
                     winnerIndicator = " ➔ 🔴 Wins!";
                 else if (m.Winner == Models.TeamColor.TeamBlue)
@@ -234,28 +235,28 @@ public class DiscordManager
                     picker = "🟣";
 
                 return $"{picker} **{m.Slot}**{winnerIndicator}";
-            })) 
+            }))
             : "*Ninguno todavía*";
 
         embed.AddField("Bans", bans, true);
         embed.AddField("Picks", picks, true);
-        
+
         embed.WithFooter($"Árbitro: {match.Referee.DisplayName}");
         embed.WithCurrentTimestamp();
 
         return embed.Build();
     }
-    
+
     private async Task UpdateLiveEmbedAsync(string matchId)
     {
         if (!activeMatches.TryGetValue(matchId, out var autoRefInterface)) return;
-        
+
         if (autoRefInterface is not MatchManagerEliminationStage autoRef) return;
-        
+
         if (client.GetChannel(parentChannelId) is not IMessageChannel channel) return;
-        
+
         var embed = BuildLiveMatchEmbed(autoRef);
-        
+
         if (liveEmbedMessages.TryGetValue(matchId, out ulong messageId))
         {
             if (await channel.GetMessageAsync(messageId) is IUserMessage message)
@@ -278,10 +279,10 @@ public class DiscordManager
         var embed = BuildMpSettingsEmbed(settings);
         await channel.SendMessageAsync(embed: embed);
     }
-    
+
     private static Embed BuildMpSettingsEmbed(DiscordModels.MpSettingsResult settings)
     {
-        var redSlots  = settings.Slots.Where(s => s.Team == "Red");
+        var redSlots = settings.Slots.Where(s => s.Team == "Red");
         var blueSlots = settings.Slots.Where(s => s.Team == "Blue");
 
         static string OrNone(string value) =>
@@ -297,10 +298,10 @@ public class DiscordManager
             .WithTitle(OrNone(settings.RoomName))
             .AddField("Mode", $"{OrNone(settings.TeamMode)} — {OrNone(settings.WinCondition)}", true)
             .AddField("Mods", OrNone(settings.ActiveMods), true)
-            .AddField("🔴 Red",  FormatSlots(redSlots),  false)
+            .AddField("🔴 Red", FormatSlots(redSlots), false)
             .AddField("🔵 Blue", FormatSlots(blueSlots), true)
             .WithCurrentTimestamp();
-        
+
         if (!string.IsNullOrWhiteSpace(settings.HistoryUrl))
             embed.WithUrl(settings.HistoryUrl);
 
@@ -311,7 +312,7 @@ public class DiscordManager
 
         return embed.Build();
     }
-    
+
     /// <summary>
     /// Registers a new referee in the database with their IRC credentials.
     /// </summary>
@@ -366,7 +367,7 @@ public class DiscordManager
             queue.Writer.TryWrite(new QueuedMessage(messageContent, messageType));
         }
     }
-    
+
     private async Task RunMessageQueueAsync(string matchId, CancellationToken ct)
     {
         if (!messageQueues.TryGetValue(matchId, out var queue)) return;

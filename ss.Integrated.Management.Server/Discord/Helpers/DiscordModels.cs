@@ -14,28 +14,28 @@ public class DiscordModels
         /// Primary Key.
         /// </summary>
         public int Id { get; set; }
-        
+
         /// <summary>
         /// Represents the day of the weekend. 0 -> Friday, 1 -> Saturday, 2 -> Sunday, 3 -> Monday.
         /// </summary>
         public int DayIndex { get; set; }
-        
+
         /// <summary>
         /// The hour in a 24h format.
         /// </summary>
         public int Hour { get; set; }
-        
+
         /// <summary>
         /// Abstract number used for the CP solver. Should be assigned relative to other scores applied .
         /// </summary>
         public int PenaltyScore { get; set; }
-        
+
         /// <summary>
         /// Weekend starting from 1. Used when matches are spread over multiple weekends.
         /// </summary>
         public int Week { get; set; }
     }
-    
+
     /// <summary>
     /// Match snapshot used for scheduling.
     /// </summary>
@@ -51,7 +51,7 @@ public class DiscordModels
         public string BlueName { get; set; }
         public int RoundId { get; set; }
     }
-    
+
     /// <summary>
     /// Information extracted from an !mp settings command in a digestible format
     /// </summary>

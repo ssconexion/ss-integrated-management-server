@@ -59,12 +59,12 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
     /// <inheritdoc />
     public event Func<string, DiscordModels.MpSettingsResult, Task>? OnSettingsReceived;
-    
+
     internal bool joined;
     private bool stoppedPreviously;
 
     private int currentMapIndex;
-    
+
     internal IMatchManager.MatchState currentState;
     internal IMatchManager.MatchState previousState;
 
@@ -90,7 +90,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
         {
             currentMatch = await db.QualifierRooms.FirstAsync(m => m.Id == matchId) ?? throw new Exception("Match not found in the DB");
             currentMatch.Referee = await db.Referees.FirstAsync(r => r.DisplayName == refDisplayName) ?? throw new Exception("Referee not found in the DB");
-            
+
             currentMatch.Round = await db.Rounds.FirstAsync(r => r.Id == currentMatch.RoundId);
 
             usersInRoom = await db.Players.Where(p => p.QualifierRoomId == matchId).Select(p => p.User.OsuID).ToListAsync();
@@ -98,16 +98,16 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
         await ConnectToBancho();
     }
-    
+
     /// <inheritdoc />
     public async Task StopAsync()
     {
         await using var db = new ModelsContext();
-        
+
         await db.QualifierRooms
             .Where(m => m.Id == matchId)
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.MpLinkId, mpLinkId));
-        
+
         await db.SaveChangesAsync();
         await SendMessageBothWays("!mp close");
         await client!.DisconnectAsync();
@@ -125,7 +125,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
         {
             _ = HandleIrcMessage(message);
         };
-        
+
         client.OnPrivateMessageSent += message =>
         {
             _ = PeruTrim(message);
@@ -138,7 +138,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
         await client.ConnectAsync();
     }
-    
+
     /// <summary>
     /// Sanitizes and parses outgoing private messages to intercept command usage.
     /// </summary>
@@ -208,12 +208,12 @@ public partial class MatchManagerQualifiersStage : IMatchManager
 
             await SendMessageBothWays(
                 string.Format(Strings.Panic, Environment.GetEnvironmentVariable("DISCORD_REFEREE_ROLE_ID"), senderNick)
-                );
+            );
         }
 
         // 3. Drive the State Machine
-        if(senderNick == "BanchoBot") _ = TryStateChange(content);
-            
+        if (senderNick == "BanchoBot") _ = TryStateChange(content);
+
         // 4. Admin Commands
         if (content.StartsWith('>'))
         {
@@ -254,6 +254,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                     await SendMessageBothWays($"!mp invite #{osuId}");
                     await Task.Delay(500);
                 }
+
                 break;
             case "setmap":
                 if (currentState != IMatchManager.MatchState.Idle)
@@ -261,6 +262,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                     await SendMessageBothWays(Strings.SetMapFail);
                     break;
                 }
+
                 await PreparePick(args[1]);
                 currentState = IMatchManager.MatchState.Idle;
                 break;
@@ -270,7 +272,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                     await SendMessageBothWays(Strings.AutoAlreadyEngaged);
                     break;
                 }
-                
+
                 if (!stoppedPreviously)
                 {
                     await SendMessageBothWays(string.Format(Strings.QualifiersAutoEngage, currentMatch!.Id));
@@ -291,12 +293,12 @@ public partial class MatchManagerQualifiersStage : IMatchManager
                     await SendMessageBothWays(Strings.AutoAlreadyStopped);
                     break;
                 }
+
                 await SendMessageBothWays(Strings.StoppingAuto);
                 previousState = currentState;
                 currentState = IMatchManager.MatchState.Idle;
                 stoppedPreviously = true;
                 break;
-                
         }
     }
 
@@ -360,7 +362,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
             }
         }
     }
-    
+
     private async Task PreparePick(string slot)
     {
         var beatmap = currentMatch!.Round.MapPool.Find(b => b.Slot == slot.ToUpper());
@@ -370,7 +372,7 @@ public partial class MatchManagerQualifiersStage : IMatchManager
             await SendMessageBothWays($"{slot.ToUpper()} does not exist in the current mappool");
             return;
         }
-        
+
         await SendMessageBothWays($"!mp map {beatmap!.BeatmapID}");
         await Task.Delay(250);
         await SendMessageBothWays($"!mp mods {slot[..2]} NF");

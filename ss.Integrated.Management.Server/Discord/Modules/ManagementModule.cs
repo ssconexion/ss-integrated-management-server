@@ -97,7 +97,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
             await FollowupAsync($"La match con ID `{matchId}` no tiene un MP link asignado.");
             return;
         }
-        
+
         var games = await OsuMatchImporter.FetchAllGamesAsync(osuMpId.Value);
 
         if (games == null || games.Count == 0)
@@ -395,7 +395,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
             embed: embed.Build()
         );
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("createqualifierslobby", "Crea una match verificando disponibilidad")]
     public async Task CreateQualifiersRoom(string roomId, string date, string hour, int roundId, int requestedBy = 1)
@@ -441,7 +441,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
 
         await FollowupAsync($"Sala de Qualifiers `{room.Id}` creada con éxito con fecha `{room.StartTime}`");
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("removequalifiersroom", "Elimina una sala de qualifiers del listado a través de su ID")]
     public async Task RemoveQualifiersRoomAsync(string matchid)
@@ -461,7 +461,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
         await db.SaveChangesAsync();
         await FollowupAsync($"Se ha borrado la match con ID `{remover.Id}`");
     }
-    
+
     [RequireFromEnvId("DISCORD_REFEREE_ROLE_ID")]
     [SlashCommand("removematchup", "Elimina una match del listado a través de su ID")]
     public async Task RemoveMatchAsync(string matchid)
@@ -481,7 +481,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
         await db.SaveChangesAsync();
         await FollowupAsync($"Se ha borrado la match con ID `{remover.Id}`");
     }
-    
+
     [RequireFromEnvId("DISCORD_ADMIN_ROLE_ID")]
     [SlashCommand("generate-groups", "NO voy a generar todos los grupos uno a uno")]
     public async Task GenerateGroupMatchesAsync(int roundId)
@@ -558,7 +558,7 @@ public class ManagementModule : InteractionModuleBase<SocketInteractionContext>
                 i++;
             }
         }
-        
+
         await db.MatchRooms.AddRangeAsync(nuevosPartidos);
         await db.SaveChangesAsync();
 

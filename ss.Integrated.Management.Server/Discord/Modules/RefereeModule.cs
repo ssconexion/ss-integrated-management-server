@@ -172,7 +172,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
     private async Task AuxEmbedForfeitCreation(string matchId, bool trueIfRedFF)
     {
         await DeferAsync(ephemeral: false);
-        
+
         await using var db = new ModelsContext();
 
         EmbedBuilder embed;
@@ -181,13 +181,13 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
             .FirstOrDefaultAsync(m => m.Id == matchId);
 
         string ffstring = trueIfRedFF ? "🔵 El equipo azul gana por defecto" : "🔴 El equipo rojo gana por defecto";
-        
+
         if (match != null)
         {
             embed = new EmbedBuilder()
                 .WithTitle($"{match.Id}: 🔴 {match.TeamRed.DisplayName} vs {match.TeamBlue.DisplayName} 🔵")
                 .AddField("Marcador", ffstring, false);
-                
+
             embed.WithCurrentTimestamp();
         }
         else
@@ -203,7 +203,7 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
     private async Task AuxEmbedCreation(string matchId)
     {
         await DeferAsync(ephemeral: false);
-        
+
         await using var db = new ModelsContext();
 
         EmbedBuilder embed;
@@ -220,11 +220,13 @@ public class RefereeModule : InteractionModuleBase<SocketInteractionContext>
                 .AddField("Estado Actual", $"`MatchFinished`", false);
 
             Debug.Assert(match.BannedMaps != null, "match.BannedMaps != null");
+
             string bans = match.BannedMaps.Any()
                 ? string.Join("\n", match.BannedMaps.Select(m => $"{(m.TeamColor == Models.TeamColor.TeamRed ? "🔴" : "🔵")} {m.Slot}"))
                 : "*Ninguno todavía*";
 
             Debug.Assert(match.PickedMaps != null, "match.PickedMaps != null");
+
             string picks = match.PickedMaps.Any()
                 ? string.Join("\n", match.PickedMaps.Select(m =>
                 {
